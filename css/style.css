@@ -142,6 +142,11 @@ header {
 
 .logo {
     max-width: 100px;
+    transition: transform 0.5s;
+}
+
+.logo:hover {
+    transform: rotate(-15deg)
 }
 
 .nav {
