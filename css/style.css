@@ -4,7 +4,7 @@
     box-sizing: border-box;
 }
 
-/* Custom Properties, update these for your own design */
+/* Custom Properties, update these first.*/
 
 :root {
     --ff-primary: 'Source Sans Pro', sans-serif;
@@ -37,10 +37,9 @@
 
 /* General styles */
 
-/* endable this to add smooth scrolling */
-/* html {
+html {
     scroll-behavior: smooth;
-} */
+}
 
 
 body {
@@ -347,6 +346,11 @@ header {
 
 .about-me__img {
     box-shadow: var(--bs);
+}
+
+.about-me__btn {
+    margin: auto;
+    text-align: center;
 }
 
 @media (min-width: 600px) {
