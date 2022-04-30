@@ -251,7 +251,15 @@ header {
 }
 
 .intro__img {
+    transition: 
+        transform 750ms cubic-bezier(.5, 0, .5, 1),
+        opacity 50ms linear;
     box-shadow: var(--bs);
+}
+
+.intro__img:hover,
+.intro__item:focus .intro__img {
+    transform: scale(1.05);
 }
 
 .section__subtitle--intro {
@@ -345,6 +353,9 @@ header {
 }
 
 .about-me__img {
+    transition: 
+    transform 750ms cubic-bezier(.5, 0, .5, 1),
+    opacity 50ms linear;
     box-shadow: var(--bs);
 }
 
@@ -382,6 +393,11 @@ header {
         grid-area: img;
         position: relative;
         z-index: 2;
+    }
+
+    .about-me__img:hover,
+    .about-me__item:focus .about-me__img {
+        transform: scale(1.05);
     }
 }
 
