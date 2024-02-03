@@ -1,6 +1,0 @@
-Created log file at "/tmp/Alacritty-138989.log"
-[0.000018752s] [ERROR] [alacritty_config_derive] Unable to load config ".config/alacritty/nvim.yml": Unable to locate config file
-Deleted log file at "/tmp/Alacritty-138989.log"
-Created log file at "/tmp/Alacritty-17809.log"
-[0.000015088s] [ERROR] [alacritty_config_derive] Unable to load config ".config/alacritty/nvim.yml": Unable to locate config file
-Deleted log file at "/tmp/Alacritty-17809.log"
