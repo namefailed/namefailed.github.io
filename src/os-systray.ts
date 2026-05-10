@@ -122,7 +122,7 @@ export function pushToast(
   playOsSound('notify')
   window.setTimeout(() => {
     el.classList.add('toast-out')
-    window.setTimeout(() => el.remove(), 280)
+    window.setTimeout(() => el.remove(), 360)
   }, durationMs)
 }
 
@@ -156,7 +156,8 @@ export function initSystray(): void {
 
   const setPanelOpen = (next: boolean): void => {
     panelOpen = next
-    panel.hidden = !next
+    panel.classList.toggle('yasb-settings-panel--open', next)
+    panel.setAttribute('aria-hidden', next ? 'false' : 'true')
     clockBtn.setAttribute('aria-expanded', next ? 'true' : 'false')
     if (next) {
       syncRetroSwitch(retroToggle)

@@ -91,9 +91,16 @@
   --ui-radius-monitor-inner: clamp(16px, 2.6vmin, 32px);
   --ui-monitor-pad: clamp(10px, 1.6vmin, 18px);
 
-  --ui-duration-fast: 0.12s;
-  --ui-duration-med: 0.18s;
-  --ui-easing-standard: ease;
+  --ui-duration-fast: 0.14s;
+  --ui-duration-med: 0.22s;
+  --ui-duration-slow: 0.34s;
+  --ui-duration-slower: 0.46s;
+  --ui-duration-splash: 0.72s;
+  /** Comfortable defaults — bumped routes override duration explicitly where helpful */
+  --ui-easing-standard: cubic-bezier(0.33, 0.86, 0.36, 1);
+  --ui-easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ui-easing-emph: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui-easing-spring: cubic-bezier(0.34, 1.24, 0.54, 1);
 
   --ui-focus-ring: 2px solid rgba(var(--th-accent-rgb), 0.85);
   --ui-focus-offset: 2px;
@@ -133,6 +140,19 @@ body {
 
 /* ── CRT-style monitor shell (~98% viewport, rounded like old plastic bezel) ─ */
 
+@keyframes wm-monitor-in {
+  from {
+    opacity: 0;
+    filter: blur(12px) saturate(0.92);
+    transform: translate(-50%, calc(-50% + 18px)) scale(0.972);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) saturate(1);
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 #monitor-frame {
   position: fixed;
   left: 50%;
@@ -145,6 +165,7 @@ body {
   z-index: var(--ui-z-base);
   display: flex;
   flex-direction: column;
+  animation: wm-monitor-in var(--ui-duration-splash) var(--ui-easing-emph) both;
   /* Outer bezel + notch / home-indicator safe areas on phones */
   padding: max(var(--ui-monitor-pad), env(safe-area-inset-top, 0px))
     max(var(--ui-monitor-pad), env(safe-area-inset-right, 0px))
@@ -295,6 +316,19 @@ html.retro-fx::before {
   pointer-events: none;
 }
 
+@keyframes wm-yasb-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 .yasb-inner {
   pointer-events: auto;
   width: 100%;
@@ -311,6 +345,7 @@ html.retro-fx::before {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 2px 10px rgba(0, 0, 0, 0.28);
+  animation: wm-yasb-slide 0.58s var(--ui-easing-emph) 0.08s both;
 }
 
 .yasb-cluster {
@@ -504,6 +539,102 @@ html.retro-fx::before {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(14px) saturate(1.08);
   -webkit-backdrop-filter: blur(14px) saturate(1.08);
+  transform-origin: 100% 0;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity var(--ui-duration-slow) var(--ui-easing-emph),
+    transform var(--ui-duration-slow) var(--ui-easing-emph),
+    visibility 0s linear var(--ui-duration-slow);
+}
+
+.yasb-settings-panel--open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity var(--ui-duration-slow) var(--ui-easing-emph),
+    transform var(--ui-duration-slow) var(--ui-easing-spring),
+    visibility 0s linear 0s;
+}
+
+@keyframes yasb-menu-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.yasb-settings-panel--open .yasb-settings-heading,
+.yasb-settings-panel--open .yasb-settings-theme-block,
+.yasb-settings-panel--open .yasb-settings-divider {
+  animation: yasb-menu-row-in var(--ui-duration-slow) var(--ui-easing-emph) backwards;
+}
+
+.yasb-settings-panel--open .yasb-settings-heading {
+  animation-delay: 0.02s;
+}
+.yasb-settings-panel--open .yasb-settings-theme-block {
+  animation-delay: 0.04s;
+}
+.yasb-settings-panel--open .yasb-settings-divider {
+  animation-delay: 0.06s;
+}
+
+.yasb-settings-panel--open .yasb-settings-row {
+  animation: yasb-menu-row-in var(--ui-duration-slow) var(--ui-easing-emph) backwards;
+}
+
+.yasb-settings-panel--open .yasb-settings-row:nth-child(4) {
+  animation-delay: 0.08s;
+}
+.yasb-settings-panel--open .yasb-settings-row:nth-child(5) {
+  animation-delay: 0.1s;
+}
+.yasb-settings-panel--open .yasb-settings-row:nth-child(6) {
+  animation-delay: 0.12s;
+}
+.yasb-settings-panel--open .yasb-settings-row:nth-child(7) {
+  animation-delay: 0.14s;
+}
+
+.yasb-settings-panel--open .yasb-settings-meta,
+.yasb-settings-panel--open .yasb-settings-hints {
+  animation: yasb-menu-row-in var(--ui-duration-slow) var(--ui-easing-emph) backwards;
+  animation-delay: 0.18s;
+}
+
+.yasb-settings-panel--open .yasb-theme-chip {
+  animation: yasb-menu-row-in 0.36s var(--ui-easing-emph) backwards;
+}
+
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(1) {
+  animation-delay: 0.07s;
+}
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(2) {
+  animation-delay: 0.09s;
+}
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(3) {
+  animation-delay: 0.11s;
+}
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(4) {
+  animation-delay: 0.13s;
+}
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(5) {
+  animation-delay: 0.15s;
+}
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(6) {
+  animation-delay: 0.17s;
+}
+.yasb-settings-panel--open .yasb-theme-chip:nth-child(7) {
+  animation-delay: 0.19s;
 }
 
 .yasb-settings-heading {
@@ -625,8 +756,8 @@ html.retro-fx::before {
   background: rgba(var(--th-accent-rgb), 0.35);
   border: 1px solid rgba(var(--th-accent-rgb), 0.35);
   transition:
-    background 0.18s ease,
-    border-color 0.18s ease;
+    background var(--ui-duration-med) var(--ui-easing-smooth),
+    border-color var(--ui-duration-med) var(--ui-easing-smooth);
 }
 
 .yasb-settings-switch-thumb {
@@ -641,9 +772,9 @@ html.retro-fx::before {
     inset 2px 0 0 rgba(255, 255, 255, 0.22),
     0 2px 6px rgba(0, 0, 0, 0.35);
   transition:
-    transform 0.18s ease,
-    opacity 0.18s ease,
-    box-shadow 0.18s ease;
+    transform var(--ui-duration-med) var(--ui-easing-spring),
+    opacity var(--ui-duration-med) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-med) var(--ui-easing-smooth);
 }
 
 .yasb-settings-switch[aria-pressed='false'] .yasb-settings-switch-track,
@@ -743,7 +874,7 @@ html.retro-fx::before {
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  animation: toast-in 0.28s ease-out both;
+  animation: toast-in var(--ui-duration-slow) var(--ui-easing-emph) both;
 }
 
 .toast.toast--warn {
@@ -759,20 +890,24 @@ html.retro-fx::before {
 
 .toast.toast-out {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateX(14px) scale(0.97);
+  filter: blur(2px);
   transition:
-    opacity 0.22s ease,
-    transform 0.22s ease;
+    opacity var(--ui-duration-med) var(--ui-easing-smooth),
+    transform var(--ui-duration-med) var(--ui-easing-emph),
+    filter var(--ui-duration-fast) var(--ui-easing-smooth);
 }
 
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateX(22px) scale(0.96);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -863,9 +998,14 @@ html.retro-fx::before {
   position: absolute;
   inset: 0;
   z-index: var(--ui-z-launcher-root);
-  display: none;
+  display: flex;
   flex-direction: column;
   pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--ui-duration-slower) var(--ui-easing-emph),
+    visibility 0s linear var(--ui-duration-slower);
 }
 
 /*
@@ -873,8 +1013,12 @@ html.retro-fx::before {
  * floating dock. Pull the backdrop down over that strip so the dimmer reaches the dock.
  */
 #desktop.launchers-visible #launcher-shell {
-  display: flex;
+  visibility: visible;
+  opacity: 1;
   pointer-events: auto;
+  transition:
+    opacity var(--ui-duration-slower) var(--ui-easing-emph),
+    visibility 0s linear 0s;
   /* Bleed past `.wm-stack` over dock reserve + desktop bottom inset + home indicator */
   bottom: calc(
     -1 *
@@ -893,7 +1037,9 @@ html.retro-fx::before {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   pointer-events: auto;
-  transition: background var(--ui-duration-med) var(--ui-easing-standard);
+  transition:
+    background var(--ui-duration-slow) var(--ui-easing-smooth),
+    backdrop-filter var(--ui-duration-slow) var(--ui-easing-smooth);
 }
 
 #launcher-panel {
@@ -919,6 +1065,22 @@ html.retro-fx::before {
   box-shadow:
     0 12px 48px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(22px) scale(0.965);
+  opacity: 0;
+  transform-origin: 50% 15%;
+  transition:
+    transform var(--ui-duration-slower) var(--ui-easing-emph),
+    opacity var(--ui-duration-slow) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-slow) var(--ui-easing-smooth);
+}
+
+#desktop.launchers-visible #launcher-panel {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  box-shadow:
+    0 20px 56px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 #launcher-panel::-webkit-scrollbar {
@@ -1005,18 +1167,20 @@ html.retro-fx::before {
   font-family: inherit;
   cursor: pointer;
   transition:
-    background var(--ui-duration-med) var(--ui-easing-standard),
-    transform var(--ui-duration-fast) var(--ui-easing-standard),
-    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
-    border-color var(--ui-duration-med) var(--ui-easing-standard);
+    background var(--ui-duration-med) var(--ui-easing-smooth),
+    transform var(--ui-duration-med) var(--ui-easing-spring),
+    box-shadow var(--ui-duration-med) var(--ui-easing-emph),
+    border-color var(--ui-duration-med) var(--ui-easing-smooth);
   border: 1px solid transparent;
 }
 
 .desktop-icon:hover {
   background: var(--th-yasb-btn-bg);
   border-color: rgba(var(--th-accent-rgb), 0.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transform: translateY(-2px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.1);
+  transform: translateY(-4px);
 }
 
 .desktop-icon:active {
@@ -1054,6 +1218,68 @@ html.retro-fx::before {
   color: var(--th-text);
   opacity: 0.92;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.72);
+}
+
+@keyframes launcher-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#desktop.launchers-visible .launcher-search-wrap {
+  animation: launcher-tile-in 0.45s var(--ui-easing-emph) 0.06s backwards;
+}
+
+#desktop.launchers-visible .desktop-icon {
+  animation: launcher-tile-in 0.44s var(--ui-easing-emph) backwards;
+}
+
+#desktop.launchers-visible .desktop-icon:nth-child(1) {
+  animation-delay: 0.05s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(2) {
+  animation-delay: 0.07s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(3) {
+  animation-delay: 0.09s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(4) {
+  animation-delay: 0.11s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(5) {
+  animation-delay: 0.13s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(6) {
+  animation-delay: 0.15s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(7) {
+  animation-delay: 0.17s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(8) {
+  animation-delay: 0.19s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(9) {
+  animation-delay: 0.21s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(10) {
+  animation-delay: 0.23s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(11) {
+  animation-delay: 0.25s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(12) {
+  animation-delay: 0.27s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(13) {
+  animation-delay: 0.29s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(14) {
+  animation-delay: 0.31s;
 }
 
 /* Hide tiled chrome so launcher shell receives clicks */
@@ -1162,8 +1388,9 @@ html.retro-fx::before {
   background: var(--th-splitter-idle);
   border-radius: 2px;
   transition:
-    background var(--ui-duration-fast) var(--ui-easing-standard),
-    box-shadow var(--ui-duration-med) var(--ui-easing-standard);
+    background var(--ui-duration-fast) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-med) var(--ui-easing-emph),
+    transform var(--ui-duration-med) var(--ui-easing-spring);
 }
 
 .splitter-h::before {
@@ -1188,10 +1415,11 @@ html.retro-fx::before {
 
 .splitter:hover::before,
 .splitter.dragging::before {
+  transform: translate(-50%, -50%) scale(1.12);
   background: var(--th-splitter-hover);
   box-shadow:
     0 0 0 1px rgba(var(--th-accent-rgb), 0.35),
-    0 0 14px rgba(var(--th-accent-rgb), 0.15);
+    0 0 18px rgba(var(--th-accent-rgb), 0.22);
 }
 
 body.resizing,
@@ -1201,6 +1429,23 @@ body.resizing-h, body.resizing-h * { cursor: col-resize !important; }
 body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 
 /* ── Window chrome (shared by all windows) ─────────────────────────────────── */
+
+@keyframes wm-window-mount {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+    filter: brightness(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+.wm-animate-mount {
+  animation: wm-window-mount 0.5s var(--ui-easing-emph) both;
+}
 
 .app-window {
   display: flex;
@@ -1212,9 +1457,29 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
     0  0  0  1px rgba(0, 0, 0, 0.4),
     0 12px 40px rgba(0, 0, 0, 0.65);
   overflow: hidden;
+  transform: translateZ(0);
   transition:
-    border-color var(--ui-duration-med) var(--ui-easing-standard),
-    box-shadow var(--ui-duration-med) var(--ui-easing-standard);
+    border-color var(--ui-duration-med) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-slow) var(--ui-easing-emph),
+    transform var(--ui-duration-slow) var(--ui-easing-emph),
+    filter var(--ui-duration-med) var(--ui-easing-smooth);
+}
+
+.content-window.app-window:not(.active),
+#terminal-window.app-window:not(.active) {
+  transform: translateY(0) scale(0.997);
+  filter: saturate(0.93);
+}
+
+.content-window.app-window:not(.active).maximized,
+#terminal-window.app-window:not(.active).maximized {
+  transform: none;
+  filter: none;
+}
+
+.app-window.maximized:not(.wm-animate-mount) {
+  transform: none;
+  filter: none;
 }
 
 /*
@@ -1224,11 +1489,13 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 .app-window.active,
 #terminal-window.app-window.active {
   border-color: var(--th-accent);
+  transform: translateY(0) scale(1);
+  filter: saturate(1);
   box-shadow:
     0  0  0  1px rgba(0, 0, 0, 0.4),
-    0 12px 40px rgba(0, 0, 0, 0.65),
-    0  0  0  2px rgba(var(--th-accent-rgb), 0.35),
-    0  0 24px rgba(var(--th-accent-rgb), 0.18);
+    0 14px 44px rgba(0, 0, 0, 0.68),
+    0  0  0  2px rgba(var(--th-accent-rgb), 0.38),
+    0  0 28px rgba(var(--th-accent-rgb), 0.22);
 }
 
 /* Hidden (minimized) */
@@ -1875,6 +2142,28 @@ html.retro-fx .xterm-screen {
 }
 
 /* Full-screen tip when focusing the browser URL bar */
+@keyframes wm-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wm-modal-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
 .browser-iframe-tip-backdrop {
   position: fixed;
   inset: 0;
@@ -1887,6 +2176,7 @@ html.retro-fx .xterm-screen {
   background: rgba(0, 0, 0, 0.58);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  animation: wm-modal-backdrop-in var(--ui-duration-slow) var(--ui-easing-emph) both;
 }
 
 .browser-iframe-tip-dialog {
@@ -1899,6 +2189,7 @@ html.retro-fx .xterm-screen {
   box-shadow:
     0 22px 50px rgba(0, 0, 0, 0.65),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: wm-modal-dialog-in var(--ui-duration-slower) var(--ui-easing-emph) 0.06s both;
 }
 
 .browser-iframe-tip-title {
@@ -1998,6 +2289,19 @@ html.retro-fx .xterm-screen {
   box-sizing: border-box;
 }
 
+@keyframes wm-dock-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 .wm-taskbar-dock {
   pointer-events: auto;
   display: inline-flex;
@@ -2020,6 +2324,7 @@ html.retro-fx .xterm-screen {
     0 8px 28px rgba(0, 0, 0, 0.38),
     0 2px 8px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: wm-dock-rise 0.66s var(--ui-easing-emph) 0.12s both;
 }
 
 .wm-task-btn {
@@ -2041,25 +2346,26 @@ html.retro-fx .xterm-screen {
   background: rgba(var(--th-overlay-rgb), 0.28);
   color: var(--th-text);
   transition:
-    background var(--ui-duration-med) var(--ui-easing-standard),
-    border-color var(--ui-duration-med) var(--ui-easing-standard),
-    transform var(--ui-duration-fast) var(--ui-easing-standard),
-    opacity var(--ui-duration-med) var(--ui-easing-standard),
-    box-shadow var(--ui-duration-med) var(--ui-easing-standard);
+    background var(--ui-duration-med) var(--ui-easing-smooth),
+    border-color var(--ui-duration-med) var(--ui-easing-smooth),
+    transform var(--ui-duration-fast) var(--ui-easing-spring),
+    opacity var(--ui-duration-med) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-med) var(--ui-easing-emph);
 }
 
 .wm-task-btn:hover {
   background: var(--th-icon-hover-bg);
   border-color: rgba(var(--th-accent-rgb), 0.32);
-  transform: translateY(-1px);
+  transform: translateY(-3px);
 }
 
 .wm-task-btn--active {
-  background: rgba(var(--th-accent-rgb), 0.14);
+  background: rgba(var(--th-accent-rgb), 0.18);
   border-color: rgba(var(--th-accent-rgb), 0.72);
   box-shadow:
-    0 0 0 1px rgba(var(--th-accent-rgb), 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.28),
+    0 10px 24px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .wm-task-btn--minimized {
@@ -2559,5 +2865,31 @@ html.retro-fx .xterm-screen {
 
   .launcher-search-wrap {
     max-width: none;
+  }
+}
+
+/* ── Motion accessibility ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  html.retro-fx .xterm-screen {
+    animation: none !important;
+  }
+
+  #launcher-panel,
+  #launcher-shell {
+    transition: none !important;
+  }
+
+  .wm-animate-mount {
+    animation: none !important;
   }
 }

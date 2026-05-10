@@ -65,4 +65,11 @@ Every polish phase should survive this walkthrough:
 
 ---
 
-Later phases extend this doc with Phase 5+ checklists (content apps, games layer, mobile/a11y, perf).
+## Phase 5 — Motion + depth
+
+- [ ] **Cold load**: bezel / bar / dock choreography reads intentional, not sluggish
+- [ ] **Launcher**: overlay + panel ease open/close; icon grid stagger stays subtle
+- [ ] **Tiles**: new windows mount smoothly; inactive panes read “recessed” vs active
+- [ ] **Reduced motion**: OS respects `prefers-reduced-motion` (no long flourishes)
+
+Later phases extend this doc with Phase 6+ checklists (content apps polish, games layer, mobile, perf).

@@ -260,7 +260,7 @@ export class Desktop {
         onMaximize: () => this.toggleMaximizeContent(ed),
         onFocus: () => this.focusWindow(ed),
       })
-      this.rightPane.appendChild(ed.el)
+      this.appendToRightPane(ed.el)
       this.windows.push(ed)
       this.attachVerticalSplitters()
       this.focusWindow(ed)
@@ -307,7 +307,7 @@ export class Desktop {
             editorPath: absFilePath,
           }),
       })
-      this.rightPane.appendChild(ex.el)
+      this.appendToRightPane(ex.el)
       this.windows.push(ex)
       this.attachVerticalSplitters()
       this.focusWindow(ex)
@@ -347,7 +347,7 @@ export class Desktop {
         onMaximize: () => this.toggleMaximizeContent(br),
         onFocus: () => this.focusWindow(br),
       })
-      this.rightPane.appendChild(br.el)
+      this.appendToRightPane(br.el)
       this.windows.push(br)
       this.attachVerticalSplitters()
       this.focusWindow(br)
@@ -381,7 +381,7 @@ export class Desktop {
           onMaximize: () => this.toggleMaximizeContent(pw),
           onFocus: () => this.focusWindow(pw),
         })
-        this.rightPane.appendChild(pw.el)
+        this.appendToRightPane(pw.el)
         this.windows.push(pw)
         this.attachVerticalSplitters()
         this.focusWindow(pw)
@@ -395,7 +395,7 @@ export class Desktop {
           onMaximize: () => this.toggleMaximizeContent(cw),
           onFocus: () => this.focusWindow(cw),
         })
-        this.rightPane.appendChild(cw.el)
+        this.appendToRightPane(cw.el)
         this.windows.push(cw)
         this.attachVerticalSplitters()
         this.focusWindow(cw)
@@ -409,7 +409,7 @@ export class Desktop {
           onMaximize: () => this.toggleMaximizeContent(sw),
           onFocus: () => this.focusWindow(sw),
         })
-        this.rightPane.appendChild(sw.el)
+        this.appendToRightPane(sw.el)
         this.windows.push(sw)
         this.attachVerticalSplitters()
         this.focusWindow(sw)
@@ -422,7 +422,7 @@ export class Desktop {
         onMaximize: () => this.toggleMaximizeContent(pong),
         onFocus: () => this.focusWindow(pong),
       })
-      this.rightPane.appendChild(pong.el)
+      this.appendToRightPane(pong.el)
       this.windows.push(pong)
       this.attachVerticalSplitters()
       this.focusWindow(pong)
@@ -451,7 +451,7 @@ export class Desktop {
       onFocus:    () => this.focusWindow(win),
     })
 
-    this.rightPane.appendChild(win.el)
+    this.appendToRightPane(win.el)
     this.windows.push(win)
     this.attachVerticalSplitters()
     this.focusWindow(win)
@@ -495,6 +495,21 @@ export class Desktop {
   }
 
   // ── private: window lifecycle ─────────────────────────────────────────────
+
+  /** Mount a tile on the right stack with a one-shot entrance animation. */
+  private appendToRightPane(el: HTMLElement): void {
+    this.rightPane.appendChild(el)
+    el.classList.add('wm-animate-mount')
+    const done = (): void => {
+      el.classList.remove('wm-animate-mount')
+      el.removeEventListener('animationend', onEnd)
+    }
+    const onEnd = (e: AnimationEvent): void => {
+      if (e.target === el) done()
+    }
+    el.addEventListener('animationend', onEnd)
+    window.setTimeout(done, 700)
+  }
 
   private closeWindow(win: TiledWin): void {
     const idx = this.windows.indexOf(win)
@@ -625,7 +640,7 @@ export class Desktop {
     this.launcherOpen = false
 
     entry.win.setMinimized(false)
-    this.rightPane.appendChild(entry.win.el)
+    this.appendToRightPane(entry.win.el)
     this.windows.push(entry.win)
     this.attachVerticalSplitters()
     this.focusWindow(entry.win)
