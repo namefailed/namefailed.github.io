@@ -573,7 +573,6 @@ html.retro-fx::before {
 }
 
 .yasb-settings-panel--open .yasb-settings-heading,
-.yasb-settings-panel--open .yasb-settings-theme-block,
 .yasb-settings-panel--open .yasb-settings-divider {
   animation: yasb-menu-row-in var(--ui-duration-slow) var(--ui-easing-emph) backwards;
 }
@@ -581,60 +580,34 @@ html.retro-fx::before {
 .yasb-settings-panel--open .yasb-settings-heading {
   animation-delay: 0.02s;
 }
-.yasb-settings-panel--open .yasb-settings-theme-block {
-  animation-delay: 0.04s;
-}
 .yasb-settings-panel--open .yasb-settings-divider {
-  animation-delay: 0.06s;
+  animation-delay: 0.05s;
 }
 
 .yasb-settings-panel--open .yasb-settings-row {
   animation: yasb-menu-row-in var(--ui-duration-slow) var(--ui-easing-emph) backwards;
 }
 
+.yasb-settings-panel--open .yasb-settings-row:nth-child(2) {
+  animation-delay: 0.04s;
+}
 .yasb-settings-panel--open .yasb-settings-row:nth-child(4) {
-  animation-delay: 0.08s;
+  animation-delay: 0.07s;
 }
 .yasb-settings-panel--open .yasb-settings-row:nth-child(5) {
-  animation-delay: 0.1s;
+  animation-delay: 0.09s;
 }
 .yasb-settings-panel--open .yasb-settings-row:nth-child(6) {
-  animation-delay: 0.12s;
+  animation-delay: 0.11s;
 }
 .yasb-settings-panel--open .yasb-settings-row:nth-child(7) {
-  animation-delay: 0.14s;
+  animation-delay: 0.13s;
 }
 
 .yasb-settings-panel--open .yasb-settings-meta,
 .yasb-settings-panel--open .yasb-settings-hints {
   animation: yasb-menu-row-in var(--ui-duration-slow) var(--ui-easing-emph) backwards;
-  animation-delay: 0.18s;
-}
-
-.yasb-settings-panel--open .yasb-theme-chip {
-  animation: yasb-menu-row-in 0.36s var(--ui-easing-emph) backwards;
-}
-
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(1) {
-  animation-delay: 0.07s;
-}
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(2) {
-  animation-delay: 0.09s;
-}
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(3) {
-  animation-delay: 0.11s;
-}
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(4) {
-  animation-delay: 0.13s;
-}
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(5) {
-  animation-delay: 0.15s;
-}
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(6) {
   animation-delay: 0.17s;
-}
-.yasb-settings-panel--open .yasb-theme-chip:nth-child(7) {
-  animation-delay: 0.19s;
 }
 
 .yasb-settings-heading {
@@ -646,74 +619,63 @@ html.retro-fx::before {
   margin: 0;
 }
 
-.yasb-settings-theme-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.yasb-settings-row--theme .yasb-settings-theme-select {
+  flex: 1;
+  margin-left: auto;
+  width: auto;
+  min-width: 0;
+  max-width: 168px;
 }
 
-.yasb-settings-block-title {
-  font-size: var(--ui-text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--th-subtext);
-}
-
-.yasb-theme-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.yasb-theme-chip {
-  padding: 4px 9px;
+.yasb-settings-theme-select {
   margin: 0;
-  border-radius: var(--ui-radius-pill);
+  accent-color: rgb(var(--th-accent-rgb));
+  appearance: none;
+  -webkit-appearance: none;
   font-family: inherit;
-  font-size: var(--ui-text-2xs);
+  font-size: var(--ui-text-xs);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--th-text-muted);
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  cursor: pointer;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition:
-    background var(--ui-duration-med) var(--ui-easing-standard),
-    border-color var(--ui-duration-med) var(--ui-easing-standard),
-    color var(--ui-duration-med) var(--ui-easing-standard),
-    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
-    transform var(--ui-duration-fast) var(--ui-easing-standard);
-}
-
-.yasb-theme-chip:hover {
+  letter-spacing: 0.03em;
   color: var(--th-text);
-  border-color: rgba(var(--th-accent-rgb), 0.32);
-  background: rgba(var(--th-accent-rgb), 0.08);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.22);
+  border-radius: var(--ui-radius-sm);
+  padding: 5px 30px 5px 10px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--th-text-muted) 50%),
+    linear-gradient(135deg, var(--th-text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 13px) 55%,
+    calc(100% - 8px) 55%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  transition:
+    border-color var(--ui-duration-med) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-med) var(--ui-easing-smooth),
+    background-color var(--ui-duration-med) var(--ui-easing-smooth);
 }
 
-.yasb-theme-chip:active {
-  transform: scale(0.97);
+.yasb-settings-theme-select:hover {
+  border-color: rgba(var(--th-accent-rgb), 0.38);
+  background-color: rgba(var(--th-accent-rgb), 0.08);
 }
 
-.yasb-theme-chip:focus {
+.yasb-settings-theme-select:focus {
   outline: none;
 }
 
-.yasb-theme-chip:focus-visible {
+.yasb-settings-theme-select:focus-visible {
   outline: var(--ui-focus-ring);
   outline-offset: 2px;
 }
 
-.yasb-theme-chip.yasb-theme-chip--active {
-  color: var(--th-badge-fg);
-  background: rgba(var(--th-accent-rgb), 0.42);
-  border-color: rgba(var(--th-accent-rgb), 0.55);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+.yasb-settings-theme-select option {
+  color: var(--th-text);
+  background: var(--th-mantle);
 }
 
 .yasb-settings-divider {

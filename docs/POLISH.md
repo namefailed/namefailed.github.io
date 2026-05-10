@@ -57,7 +57,7 @@ Every polish phase should survive this walkthrough:
 
 ## Phase 4 — Terminal + command surface
 
-- [ ] **System menu (clock)**: theme chips match `theme list`; active chip obvious; ←/→ move between radios; panel reads lighter than bar chrome overload
+- [ ] **System menu (clock)**: palette `<select>` lists every pack; mirrors `theme` CLI changes; panel stays compact
 - [ ] **xterm**: font stack matches site mono tokens; smooth wheel scroll isn’t jarring; selection stays readable when focus moves to a window
 - [ ] **Padding / scrollbar**: terminal body uses shared spacing tokens; thumb still hugs the right inner edge
 - [ ] **Mode line**: vim mode changes tint the top accent with a short transition (not a hard snap)

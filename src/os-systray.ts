@@ -53,47 +53,22 @@ function refreshMeta(el: HTMLElement | null): void {
   el.textContent = getActivePack().label
 }
 
-/** Strip vendor prefix so chips stay short (e.g. "Catppuccin Mocha" → "Mocha"). */
-function themeChipCaption(fullLabel: string): string {
-  return fullLabel.replace(/^Catppuccin\s+/i, '').trim()
+function buildThemeSelect(select: HTMLSelectElement): void {
+  select.replaceChildren()
+  for (const { id, label } of listThemeSummaries()) {
+    const opt = document.createElement('option')
+    opt.value = id
+    opt.textContent = label
+    select.appendChild(opt)
+  }
+  syncThemeSelect(select)
 }
 
-function syncThemeChips(container?: HTMLElement | null): void {
-  const el = container ?? document.getElementById('yasb-theme-chips')
+function syncThemeSelect(select?: HTMLSelectElement | null): void {
+  const el = select ?? (document.getElementById('settings-theme-select') as HTMLSelectElement | null)
   if (!el) return
   const cur = getThemeId()
-  for (const btn of el.querySelectorAll<HTMLButtonElement>('.yasb-theme-chip')) {
-    const id = btn.dataset.themeId
-    const active = id === cur
-    btn.classList.toggle('yasb-theme-chip--active', active)
-    btn.setAttribute('aria-checked', active ? 'true' : 'false')
-    btn.tabIndex = active ? 0 : -1
-  }
-}
-
-function buildThemeChips(container: HTMLElement): void {
-  container.replaceChildren()
-  for (const { id, label } of listThemeSummaries()) {
-    const btn = document.createElement('button')
-    btn.type = 'button'
-    btn.className = 'yasb-theme-chip'
-    btn.dataset.themeId = id
-    btn.setAttribute('role', 'radio')
-    btn.setAttribute('aria-checked', 'false')
-    btn.title = `${label} (${id})`
-    btn.textContent = themeChipCaption(label)
-    btn.addEventListener('click', e => {
-      e.stopPropagation()
-      if (id === getThemeId()) return
-      if (applyTheme(id)) {
-        playOsSound('click')
-        syncThemeChips(container)
-        refreshMeta(document.getElementById('yasb-settings-meta'))
-      }
-    })
-    container.appendChild(btn)
-  }
-  syncThemeChips(container)
+  if ([...el.options].some(o => o.value === cur)) el.value = cur
 }
 
 /** I call this after `sound` in the terminal so menu toggles stay in sync. */
@@ -103,7 +78,7 @@ export function syncSettingsSoundToggle(): void {
   syncVolumeSlider(document.getElementById('settings-volume-slider') as HTMLInputElement | null)
   syncRetroSwitch(document.getElementById('settings-retro-toggle'))
   syncMatrixSwitch(document.getElementById('settings-matrix-toggle'))
-  syncThemeChips()
+  syncThemeSelect()
   refreshMeta(document.getElementById('yasb-settings-meta'))
 }
 
@@ -129,30 +104,16 @@ export function pushToast(
 export function initSystray(): void {
   const clockBtn = document.getElementById('btn-yasb-clock') as HTMLButtonElement | null
   const panel = document.getElementById('yasb-settings') as HTMLElement | null
-  const themeChipsRoot = document.getElementById('yasb-theme-chips') as HTMLElement | null
+  const themeSelect = document.getElementById('settings-theme-select') as HTMLSelectElement | null
   const soundToggle = document.getElementById('settings-sound-toggle') as HTMLButtonElement | null
   const retroToggle = document.getElementById('settings-retro-toggle') as HTMLButtonElement | null
   const matrixToggle = document.getElementById('settings-matrix-toggle') as HTMLButtonElement | null
 
   if (!clockBtn || !panel) return
 
-  if (themeChipsRoot) buildThemeChips(themeChipsRoot)
+  if (themeSelect) buildThemeSelect(themeSelect)
 
   let panelOpen = false
-
-  const onThemeChipKeydown = (ev: KeyboardEvent): void => {
-    if (!themeChipsRoot || ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return
-    ev.preventDefault()
-    const chips = [...themeChipsRoot.querySelectorAll<HTMLButtonElement>('.yasb-theme-chip')]
-    if (chips.length === 0) return
-    const i = chips.findIndex(c => c === document.activeElement)
-    const from = i >= 0 ? i : chips.findIndex(c => c.dataset.themeId === getThemeId())
-    const dir = ev.key === 'ArrowRight' ? 1 : -1
-    const next = (from + dir + chips.length) % chips.length
-    chips[next]?.focus()
-  }
-
-  themeChipsRoot?.addEventListener('keydown', onThemeChipKeydown)
 
   const setPanelOpen = (next: boolean): void => {
     panelOpen = next
@@ -162,13 +123,13 @@ export function initSystray(): void {
     if (next) {
       syncRetroSwitch(retroToggle)
       syncMatrixSwitch(matrixToggle)
-      syncThemeChips(themeChipsRoot)
+      syncThemeSelect(themeSelect)
       refreshMeta(document.getElementById('yasb-settings-meta'))
     }
   }
 
   window.addEventListener('mrgrey-theme-change', () => {
-    syncThemeChips(themeChipsRoot)
+    syncThemeSelect(themeSelect)
     refreshMeta(document.getElementById('yasb-settings-meta'))
   })
 
@@ -176,6 +137,20 @@ export function initSystray(): void {
     e.stopPropagation()
     setPanelOpen(!panelOpen)
   })
+
+  themeSelect?.addEventListener('change', e => {
+    e.stopPropagation()
+    const id = themeSelect.value
+    if (!id || id === getThemeId()) return
+    if (!applyTheme(id)) {
+      syncThemeSelect(themeSelect)
+      return
+    }
+    playOsSound('click')
+    refreshMeta(document.getElementById('yasb-settings-meta'))
+  })
+
+  themeSelect?.addEventListener('click', e => e.stopPropagation())
 
   const applySoundToggle = async (): Promise<void> => {
     await resumeAudioIfNeeded()
