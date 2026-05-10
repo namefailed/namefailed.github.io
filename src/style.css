@@ -553,8 +553,13 @@ html.retro-fx::before {
   height: 16px;
   border-radius: 50%;
   background: var(--th-text);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: transform 0.18s ease;
+  box-shadow:
+    inset 2px 0 0 rgba(255, 255, 255, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .yasb-settings-switch[aria-pressed='false'] .yasb-settings-switch-track,
@@ -563,10 +568,23 @@ html.retro-fx::before {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
+/* OFF → knob hugs the left; highlight bias on right edge (“faces” left into the trough) */
 .yasb-settings-switch[aria-pressed='false'] .yasb-settings-switch-thumb,
 .yasb-settings-switch.yasb-settings-switch--off .yasb-settings-switch-thumb {
+  transform: translateX(0);
+  opacity: 0.78;
+  box-shadow:
+    inset -2px 0 0 rgba(255, 255, 255, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ON → knob on the right; highlight bias on left edge (“faces” right outward) */
+.yasb-settings-switch[aria-pressed='true'] .yasb-settings-switch-thumb {
   transform: translateX(18px);
-  opacity: 0.75;
+  opacity: 1;
+  box-shadow:
+    inset 2px 0 0 rgba(255, 255, 255, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .yasb-settings-switch:disabled {
