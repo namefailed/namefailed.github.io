@@ -65,6 +65,42 @@ const WINDOW_COMMANDS = new Set([
 /** CLI/editor-launcher aliases — same WM tile as `edit` (see terminal `OPEN_EDITOR_WINDOWS`). */
 const OPEN_EDITOR_LAUNCH_CMDS = new Set(['edit', 'editor', 'vim'])
 
+/** Warm the same dynamic chunks `openWindow` uses — hover / Tab before click or Enter. */
+function prefetchLazyTiledChunk(invokedCmd: string): void {
+  const cmd = OPEN_EDITOR_LAUNCH_CMDS.has(invokedCmd) ? 'edit' : invokedCmd
+  switch (cmd) {
+    case 'browse':
+      void import('./browser-window')
+      return
+    case 'explorer':
+      void import('./file-explorer-window')
+      return
+    case 'edit':
+      void import('./editor-window')
+      return
+    case 'paint':
+      void import('./paint-window')
+      return
+    case 'cube':
+      void import('./rubik-window')
+      return
+    case 'snake':
+      void import('./snake-window')
+      return
+    case 'pong':
+      void import('./pong-window')
+      return
+    default:
+      return
+  }
+}
+
+function attachLazyTilePrefetchHandlers(el: HTMLElement, invokedCmd: string): void {
+  const run = (): void => prefetchLazyTiledChunk(invokedCmd)
+  el.addEventListener('pointerenter', run, { passive: true })
+  el.addEventListener('focusin', run)
+}
+
 type TiledWin =
   | AppWindow
   | EditorWindow
@@ -817,6 +853,7 @@ export class Desktop {
         const cmd = commands[item.cmd]
         if (!cmd || !WINDOW_COMMANDS.has(item.cmd)) continue
         btn.innerHTML = `<span class="desktop-icon-glyph">${item.glyph}</span><span class="desktop-icon-label">${item.label}</span>`
+        attachLazyTilePrefetchHandlers(btn, item.cmd)
         btn.addEventListener('click', () => {
           void this.openWindow({
             command: item.cmd,
@@ -1077,6 +1114,8 @@ export class Desktop {
       lab.className = 'wm-task-label'
       lab.textContent = meta.label
       btn.appendChild(lab)
+
+      if (slot.kind !== 'terminal') attachLazyTilePrefetchHandlers(btn, slot.cmd)
 
       btn.addEventListener('click', () => this.focusTaskbarIndex(idx))
       this.taskbarDock.appendChild(btn)

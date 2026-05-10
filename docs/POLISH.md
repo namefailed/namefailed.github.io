@@ -94,4 +94,8 @@ Every polish phase should survive this walkthrough:
 - [x] **Lazy tiles**: `browse`, `explorer`, `edit`, paint/snake/pong/`cube` load via `import()` on first open; **Three.js** stays out of cold path
 - [x] **URL helpers**: `DEFAULT_BROWSER_URL` / `normalizeBrowserUrl` live in `browser-url.ts` so desktop + terminal avoid eager `browser-window`
 
-Later phases extend this doc with Phase 10+ as needed.
+## Phase 10 — Lazy-chunk warm-up
+
+- [x] **Hover / focus prefetch**: launcher grid + dock pins fire the same `import()` paths as `openWindow` on `pointerenter` and `focusin` so the first open is often already cached
+
+Later phases extend this doc with Phase 11+ as needed.
