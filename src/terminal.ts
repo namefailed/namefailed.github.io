@@ -146,6 +146,12 @@ export class TerminalApp {
     this.fitAddon.fit()
   }
 
+  /** Keep xterm palette in sync when theme changes from the system menu (or elsewhere). */
+  syncXtermTheme(): void {
+    this.refreshTerminalTheme()
+    this.fitAddon.fit()
+  }
+
   private refreshTerminalTheme(): void {
     this.xterm.options.theme = getActiveTerminalTheme()
   }

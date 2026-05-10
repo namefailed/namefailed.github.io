@@ -32,4 +32,6 @@ let app!: TerminalApp
 const desktop = new Desktop(desktopEl, terminalWin, () => app.fit())
 app = new TerminalApp(terminalEl, vimModeLine, spec => desktop.openWindow(spec))
 
+window.addEventListener('mrgrey-theme-change', () => app.syncXtermTheme())
+
 app.mount()
