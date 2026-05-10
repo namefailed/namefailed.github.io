@@ -31,6 +31,7 @@ export const theme: ITheme = {
   brightCyan: '#94e2d5',
   brightWhite: '#a6adc8',
   selectionBackground: '#585b70',
+  selectionInactiveBackground: 'rgba(88, 91, 112, 0.42)',
 }
 
 // ANSI escape helpers

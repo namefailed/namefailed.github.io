@@ -55,6 +55,13 @@ Every polish phase should survive this walkthrough:
 - [ ] **Maximize / restore**: terminal max and single-window max keep rings consistent when that surface is active
 - [ ] **Ctrl+D show desktop**: restore brings focus/ring state back in a sensible way (no stuck “active” on a hidden window)
 
+## Phase 4 — Terminal + command surface
+
+- [ ] **xterm**: font stack matches site mono tokens; smooth wheel scroll isn’t jarring; selection stays readable when focus moves to a window
+- [ ] **Padding / scrollbar**: terminal body uses shared spacing tokens; thumb still hugs the right inner edge
+- [ ] **Mode line**: vim mode changes tint the top accent with a short transition (not a hard snap)
+- [ ] **`help`**: intro mentions URL behavior; grouped catalog still matches every visible command
+
 ---
 
-Later phases extend this doc with Phase 4+ checklists.
+Later phases extend this doc with Phase 5+ checklists (content apps, games layer, mobile/a11y, perf).

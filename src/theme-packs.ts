@@ -33,6 +33,7 @@ const mochaTerminal: ITheme = {
   brightCyan: '#94e2d5',
   brightWhite: '#a6adc8',
   selectionBackground: '#585b70',
+  selectionInactiveBackground: 'rgba(88, 91, 112, 0.42)',
 }
 
 const mochaRain = [
@@ -117,6 +118,7 @@ const draculaTerminal: ITheme = {
   brightCyan: '#a4ffff',
   brightWhite: '#ffffff',
   selectionBackground: '#44475a',
+  selectionInactiveBackground: 'rgba(68, 71, 90, 0.42)',
 }
 
 const draculaRain = [
@@ -198,6 +200,7 @@ const nordTerminal: ITheme = {
   brightCyan: '#8fbcbb',
   brightWhite: '#eceff4',
   selectionBackground: '#434c5e',
+  selectionInactiveBackground: 'rgba(67, 76, 94, 0.42)',
 }
 
 const nordRain = [
@@ -279,6 +282,7 @@ const gruvboxTerminal: ITheme = {
   brightCyan: '#8ec07c',
   brightWhite: '#fbf1c7',
   selectionBackground: '#504945',
+  selectionInactiveBackground: 'rgba(80, 73, 69, 0.42)',
 }
 
 const gruvboxRain = [
@@ -360,6 +364,7 @@ const tokyoNightTerminal: ITheme = {
   brightCyan: '#7dcfff',
   brightWhite: '#c0caf5',
   selectionBackground: '#33467c',
+  selectionInactiveBackground: 'rgba(51, 70, 124, 0.42)',
 }
 
 const tokyoNightRain = [
@@ -441,6 +446,7 @@ const solarizedTerminal: ITheme = {
   brightCyan: '#93a1a1',
   brightWhite: '#fdf6e3',
   selectionBackground: '#073642',
+  selectionInactiveBackground: 'rgba(7, 54, 66, 0.42)',
 }
 
 const solarizedRain = [
@@ -522,6 +528,7 @@ const oneDarkTerminal: ITheme = {
   brightCyan: '#56b6c2',
   brightWhite: '#c8ccd4',
   selectionBackground: '#3e4451',
+  selectionInactiveBackground: 'rgba(62, 68, 81, 0.42)',
 }
 
 const oneDarkRain = [

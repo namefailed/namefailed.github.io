@@ -110,12 +110,15 @@ export class TerminalApp {
 
     this.xterm = new Terminal({
       theme: getActiveTerminalTheme(),
-      fontFamily:       '"JetBrains Mono", monospace',
+      fontFamily:       `JetBrains Mono, ui-monospace, SFMono-Regular, monospace`,
       fontSize:         15,
+      fontWeight:       400,
+      fontWeightBold:   600,
       lineHeight:       1.2,
       cursorBlink:      true,
       cursorStyle:      'bar',
       scrollback:       5000,
+      smoothScrollDuration: 140,
       allowProposedApi: true,
     })
 

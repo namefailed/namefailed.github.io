@@ -1201,7 +1201,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   min-height: 28px;
   padding: 4px 12px 5px;
   box-sizing: border-box;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   letter-spacing: 0.06em;
   background: linear-gradient(
     180deg,
@@ -1210,6 +1210,9 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   );
   border-top: 2px solid var(--th-accent);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-top-color var(--ui-duration-med) var(--ui-easing-standard),
+    opacity var(--ui-duration-fast) var(--ui-easing-standard);
 }
 
 .vim-mode-line.mode-insert {
@@ -1226,7 +1229,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 
 .vim-mode-glyph {
   color: var(--th-accent);
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   opacity: 0.85;
 }
 
@@ -1246,7 +1249,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 .vim-mode-text {
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   color: var(--th-text);
 }
 
@@ -1273,7 +1276,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   text-transform: none;
   letter-spacing: 0.04em;
   font-weight: 600;
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
 }
 
 .vim-mode-line--off .vim-mode-dash {
@@ -1325,8 +1328,8 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 #terminal {
   flex: 1;
   position: relative;
-  /* Flush scrollbar to the inner right edge of the window (was floating inward with symmetric padding) */
-  padding: 12px 0 12px 12px;
+  /* Matches ~12px rhythm via token; scrollbar flush right (no symmetric padding) */
+  padding: var(--ui-text-sm) 0 var(--ui-text-sm) var(--ui-text-sm);
   min-height: 0;
 }
 

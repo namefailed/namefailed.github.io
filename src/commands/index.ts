@@ -240,6 +240,9 @@ function runHelp(): string[] {
   lines.push(
     `  ${c.dim}Window apps open as tiles on the right; shell commands print here. Arguments go after the command name.${c.reset}`,
   )
+  lines.push(
+    `  ${c.dim}http(s) URLs in output are clickable — they open in a new tab (no-opener).${c.reset}`,
+  )
   lines.push('')
   lines.push(
     `  ${c.dim}Shortcuts:${c.reset}  ${c.blue}Ctrl+T${c.reset}${c.dim} · terminal${c.reset}   ${c.blue}Ctrl+1–9${c.reset}${c.dim} · dock${c.reset}   ${c.blue}Ctrl+D${c.reset}${c.dim} · desktop / launcher${c.reset}`,
