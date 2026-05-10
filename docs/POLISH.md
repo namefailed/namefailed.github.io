@@ -57,7 +57,7 @@ Every polish phase should survive this walkthrough:
 
 ## Phase 4 — Terminal + command surface
 
-- [ ] **System menu (clock)**: palette `<select>` lists every pack; mirrors `theme` CLI changes; panel stays compact
+- [ ] **System menu (clock)**: palette `<select>` lists every pack; mirrors `theme` CLI changes; shortcuts are a tidy list (no duplicate palette line above hints)
 - [ ] **xterm**: font stack matches site mono tokens; smooth wheel scroll isn’t jarring; selection stays readable when focus moves to a window
 - [ ] **Padding / scrollbar**: terminal body uses shared spacing tokens; thumb still hugs the right inner edge
 - [ ] **Mode line**: vim mode changes tint the top accent with a short transition (not a hard snap)
@@ -72,4 +72,10 @@ Every polish phase should survive this walkthrough:
 - [ ] **Tiles**: new windows mount smoothly; inactive panes read “recessed” vs active
 - [ ] **Reduced motion**: OS respects `prefers-reduced-motion` (no long flourishes)
 
-Later phases extend this doc with Phase 6+ checklists (content apps polish, games layer, mobile, perf).
+## Phase 6 — In-app chrome (content tiles)
+
+- [ ] **Files / Browse / Editor**: toolbars, lists, and empty states match bar tokens; no layout “drift” vs WM
+- [ ] **Portfolio windows** (résumé, projects, skills): readable line length; headings + scroll feel consistent
+- [ ] **Tiny apps** (paint, games, cube): controls legible; focus rings don’t clip
+
+Later phases extend this doc with Phase 7+ (mobile hardening, perf, a11y audits).

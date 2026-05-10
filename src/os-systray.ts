@@ -9,7 +9,7 @@ import {
 } from './os-sound'
 import { getRetroFx, setRetroFx } from './retro-fx'
 import { getMatrixBgHandle } from './matrix-bg'
-import { applyTheme, getThemeId, getActivePack, listThemeSummaries } from './theme'
+import { applyTheme, getThemeId, listThemeSummaries } from './theme'
 
 function syncSettingsSwitch(btn: HTMLElement, on: boolean): void {
   btn.setAttribute('aria-pressed', on ? 'true' : 'false')
@@ -48,11 +48,6 @@ function syncVolumeSlider(panelSlider: HTMLInputElement | null): void {
     panelSlider.value = String(pct)
 }
 
-function refreshMeta(el: HTMLElement | null): void {
-  if (!el) return
-  el.textContent = getActivePack().label
-}
-
 function buildThemeSelect(select: HTMLSelectElement): void {
   select.replaceChildren()
   for (const { id, label } of listThemeSummaries()) {
@@ -79,7 +74,6 @@ export function syncSettingsSoundToggle(): void {
   syncRetroSwitch(document.getElementById('settings-retro-toggle'))
   syncMatrixSwitch(document.getElementById('settings-matrix-toggle'))
   syncThemeSelect()
-  refreshMeta(document.getElementById('yasb-settings-meta'))
 }
 
 export function pushToast(
@@ -124,13 +118,11 @@ export function initSystray(): void {
       syncRetroSwitch(retroToggle)
       syncMatrixSwitch(matrixToggle)
       syncThemeSelect(themeSelect)
-      refreshMeta(document.getElementById('yasb-settings-meta'))
     }
   }
 
   window.addEventListener('mrgrey-theme-change', () => {
     syncThemeSelect(themeSelect)
-    refreshMeta(document.getElementById('yasb-settings-meta'))
   })
 
   clockBtn.addEventListener('click', e => {
@@ -147,7 +139,6 @@ export function initSystray(): void {
       return
     }
     playOsSound('click')
-    refreshMeta(document.getElementById('yasb-settings-meta'))
   })
 
   themeSelect?.addEventListener('click', e => e.stopPropagation())
