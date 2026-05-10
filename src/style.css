@@ -1075,28 +1075,37 @@ html.retro-fx::before {
   position: absolute;
   background: var(--th-splitter-idle);
   border-radius: 2px;
-  transition: background 0.15s ease;
+  transition:
+    background var(--ui-duration-fast) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard);
 }
 
 .splitter-h::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 2px;
-  height: 32px;
+  width: 4px;
+  height: clamp(36px, 28%, var(--ui-touch-min));
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(var(--th-overlay-rgb), 0.35);
 }
 
 .splitter-v::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 32px;
-  height: 2px;
+  width: clamp(36px, 38%, calc(var(--ui-touch-min) + 24px));
+  height: 4px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(var(--th-overlay-rgb), 0.35);
 }
 
 .splitter:hover::before,
 .splitter.dragging::before {
   background: var(--th-splitter-hover);
+  box-shadow:
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.35),
+    0 0 14px rgba(var(--th-accent-rgb), 0.15);
 }
 
 body.resizing,
@@ -1117,11 +1126,17 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
     0  0  0  1px rgba(0, 0, 0, 0.4),
     0 12px 40px rgba(0, 0, 0, 0.65);
   overflow: hidden;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color var(--ui-duration-med) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard);
 }
 
-/* Active window — accent focus ring */
-.app-window.active {
+/*
+ * Active window — accent focus ring (terminal uses the same `.app-window` stack;
+ * keep `#terminal-window.app-window.active` pinned so tiling refactors can't drift ring parity).
+ */
+.app-window.active,
+#terminal-window.app-window.active {
   border-color: var(--th-accent);
   box-shadow:
     0  0  0  1px rgba(0, 0, 0, 0.4),
@@ -1146,6 +1161,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   height: 34px;
   background: var(--th-mantle);
   border-bottom: 1px solid var(--th-titlebar-border);
+  transition: border-bottom-color var(--ui-duration-med) var(--ui-easing-standard);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1155,6 +1171,10 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   cursor: default;
   position: relative;
   z-index: 1;
+}
+
+.app-window.active .win-titlebar {
+  border-bottom-color: color-mix(in srgb, var(--th-accent) 32%, var(--th-titlebar-border));
 }
 
 .win-title-left {

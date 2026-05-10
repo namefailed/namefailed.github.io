@@ -46,6 +46,15 @@ Every polish phase should survive this walkthrough:
 - [ ] **YASB**: focused title truncates cleanly; clock popover + toast column line up; sound chip rhythm matches bar padding
 - [ ] **≤720px**: launcher inset tightens so nothing hugs the bezel awkwardly
 
+## Phase 3 — WM core (tiling, terminal, splitters)
+
+- [ ] **Terminal focus**: click terminal then a content window then terminal again — `#terminal-window.app-window.active` shows the same accent ring + shadow stack as any other `.app-window.active` (border + outer glow), with a smooth transition, not a snap
+- [ ] **Titlebar parity**: with terminal active vs a content window active, title bar bottom edge picks up the same subtle accent-tinted divider (inactive windows stay neutral)
+- [ ] **Horizontal splitter**: grip reads at a glance; hover/drag states are obvious; drag still resizes terminal vs right pane without jank (`splitter.ts` unchanged)
+- [ ] **Vertical splitters** (two+ stacked apps): same grip affordance; dragging still resizes row heights predictably
+- [ ] **Maximize / restore**: terminal max and single-window max keep rings consistent when that surface is active
+- [ ] **Ctrl+D show desktop**: restore brings focus/ring state back in a sensible way (no stuck “active” on a hidden window)
+
 ---
 
-Later phases extend this doc with Phase 3+ checklists.
+Later phases extend this doc with Phase 4+ checklists.
