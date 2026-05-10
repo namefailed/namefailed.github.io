@@ -106,6 +106,9 @@ export class FileExplorerWindow {
     const toolbar = document.createElement('div')
     toolbar.className = 'fe-toolbar'
 
+    const toolbarActions = document.createElement('div')
+    toolbarActions.className = 'fe-toolbar-actions'
+
     const btnUp = mkBtn('Up', 'Parent folder', () => this.goUp())
     const btnHome = mkBtn('Home', 'Go home (~)', () => this.navigateTo(FS_HOME))
     const btnRefresh = mkBtn('Refresh', 'Reload listing', () => this.refresh())
@@ -125,7 +128,8 @@ export class FileExplorerWindow {
     this.pathEl.className = 'fe-path'
     this.pathEl.setAttribute('aria-live', 'polite')
 
-    toolbar.append(btnUp, btnHome, btnRefresh, this.btnRename, this.btnDel, this.btnCut, this.btnCopy, this.btnPaste, this.pathEl)
+    toolbarActions.append(btnUp, btnHome, btnRefresh, this.btnRename, this.btnDel, this.btnCut, this.btnCopy, this.btnPaste)
+    toolbar.append(toolbarActions, this.pathEl)
 
     this.bodyEl = document.createElement('div')
     this.bodyEl.className = 'fe-body win-body'

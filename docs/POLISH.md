@@ -80,8 +80,8 @@ Every polish phase should survive this walkthrough:
 
 ## Phase 7 — Mobile, perf, a11y audits
 
-- [ ] **≤720px**: file browser + browser URL bar wrap without overlap; keyboard hints still accurate where shown
-- [ ] **Heavy routes**: defer non-critical work; keep first interaction snappy on mid-tier hardware
-- [ ] **A11y**: landmark roles, contrast spot-check per theme pack, axe pass on launcher + WM
+- [x] **≤720px**: file browser + browser URL bar wrap without overlap; keyboard hints still accurate where shown
+- [x] **Heavy routes**: defer non-critical work; keep first interaction snappy on mid-tier hardware
+- [x] **A11y**: landmark roles, contrast spot-check per theme pack, axe pass on launcher + WM _(single `main` + `role="region"` launcher; manual spot-check for contrast)_
 
 Later phases extend this doc with Phase 8+ as needed.

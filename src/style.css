@@ -1907,6 +1907,13 @@ html.retro-fx .xterm-screen {
   background: rgba(var(--th-overlay-rgb), 0.35);
 }
 
+.file-explorer-app .fe-toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2) var(--ui-space-3);
+}
+
 .file-explorer-app .fe-btn {
   margin: 0;
   padding: var(--ui-space-2) var(--ui-space-6);
@@ -2115,6 +2122,28 @@ html.retro-fx .xterm-screen {
   padding: var(--ui-space-2) var(--ui-space-4);
   border-bottom: 1px solid var(--th-titlebar-border);
   background: rgba(var(--th-overlay-rgb), 0.35);
+}
+
+.browser-app .browser-toolbar-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2) var(--ui-space-3);
+}
+
+.browser-app .browser-url-row {
+  display: flex;
+  align-items: center;
+  flex: 1 1 200px;
+  gap: var(--ui-space-2) var(--ui-space-3);
+  min-width: 0;
+}
+
+.browser-app .browser-url-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--ui-space-2) var(--ui-space-3);
 }
 
 .browser-app .browser-btn {
@@ -3020,6 +3049,57 @@ html.retro-fx .xterm-screen {
 
   .launcher-search-wrap {
     max-width: none;
+  }
+
+  .browser-app .browser-toolbar {
+    align-items: stretch;
+  }
+
+  .browser-app .browser-toolbar-nav {
+    width: 100%;
+  }
+
+  .browser-app .browser-url-row {
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .browser-app .browser-url-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .browser-app .browser-url-actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .browser-app .browser-url-actions .browser-btn {
+    flex: 1;
+  }
+
+  .browser-bookmarks-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .file-explorer-app .fe-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .file-explorer-app .fe-toolbar-actions {
+    width: 100%;
+  }
+
+  .file-explorer-app .fe-path {
+    flex: none;
+    width: 100%;
+    min-width: 0;
   }
 }
 

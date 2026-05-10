@@ -17,16 +17,26 @@ initThemeFromStorage()
 initRetroFxFromStorage()
 initOsSound()
 initSystray()
+syncSettingsSoundToggle()
 
 const terminalEl = document.getElementById('terminal')!
 const terminalWin = document.getElementById('terminal-window')!
 const vimModeLine = document.getElementById('vim-mode-line') as HTMLElement | null
 const desktopEl = document.getElementById('desktop')!
 const matrixCanvas = document.getElementById('matrix-bg') as HTMLCanvasElement | null
-if (matrixCanvas) {
-  initMatrixBg(matrixCanvas, desktopEl)
-  syncSettingsSoundToggle()
+function scheduleMatrixInit(): void {
+  if (!matrixCanvas) return
+  const run = (): void => {
+    initMatrixBg(matrixCanvas!, desktopEl)
+    syncSettingsSoundToggle()
+  }
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 2400 })
+  } else {
+    window.setTimeout(run, 16)
+  }
 }
+scheduleMatrixInit()
 
 let app!: TerminalApp
 const desktop = new Desktop(desktopEl, terminalWin, () => app.fit())

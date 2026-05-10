@@ -134,6 +134,10 @@ export class BrowserWindow {
     const btnReload = mkBtn('⟳', 'Reload', () => this.reload())
     const btnHome = mkBtn('⌂', 'Home page', () => this.navigateTo(DEFAULT_BROWSER_URL))
 
+    const toolbarNav = document.createElement('div')
+    toolbarNav.className = 'browser-toolbar-nav'
+    toolbarNav.append(btnBack, btnFwd, btnReload, btnHome)
+
     this.urlInput = document.createElement('input')
     this.urlInput.type = 'text'
     this.urlInput.className = 'browser-url-input'
@@ -146,6 +150,14 @@ export class BrowserWindow {
     const btnOpenTab = mkBtn('↗', 'Open this URL in a new browser tab', () =>
       this.openInSystemTab(),
     )
+
+    const urlActions = document.createElement('div')
+    urlActions.className = 'browser-url-actions'
+    urlActions.append(btnGo, btnOpenTab)
+
+    const urlRow = document.createElement('div')
+    urlRow.className = 'browser-url-row'
+    urlRow.append(this.urlInput, urlActions)
 
     const bookmarksBar = document.createElement('div')
     bookmarksBar.className = 'browser-bookmarks-bar'
@@ -176,7 +188,7 @@ export class BrowserWindow {
       queueMicrotask(() => this.openIframeTip())
     })
 
-    toolbar.append(btnBack, btnFwd, btnReload, btnHome, this.urlInput, btnGo, btnOpenTab)
+    toolbar.append(toolbarNav, urlRow)
 
     this.statusEl = document.createElement('div')
     this.statusEl.className = 'browser-status'

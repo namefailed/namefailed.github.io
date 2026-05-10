@@ -21,7 +21,7 @@
 
       <canvas id="matrix-bg" aria-hidden="true"></canvas>
 
-      <div id="desktop-workspace">
+      <div id="desktop-workspace" role="main" aria-label="Desktop workspace">
         <!-- YASB-style status bar (always visible) -->
         <header id="yasb-bar" class="yasb-bar" role="banner">
           <div class="yasb-inner">
@@ -153,7 +153,7 @@
           <!-- Launcher overlay (below bar; Ctrl+D or Applications) -->
           <div id="launcher-shell" aria-hidden="true">
             <div id="launcher-backdrop" aria-hidden="true"></div>
-            <main id="launcher-panel" aria-label="Application launcher">
+            <div id="launcher-panel" role="region" aria-label="Application launcher">
               <label class="visually-hidden" for="launcher-search">Search applications</label>
               <div class="launcher-search-wrap">
                 <span class="launcher-search-icon" aria-hidden="true">⌕</span>
@@ -166,7 +166,7 @@
                 />
               </div>
               <div id="desktop-icons" class="launcher-icon-grid"></div>
-            </main>
+            </div>
           </div>
 
           <!-- Tiling area: terminal + splitter + right-pane -->
