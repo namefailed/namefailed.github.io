@@ -74,8 +74,14 @@ Every polish phase should survive this walkthrough:
 
 ## Phase 6 — In-app chrome (content tiles)
 
-- [ ] **Files / Browse / Editor**: toolbars, lists, and empty states match bar tokens; no layout “drift” vs WM
-- [ ] **Portfolio windows** (résumé, projects, skills): readable line length; headings + scroll feel consistent
-- [ ] **Tiny apps** (paint, games, cube): controls legible; focus rings don’t clip
+- [ ] **Files / Browse / Editor**: toolbars, lists, and empty states match bar tokens; no layout “drift” vs WM _(CSS rhythm + focus-visible pass in repo)_
+- [ ] **Portfolio windows** (résumé, projects, skills): readable line length; headings + scroll feel consistent _(résumé text column capped at ~74ch)_
+- [ ] **Tiny apps** (paint, games, cube): controls legible; focus rings don’t clip _(canvas tabindex / outline where needed)_
 
-Later phases extend this doc with Phase 7+ (mobile hardening, perf, a11y audits).
+## Phase 7 — Mobile, perf, a11y audits
+
+- [ ] **≤720px**: file browser + browser URL bar wrap without overlap; keyboard hints still accurate where shown
+- [ ] **Heavy routes**: defer non-critical work; keep first interaction snappy on mid-tier hardware
+- [ ] **A11y**: landmark roles, contrast spot-check per theme pack, axe pass on launcher + WM
+
+Later phases extend this doc with Phase 8+ as needed.

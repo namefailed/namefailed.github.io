@@ -144,6 +144,7 @@ export class RubikWindow {
 
     this.host = document.createElement('div')
     this.host.className = 'rubik-canvas-host'
+    this.host.tabIndex = 0
 
     const moveRow = document.createElement('div')
     moveRow.className = 'rubik-moves'

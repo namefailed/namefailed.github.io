@@ -85,6 +85,7 @@ export class SnakeWindow {
 
     this.canvas = document.createElement('canvas')
     this.canvas.className = 'snake-canvas'
+    this.canvas.tabIndex = 0
     const g = this.canvas.getContext('2d')
     if (!g) throw new Error('2d')
     this.ctx = g
