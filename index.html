@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#181825" />
+    <meta name="color-scheme" content="dark" />
+    <title>mrgrey.dev</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Vintage CRT-style bezel; inner surface is #desktop -->
+    <div id="monitor-frame">
+    <div id="desktop" data-content-count="0">
+
+      <canvas id="matrix-bg" aria-hidden="true"></canvas>
+
+      <div id="desktop-workspace">
+        <!-- YASB-style status bar (always visible) -->
+        <header id="yasb-bar" class="yasb-bar" role="banner">
+          <div class="yasb-inner">
+            <div class="yasb-cluster yasb-start">
+              <button
+                type="button"
+                id="btn-applications"
+                class="yasb-btn yasb-btn-apps"
+                aria-expanded="false"
+                aria-controls="launcher-shell"
+              >
+                <span class="yasb-btn-glyph" aria-hidden="true">◆</span>
+                Applications
+              </button>
+            </div>
+            <div class="yasb-cluster yasb-center">
+              <span id="yasb-focused" class="yasb-focused" aria-live="polite"></span>
+            </div>
+            <div class="yasb-cluster yasb-end">
+              <div class="yasb-system" id="yasb-system">
+                <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+                <button
+                  type="button"
+                  id="btn-yasb-clock"
+                  class="yasb-clock-btn"
+                  aria-expanded="false"
+                  aria-haspopup="dialog"
+                  aria-controls="yasb-settings"
+                  title="System menu"
+                >
+                  <span id="yasb-clock-text" class="yasb-clock-text"></span>
+                </button>
+                <div
+                  id="yasb-settings"
+                  class="yasb-settings-panel"
+                  hidden
+                  role="dialog"
+                  aria-label="System menu"
+                >
+                  <div class="yasb-settings-heading">System menu</div>
+                  <div class="yasb-settings-row">
+                    <span class="yasb-settings-label">UI sounds</span>
+                    <button
+                      type="button"
+                      id="settings-sound-toggle"
+                      class="yasb-settings-switch"
+                      aria-pressed="true"
+                      title="Toggle UI sounds"
+                    >
+                      <span class="yasb-settings-switch-track" aria-hidden="true">
+                        <span class="yasb-settings-switch-thumb"></span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="yasb-settings-row yasb-settings-row--volume">
+                    <span class="yasb-settings-label">Volume</span>
+                    <input
+                      type="range"
+                      id="settings-volume-slider"
+                      class="yasb-settings-volume-slider"
+                      min="0"
+                      max="100"
+                      value="72"
+                      aria-label="UI sound volume"
+                    />
+                  </div>
+                  <div class="yasb-settings-row">
+                    <span class="yasb-settings-label">CRT overlay</span>
+                    <button
+                      type="button"
+                      id="settings-retro-toggle"
+                      class="yasb-settings-switch"
+                      aria-pressed="false"
+                      title="Scanlines &amp; vignette"
+                    >
+                      <span class="yasb-settings-switch-track" aria-hidden="true">
+                        <span class="yasb-settings-switch-thumb"></span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="yasb-settings-row">
+                    <span class="yasb-settings-label">Matrix rain</span>
+                    <button
+                      type="button"
+                      id="settings-matrix-toggle"
+                      class="yasb-settings-switch"
+                      aria-pressed="false"
+                      title="Animated backdrop"
+                    >
+                      <span class="yasb-settings-switch-track" aria-hidden="true">
+                        <span class="yasb-settings-switch-thumb"></span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="yasb-settings-meta" id="yasb-settings-meta"></div>
+                  <div class="yasb-settings-hints">
+                    <span class="yasb-settings-hint-k">Ctrl+T</span> terminal
+                    <span class="yasb-settings-hint-sep">·</span>
+                    <span class="yasb-settings-hint-k">Ctrl+D</span> launcher
+                    <span class="yasb-settings-hint-sep">·</span>
+                    <span class="yasb-settings-hint-k">help</span> commands
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="wm-stack">
+          <!-- Launcher overlay (below bar; Ctrl+D or Applications) -->
+          <div id="launcher-shell" aria-hidden="true">
+            <div id="launcher-backdrop" aria-hidden="true"></div>
+            <main id="launcher-panel" aria-label="Application launcher">
+              <label class="visually-hidden" for="launcher-search">Search applications</label>
+              <div class="launcher-search-wrap">
+                <span class="launcher-search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="search"
+                  id="launcher-search"
+                  placeholder="Search applications"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div id="desktop-icons" class="launcher-icon-grid"></div>
+            </main>
+          </div>
+
+          <!-- Tiling area: terminal + splitter + right-pane -->
+          <div id="panes">
+
+          <!-- Master pane: interactive terminal (always left) -->
+          <div class="app-window active" id="terminal-window">
+            <div class="win-titlebar">
+              <div class="win-title-left">
+                <span class="win-title">mrgrey@dev — ~/terminal</span>
+              </div>
+              <div class="win-traffic">
+                <span class="dot dot-min" title="minimize"></span>
+                <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
+                <span class="dot dot-close" title="close terminal"></span>
+              </div>
+            </div>
+            <div class="terminal-stack">
+              <div id="terminal"></div>
+              <footer id="vim-mode-line" class="vim-mode-line mode-insert" aria-label="Vim input mode">
+                <span class="vim-mode-glyph" aria-hidden="true">◆</span>
+                <span class="vim-mode-core">
+                  <span class="vim-mode-dash">—</span>
+                  <span id="vim-mode-text" class="vim-mode-text">INSERT</span>
+                  <span class="vim-mode-dash">—</span>
+                </span>
+              </footer>
+            </div>
+          </div>
+
+          <!-- Horizontal splitter between terminal and right pane -->
+          <div id="h-splitter" class="splitter splitter-h"></div>
+
+          <!-- Slave pane: content windows appended here by desktop.ts -->
+          <div id="right-pane"></div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Floating dock — order: Terminal, Browse, Files, Editor, Links, Resume, Projects, Skills, Contact (+ running extras); see LAUNCHER_ICONS in desktop.ts -->
+      <nav id="wm-taskbar" class="wm-taskbar" aria-label="Open windows">
+        <div id="wm-taskbar-dock" class="wm-taskbar-dock"></div>
+      </nav>
+    </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
