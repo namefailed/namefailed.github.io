@@ -84,4 +84,9 @@ Every polish phase should survive this walkthrough:
 - [x] **Heavy routes**: defer non-critical work; keep first interaction snappy on mid-tier hardware
 - [x] **A11y**: landmark roles, contrast spot-check per theme pack, axe pass on launcher + WM _(single `main` + `role="region"` launcher; manual spot-check for contrast)_
 
-Later phases extend this doc with Phase 8+ as needed.
+## Phase 8 — Persistence, reduced-motion default, skip link
+
+- [x] **Matrix**: `localStorage` remembers on/off across reloads; **`prefers-reduced-motion: reduce`** starts with rain off unless a saved preference says otherwise
+- [x] **Skip link**: keyboard users can jump straight into the terminal shell (focused xterm after load)
+
+Later phases extend this doc with Phase 9+ as needed.

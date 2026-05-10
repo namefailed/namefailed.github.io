@@ -454,7 +454,7 @@ export const commands: Record<string, Command> = {
 
   matrix: {
     description:
-      'Matrix rain — matrix on | off | status | --help · clock menu also drives it',
+      'Matrix rain — matrix on | off | status | --help · clock menu syncs · on/off saved for reload',
     run: () => [],   // handled directly in terminal.ts
   },
 

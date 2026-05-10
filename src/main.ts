@@ -44,4 +44,9 @@ app = new TerminalApp(terminalEl, vimModeLine, spec => desktop.openWindow(spec))
 
 window.addEventListener('mrgrey-theme-change', () => app.syncXtermTheme())
 
-app.mount()
+void app.mount().then(() => {
+  document.querySelector<HTMLAnchorElement>('a.skip-link')?.addEventListener('click', e => {
+    e.preventDefault()
+    app.focusShell()
+  })
+})

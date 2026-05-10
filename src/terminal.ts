@@ -146,6 +146,11 @@ export class TerminalApp {
     this.fitAddon.fit()
   }
 
+  /** Move keyboard focus into the shell (skip link / chrome hand-off). */
+  focusShell(): void {
+    this.xterm.focus()
+  }
+
   /** Keep xterm palette in sync when theme changes from the system menu (or elsewhere). */
   syncXtermTheme(): void {
     this.refreshTerminalTheme()

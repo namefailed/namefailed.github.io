@@ -4,6 +4,31 @@
 
 import { getMatrixRainPalette } from './theme-control'
 
+const STORAGE_KEY = 'mrgrey-matrix-bg'
+
+function readStoredMatrix(): boolean | null {
+  try {
+    const v = localStorage.getItem(STORAGE_KEY)
+    if (v === 'on') return true
+    if (v === 'off') return false
+  } catch {
+    /* private mode etc. */
+  }
+  return null
+}
+
+function writeStoredMatrix(on: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off')
+  } catch {
+    /* ignore */
+  }
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 /** Weighted toward decimal digits so the rain reads as numbers falling. */
 const DECIMAL = '0123456789'
 const GLYPH =
@@ -107,7 +132,8 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   let frame = 0
   let raf = 0
 
-  let enabled = true
+  const stored = readStoredMatrix()
+  let enabled = stored !== null ? stored : !prefersReducedMotion()
 
   function layout(): void {
     const rect = root.getBoundingClientRect()
@@ -217,6 +243,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const handle: MatrixBgHandle = {
     setEnabled: (on: boolean) => {
       enabled = on
+      writeStoredMatrix(on)
       syncDom()
       if (enabled) {
         layout()
