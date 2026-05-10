@@ -70,12 +70,22 @@
   /* One rhythm: tiling gaps, splitters, desktop bottom inset */
   --ui-gap-wm: 7px;
   --ui-reserve-dock: 44px;
+  --ui-space-2: var(--ui-gap-wm);
   --ui-space-3: 10px;
+  --ui-space-4: 14px;
+  --ui-space-5: 18px;
+  --ui-space-6: 24px;
+  --ui-space-8: 28px;
+  --ui-space-10: 32px;
 
   --ui-touch-min: 44px;
 
   --ui-radius-pill: 999px;
   --ui-radius-sm: 10px;
+  --ui-radius-md: 14px;
+  --ui-radius-lg: 20px;
+  --ui-radius-launcher-icon: 16px;
+  --ui-radius-dock: 14px;
   --ui-radius-md-inner: clamp(14px, 2.4vmin, 28px);
   --ui-radius-monitor: clamp(22px, 3.2vmin, 40px);
   --ui-radius-monitor-inner: clamp(16px, 2.6vmin, 32px);
@@ -101,6 +111,10 @@
   --ui-z-modal: 10000;
   --ui-z-retro-vignette: 8999;
   --ui-z-retro-scanlines: 9000;
+  /* Launcher sits above wm tiles but inside the same shell as YASB. */
+  --ui-z-launcher-root: 5;
+  --ui-z-launcher-backdrop: 1;
+  --ui-z-launcher-panel: 2;
 }
 
 html, body {
@@ -286,9 +300,9 @@ html.retro-fx::before {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ui-space-3);
   min-height: 28px;
-  padding: 3px 10px;
+  padding: 3px var(--ui-space-3);
   box-sizing: border-box;
   background: var(--th-yasb-bg);
   backdrop-filter: blur(12px) saturate(1.15);
@@ -302,7 +316,7 @@ html.retro-fx::before {
 .yasb-cluster {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ui-space-3);
   min-width: 0;
 }
 
@@ -383,19 +397,19 @@ html.retro-fx::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0 8px 0 0;
-  padding: 4px 9px;
+  margin: 0 var(--ui-space-3) 0 0;
+  padding: var(--ui-space-2) 9px;
   border: 1px solid rgba(var(--th-accent-rgb), 0.22);
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
   cursor: pointer;
   color: var(--th-yasb-clock);
   background: var(--th-yasb-btn-bg);
   transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.12s ease,
-    opacity 0.18s ease;
+    background var(--ui-duration-med) var(--ui-easing-standard),
+    border-color var(--ui-duration-med) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
+    transform var(--ui-duration-fast) var(--ui-easing-standard),
+    opacity var(--ui-duration-med) var(--ui-easing-standard);
 }
 
 .yasb-sound-btn:hover {
@@ -472,12 +486,12 @@ html.retro-fx::before {
 
 .yasb-settings-panel {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--ui-space-3));
   right: 0;
   z-index: var(--ui-z-yasb-popover);
   min-width: 220px;
-  padding: 10px 12px 12px;
-  border-radius: 10px;
+  padding: var(--ui-space-3) var(--ui-space-4) var(--ui-space-4);
+  border-radius: var(--ui-radius-sm);
   background: rgba(24, 24, 37, 0.96);
   border: 1px solid rgba(var(--th-accent-rgb), 0.28);
   box-shadow:
@@ -597,13 +611,13 @@ html.retro-fx::before {
 
 .toast-stack {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--ui-space-3));
   right: 0;
   z-index: var(--ui-z-chrome-popover);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--ui-space-3);
   min-width: 220px;
   max-width: min(340px, 42vw);
   pointer-events: none;
@@ -666,6 +680,7 @@ html.retro-fx::before {
 
 .yasb-focused {
   font-size: var(--ui-text-xs);
+  line-height: var(--ui-line-tight);
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--th-text);
@@ -674,6 +689,8 @@ html.retro-fx::before {
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  padding: 0 var(--ui-space-2);
+  min-height: 0;
   text-shadow: 0 0 20px rgba(var(--th-accent-rgb), 0.15);
 }
 
@@ -741,7 +758,7 @@ html.retro-fx::before {
 #launcher-shell {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: var(--ui-z-launcher-root);
   display: none;
   flex-direction: column;
   pointer-events: none;
@@ -767,33 +784,48 @@ html.retro-fx::before {
 #launcher-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--ui-z-launcher-backdrop);
   background: var(--th-launcher-backdrop);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   pointer-events: auto;
+  transition: background var(--ui-duration-med) var(--ui-easing-standard);
 }
 
 #launcher-panel {
   position: relative;
-  z-index: 2;
+  z-index: var(--ui-z-launcher-panel);
   flex: 1;
   min-height: 0;
-  margin: 14px;
-  padding: 28px 32px 40px;
+  margin: var(--ui-space-4);
+  padding: var(--ui-space-8) var(--ui-space-10) var(--ui-space-10);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--ui-space-6);
   overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--th-scroll-thumb) transparent;
   pointer-events: auto;
   background: var(--th-launcher-panel);
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  border: 1px solid rgba(var(--th-accent-rgb), 0.12);
-  border-radius: 20px;
+  border: 1px solid rgba(var(--th-accent-rgb), 0.14);
+  border-radius: var(--ui-radius-lg);
   box-shadow:
     0 12px 48px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#launcher-panel::-webkit-scrollbar {
+  width: 8px;
+}
+#launcher-panel::-webkit-scrollbar-thumb {
+  background: var(--th-scroll-thumb);
+  border-radius: var(--ui-radius-sm);
+}
+#launcher-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--th-scroll-thumb-hover);
 }
 
 .launcher-search-wrap {
@@ -806,7 +838,7 @@ html.retro-fx::before {
 
 .launcher-search-icon {
   position: absolute;
-  left: 16px;
+  left: var(--ui-space-6);
   top: 50%;
   transform: translateY(-50%);
   font-size: 15px;
@@ -817,18 +849,19 @@ html.retro-fx::before {
 
 #launcher-search {
   width: 100%;
-  padding: 12px 16px 12px 44px;
+  padding: var(--ui-space-4) var(--ui-space-6) var(--ui-space-4) 44px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 0.875rem;
+  line-height: var(--ui-line-snug);
   color: var(--th-text);
   background: var(--th-launcher-input-bg);
   border: 1px solid rgba(var(--th-accent-rgb), 0.12);
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
   outline: none;
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
+    border-color var(--ui-duration-med) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
+    background var(--ui-duration-med) var(--ui-easing-standard);
 }
 
 #launcher-search::placeholder {
@@ -848,7 +881,7 @@ html.retro-fx::before {
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
-  gap: 18px 20px;
+  gap: var(--ui-space-5) var(--ui-space-6);
   justify-items: center;
   align-content: start;
 }
@@ -858,31 +891,37 @@ html.retro-fx::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--ui-space-3);
   width: 100%;
   max-width: 132px;
-  padding: 14px 10px;
-  border: none;
-  border-radius: 16px;
+  padding: var(--ui-space-4) var(--ui-space-3);
+  border-radius: var(--ui-radius-launcher-icon);
   background: transparent;
   color: var(--th-text);
   font-family: inherit;
   cursor: pointer;
   transition:
-    background 0.15s ease,
-    transform 0.12s ease,
-    box-shadow 0.15s ease;
+    background var(--ui-duration-med) var(--ui-easing-standard),
+    transform var(--ui-duration-fast) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
+    border-color var(--ui-duration-med) var(--ui-easing-standard);
+  border: 1px solid transparent;
 }
 
 .desktop-icon:hover {
   background: var(--th-yasb-btn-bg);
+  border-color: rgba(var(--th-accent-rgb), 0.12);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   transform: translateY(-2px);
 }
 
+.desktop-icon:active {
+  transform: translateY(0);
+}
+
 .desktop-icon:focus-visible {
-  outline: 2px solid rgba(var(--th-accent-rgb), 0.65);
-  outline-offset: 3px;
+  outline: var(--ui-focus-ring);
+  outline-offset: var(--ui-focus-offset);
 }
 
 .desktop-icon-glyph {
@@ -891,7 +930,7 @@ html.retro-fx::before {
   justify-content: center;
   width: 56px;
   height: 56px;
-  border-radius: 18px;
+  border-radius: var(--ui-space-5);
   background: linear-gradient(145deg, var(--th-icon-glyph-start), var(--th-icon-glyph-end));
   border: 1px solid rgba(var(--th-accent-rgb), 0.18);
   box-shadow:
@@ -904,8 +943,9 @@ html.retro-fx::before {
 }
 
 .desktop-icon-label {
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   letter-spacing: 0.05em;
+  line-height: var(--ui-line-tight);
   text-align: center;
   color: var(--th-text);
   opacity: 0.92;
@@ -1837,10 +1877,10 @@ html.retro-fx .xterm-screen {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 4px;
-  max-width: calc(100% - 14px);
-  padding: 4px 8px 5px;
-  border-radius: 14px;
+  gap: var(--ui-space-2);
+  max-width: calc(100% - 2 * var(--ui-gap-wm));
+  padding: var(--ui-space-2) var(--ui-space-3) calc(var(--ui-space-2) + 1px);
+  border-radius: var(--ui-radius-dock);
   background: linear-gradient(
     165deg,
     rgba(var(--th-overlay-rgb), 0.42) 0%,
@@ -1864,20 +1904,21 @@ html.retro-fx .xterm-screen {
   margin: 0;
   min-height: 28px;
   min-width: 0;
-  padding: 4px 7px 4px 6px;
+  padding: var(--ui-space-2) var(--ui-gap-wm) var(--ui-space-2) 6px;
   font-family: inherit;
+  font-size: var(--ui-text-2xs);
   cursor: pointer;
   user-select: none;
-  border-radius: 10px;
+  border-radius: var(--ui-radius-sm);
   border: 1px solid rgba(var(--th-accent-rgb), 0.14);
   background: rgba(var(--th-overlay-rgb), 0.28);
   color: var(--th-text);
   transition:
-    background 0.14s ease,
-    border-color 0.14s ease,
-    transform 0.12s ease,
-    opacity 0.14s ease,
-    box-shadow 0.14s ease;
+    background var(--ui-duration-med) var(--ui-easing-standard),
+    border-color var(--ui-duration-med) var(--ui-easing-standard),
+    transform var(--ui-duration-fast) var(--ui-easing-standard),
+    opacity var(--ui-duration-med) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard);
 }
 
 .wm-task-btn:hover {
@@ -1948,10 +1989,10 @@ html.retro-fx .xterm-screen {
 .wm-task-label {
   flex: 1;
   min-width: 0;
-  font-size: 10px;
+  font-size: var(--ui-text-2xs);
   font-weight: 600;
   letter-spacing: 0.04em;
-  line-height: 1.2;
+  line-height: var(--ui-line-tight);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2375,5 +2416,21 @@ html.retro-fx .xterm-screen {
   .yasb-clock-btn,
   .yasb-sound-btn {
     min-height: var(--ui-touch-min);
+  }
+
+  #launcher-panel {
+    margin: var(--ui-space-3);
+    padding: var(--ui-space-6) var(--ui-space-4) var(--ui-space-8);
+    gap: var(--ui-space-5);
+    border-radius: var(--ui-radius-md-inner);
+  }
+
+  .launcher-icon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--ui-space-4);
+  }
+
+  .launcher-search-wrap {
+    max-width: none;
   }
 }

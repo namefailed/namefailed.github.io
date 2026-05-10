@@ -39,6 +39,13 @@ Every polish phase should survive this walkthrough:
 - [ ] Keyboard **Tab** through top bar buttons — visible **focus rings** that don’t fight retro layers
 - [ ] Resize viewport + rotate mobile — bezel safe-area doesn’t clip focus rings or scrollbars
 
+## Phase 2 — shell chrome (YASB, launcher, dock)
+
+- [ ] **Applications**: grid breathes — icon tiles show hover border, long grids scroll with a thin thumb, backdrop reads even
+- [ ] **Dock**: pill width respects side gutters, active vs minimized vs running states read at a glance
+- [ ] **YASB**: focused title truncates cleanly; clock popover + toast column line up; sound chip rhythm matches bar padding
+- [ ] **≤720px**: launcher inset tightens so nothing hugs the bezel awkwardly
+
 ---
 
-Later phases extend this doc with Phase 2+ checklists.
+Later phases extend this doc with Phase 3+ checklists.
