@@ -1,7 +1,7 @@
-/** First paint when opening Browse from launcher/dock or running `browse` with no URL */
+/** Default Browse target when none is supplied (launcher, dock, or bare `browse`). */
 export const DEFAULT_BROWSER_URL = 'https://en.wikipedia.org/wiki/Linux'
 
-/** Safe navigation target; strips javascript:/data:, adds https:// when missing. */
+/** Normalizes URL bar input: blocks dangerous schemes, assumes https for host-like input. */
 export function normalizeBrowserUrl(input: string): string {
   const t = input.trim()
   if (!t) return 'about:blank'

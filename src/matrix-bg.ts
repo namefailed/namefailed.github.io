@@ -1,6 +1,4 @@
-/**
- * Matrix rain canvas behind `#desktop`; I tint glyphs from whatever theme pack is active.
- */
+/** Full-viewport canvas rain behind `#desktop`; glyph colors follow the active theme pack. */
 
 import { getMatrixRainPalette } from './theme-control'
 
@@ -21,12 +19,12 @@ function writeStoredMatrix(on: boolean): void {
   try {
     localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off')
   } catch {
-    /* ignore */
+    /* quota / private browsing */
   }
 }
 
 function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 /** Weighted toward decimal digits so the rain reads as numbers falling. */
@@ -40,7 +38,7 @@ const SPEED_SPREAD = 3.2
 
 function charAtSeed(seed: number): string {
   const x = (Math.imul(seed ^ (seed >>> 16), 0x45d9f3b)) >>> 0
-  // ~62% digits 0–9; rest keeps Catppuccin / Matrix texture
+  // Bias toward digits; remainder is mixed glyph texture
   if (x % 100 < 62) return DECIMAL[x % 10]!
   return GLYPH[x % GLYPH.length]!
 }

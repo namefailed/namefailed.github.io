@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 
-/** Rubik/`three` chunk is lazy-loaded; tolerate its size in build logs without raising the main-bundle bar. */
+// Rubik pulls three.js in a lazy chunk (~500k+); keep default warning threshold from flagging it on every build.
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 600,

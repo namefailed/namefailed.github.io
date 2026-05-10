@@ -1,7 +1,7 @@
 /**
- * Entry point: I apply theme/retro, init sounds + the clock menu, then spin up
- * `Desktop` and `TerminalApp`. Order matters when I debug first paint (theme before
- * xterm colors; construct desktop before terminal so `fit` closes over `app`).
+ * Bootstrap: theme, CRT flag, audio, clock menu, tiling shell, terminal.
+ * Theme before xterm (palette); construct `Desktop` before `TerminalApp` so `fit`
+ * closes over the mounted app instance.
  */
 import '@xterm/xterm/css/xterm.css'
 import './style.css'
@@ -25,9 +25,10 @@ const vimModeLine = document.getElementById('vim-mode-line') as HTMLElement | nu
 const desktopEl = document.getElementById('desktop')!
 const matrixCanvas = document.getElementById('matrix-bg') as HTMLCanvasElement | null
 function scheduleMatrixInit(): void {
-  if (!matrixCanvas) return
+  const canvas = matrixCanvas
+  if (!canvas) return
   const run = (): void => {
-    initMatrixBg(matrixCanvas!, desktopEl)
+    initMatrixBg(canvas, desktopEl)
     syncSettingsSoundToggle()
   }
   if (typeof requestIdleCallback === 'function') {

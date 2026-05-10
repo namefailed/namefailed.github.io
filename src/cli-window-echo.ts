@@ -1,6 +1,4 @@
-/**
- * One-shot terminal lines emitted after spawning a tiling window — keeps the SPA feeling like an OS.
- */
+/** Short terminal banner lines after Desktop opens a window from the shell. */
 import { c } from './theme'
 
 function pick(xs: readonly string[]): string {

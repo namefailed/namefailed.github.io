@@ -1,6 +1,6 @@
 // ── appwindow.ts ──────────────────────────────────────────────────────────────
-// My read-only content tiles: title bar + `.win-body` with ANSI→HTML. If I want
-// typing I use the terminal or `EditorWindow`, not this.
+// Read-only tiled window: chrome + `.win-body` renders ANSI-ish lines as HTML.
+// Editing lives in `EditorWindow` / the terminal, not here.
 
 import { ansiToHtml } from './ansi'
 
@@ -12,7 +12,7 @@ export interface WindowSpec {
   editorPath?: string
   /** When command === 'explorer', starting directory (absolute or relative to vfs cwd) */
   explorerPath?: string
-  /** When command === 'browse`, initial URL (defaults to Wikipedia/Linux in browser-window) */
+  /** When command === `browse`, initial URL (default: Linux article on Wikipedia) */
   browserUrl?: string
 }
 

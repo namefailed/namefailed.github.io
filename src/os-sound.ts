@@ -1,4 +1,4 @@
-/** UI bleeps via Web Audio; I persist on/off in `localStorage` under `mrgrey-os-sound`. */
+/** Short UI sounds via Web Audio; mute state persisted under `mrgrey-os-sound` / volume under `mrgrey-os-volume`. */
 
 const STORAGE_KEY = 'mrgrey-os-sound'
 const VOLUME_KEY = 'mrgrey-os-volume'

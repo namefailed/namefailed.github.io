@@ -1,6 +1,6 @@
 // ── editor-window.ts ────────────────────────────────────────────────────────────
-// Mini-vim buffer on top of `vfsReadRaw` / `vfsWrite`; chrome matches `AppWindow`.
-// I keep normal / insert / `:` separate from my xterm prompt vim (`vim.ts`).
+// In-browser editor with normal / insert / ex-line modes over `vfsReadRaw` / `vfsWrite`.
+// Separate from terminal-line editing in `vim.ts`.
 
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
 
@@ -147,7 +147,7 @@ export class EditorWindow {
     })
   }
 
-  /** True if the path I’m opening matches the buffer I already have */
+  /** Path matches the file currently loaded in this tile. */
   pathMatches(userPath: string): boolean {
     return this.absPath === vfsNormalize(userPath)
   }
@@ -177,7 +177,7 @@ export class EditorWindow {
     this.snapPtr = 0
   }
 
-  /** I snapshot here after edits so `u` undo has something to pop */
+  /** Push undo snapshot after mutating buffer text. */
   private recordAfterMutation(): void {
     const t = this.textarea.value
     if (this.snapshots[this.snapPtr] === t) return

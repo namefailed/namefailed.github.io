@@ -33,7 +33,7 @@ export function applyTheme(id: string): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, id)
   } catch {
-    /* private mode */
+    /* localStorage unavailable */
   }
   window.dispatchEvent(new CustomEvent('mrgrey-theme-change'))
   return true

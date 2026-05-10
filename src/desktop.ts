@@ -1,12 +1,12 @@
 // ── desktop.ts ────────────────────────────────────────────────────────────────
-// My tiling WM: terminal fixed left; I stack portfolio/editor windows on the right.
+// Tiling shell: terminal column on the left; portfolio / editor / browser / games on the right.
 //
-// Two kinds of commands:
-//   • Window commands — resume/links/skills/projects/contact/edit/editor/vim/explorer/browse/paint/cube/snake/pong; I toggle
-//     tiles or switch `edit` / `explorer` paths (same path again closes).
-//   • Terminal-only — help, whoami, vfs, … live in commands/index.ts.
+// Command types:
+//   • Opens a tile — resume, links, skills, …, edit, explorer, browse, paint, cube, snake, pong;
+//     repeats the same path/URL or toggles focus/close per command rules in `openWindow`.
+//   • Terminal-only — help, vfs, … (see commands/index.ts).
 //
-// WM shortcuts (Ctrl, same vibe as a real WM):
+// Keyboard (Ctrl chords, WM-style):
 //   Ctrl+T ............ focus terminal (restore if minimized)
 //   Ctrl+1..9 ......... dock slots (Terminal→Browse→Files→Editor→Links→Resume→Projects→Skills→Contact, then running extras)
 //   Ctrl+H ............ focus left  (terminal, then previous content window)

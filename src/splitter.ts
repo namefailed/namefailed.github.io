@@ -1,8 +1,8 @@
 // ── splitter.ts ───────────────────────────────────────────────────────────────
-// I drag-resize tiles here. Pointer Events = one path for mouse + touch (pure
-// mouse listeners left touch users stuck).
+// Drag-to-resize using Pointer Events (mouse + touch). Separate mouse-only handlers
+// often miss reliable touch dragging.
 //
-// `h` → width of the thing on the left (terminal). `v` → height above (stacked app).
+// `h`: horizontal split — adjusts width of the left target (terminal). `v`: vertical — height above.
 
 export type SplitterOrientation = 'h' | 'v'
 

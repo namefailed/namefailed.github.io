@@ -1,4 +1,4 @@
-/** My CLI table: `{ description, run(args) -> lines }`; I handle a few specials in `terminal.ts` instead. */
+/** Command registry `{ description, run }`. Opening windows is handled in `terminal.ts`, not here. */
 import { c, getThemeId } from '../theme'
 import { WHOAMI_ART } from '../ascii'
 import {

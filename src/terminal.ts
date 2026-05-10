@@ -1,6 +1,6 @@
 /**
- * My xterm shell: boot lines, vim-style prompt editing, dispatch into `commands`.
- * Anything that opens a tiled window goes through `onOpenWindow` from `Desktop`.
+ * xterm façade: scripted boot lines, Vim-style prompt (`vim.ts`), dispatches CLI commands.
+ * Window-spawning commands call `onOpenWindow` wired from `Desktop`.
  */
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'

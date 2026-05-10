@@ -1,4 +1,4 @@
-/** I stash the live `Desktop` here so `ps` et al. don’t import `desktop.ts` and create cycles. */
+/** Holds the active `Desktop` for commands like `ps` without importing desktop.ts (avoids circular deps). */
 import type { Desktop } from './desktop'
 
 let desktopRef: Desktop | null = null

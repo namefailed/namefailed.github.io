@@ -1,4 +1,4 @@
-/** My status cluster: toasts, clock opening the system menu (sound, volume, effects). */
+/** Clock popover (system menu), toasts, and settings control sync helpers. */
 import {
   getSoundVolume,
   isSoundEnabled,
@@ -66,7 +66,7 @@ function syncThemeSelect(select?: HTMLSelectElement | null): void {
   if ([...el.options].some(o => o.value === cur)) el.value = cur
 }
 
-/** I call this after `sound` in the terminal so menu toggles stay in sync. */
+/** Refresh menu toggles (sound, CRT, matrix, theme) — call after terminal `sound` and related commands. */
 export function syncSettingsSoundToggle(): void {
   const sw = document.getElementById('settings-sound-toggle')
   if (sw) syncSoundSwitch(sw)
