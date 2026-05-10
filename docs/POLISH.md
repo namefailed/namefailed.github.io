@@ -89,4 +89,9 @@ Every polish phase should survive this walkthrough:
 - [x] **Matrix**: `localStorage` remembers on/off across reloads; **`prefers-reduced-motion: reduce`** starts with rain off unless a saved preference says otherwise
 - [x] **Skip link**: keyboard users can jump straight into the terminal shell (focused xterm after load)
 
-Later phases extend this doc with Phase 9+ as needed.
+## Phase 9 — Route-level code splitting
+
+- [x] **Lazy tiles**: `browse`, `explorer`, `edit`, paint/snake/pong/`cube` load via `import()` on first open; **Three.js** stays out of cold path
+- [x] **URL helpers**: `DEFAULT_BROWSER_URL` / `normalizeBrowserUrl` live in `browser-url.ts` so desktop + terminal avoid eager `browser-window`
+
+Later phases extend this doc with Phase 10+ as needed.

@@ -20,7 +20,7 @@ import type { VimMode } from './vim'
 import type { WindowSpec } from './desktop'
 import { getRetroFx, setRetroFx, toggleRetroFx } from './retro-fx'
 import { getMatrixBgHandle } from './matrix-bg'
-import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-window'
+import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { vfsNormalize, vfsPromptPath, vfsPwd } from './os-fs'
 import {
   playOsSound,

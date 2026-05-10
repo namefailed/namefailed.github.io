@@ -20,17 +20,14 @@
 
 import { AppWindow } from './appwindow'
 import type { WindowSpec } from './appwindow'
-import { EditorWindow } from './editor-window'
-import { FileExplorerWindow } from './file-explorer-window'
-import {
-  BrowserWindow,
-  DEFAULT_BROWSER_URL,
-  normalizeBrowserUrl,
-} from './browser-window'
-import { PaintWindow } from './paint-window'
-import { PongWindow } from './pong-window'
-import { RubikWindow } from './rubik-window'
-import { SnakeWindow } from './snake-window'
+import type { BrowserWindow } from './browser-window'
+import type { EditorWindow } from './editor-window'
+import type { FileExplorerWindow } from './file-explorer-window'
+import type { PaintWindow } from './paint-window'
+import type { PongWindow } from './pong-window'
+import type { RubikWindow } from './rubik-window'
+import type { SnakeWindow } from './snake-window'
+import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { FS_HOME, vfsNormalize } from './os-fs'
 import { Splitter } from './splitter'
 import { commands } from './commands/index'
@@ -224,36 +221,39 @@ export class Desktop {
     return rows
   }
 
-  openWindow(spec: WindowSpec): void {
+  async openWindow(spec: WindowSpec): Promise<void> {
     this.closeLauncherOverlay()
 
     if (spec.command === 'edit') {
       const pathArg = spec.editorPath ?? 'welcome.txt'
 
       const existingOpen = this.windows.find(w => w.command === 'edit')
-      if (existingOpen instanceof EditorWindow) {
-        if (existingOpen.pathMatches(pathArg)) {
+      if (existingOpen) {
+        const ed = existingOpen as EditorWindow
+        if (ed.pathMatches(pathArg)) {
           this.closeWindow(existingOpen)
           return
         }
-        existingOpen.loadFile(pathArg)
+        ed.loadFile(pathArg)
         this.focusWindow(existingOpen)
         return
       }
 
       const minEd = this.minimized.find(m => m.win.command === 'edit')
-      if (minEd?.win instanceof EditorWindow) {
-        if (minEd.win.pathMatches(pathArg)) {
+      if (minEd) {
+        const ed = minEd.win as EditorWindow
+        if (ed.pathMatches(pathArg)) {
           this.restoreMinimized(minEd)
           return
         }
-        minEd.win.loadFile(pathArg)
+        ed.loadFile(pathArg)
         this.restoreMinimized(minEd)
         return
       }
 
+      const { EditorWindow: EditorWindowCtor } = await import('./editor-window')
       let ed!: EditorWindow
-      ed = new EditorWindow({
+      ed = new EditorWindowCtor({
         initialPath: pathArg,
         onClose: () => this.closeWindow(ed),
         onMinimize: () => this.minimizeWindow(ed),
@@ -271,36 +271,39 @@ export class Desktop {
       const pathArg = vfsNormalize(spec.explorerPath ?? FS_HOME)
 
       const existingOpen = this.windows.find(w => w.command === 'explorer')
-      if (existingOpen instanceof FileExplorerWindow) {
-        if (existingOpen.pathMatches(pathArg)) {
+      if (existingOpen) {
+        const ex = existingOpen as FileExplorerWindow
+        if (ex.pathMatches(pathArg)) {
           this.closeWindow(existingOpen)
           return
         }
-        existingOpen.navigateTo(pathArg)
+        ex.navigateTo(pathArg)
         this.focusWindow(existingOpen)
         return
       }
 
       const minEx = this.minimized.find(m => m.win.command === 'explorer')
-      if (minEx?.win instanceof FileExplorerWindow) {
-        if (minEx.win.pathMatches(pathArg)) {
+      if (minEx) {
+        const ex = minEx.win as FileExplorerWindow
+        if (ex.pathMatches(pathArg)) {
           this.restoreMinimized(minEx)
           return
         }
-        minEx.win.navigateTo(pathArg)
+        ex.navigateTo(pathArg)
         this.restoreMinimized(minEx)
         return
       }
 
+      const { FileExplorerWindow: FileExplorerWindowCtor } = await import('./file-explorer-window')
       let ex!: FileExplorerWindow
-      ex = new FileExplorerWindow({
+      ex = new FileExplorerWindowCtor({
         initialPath: pathArg,
         onClose: () => this.closeWindow(ex),
         onMinimize: () => this.minimizeWindow(ex),
         onMaximize: () => this.toggleMaximizeContent(ex),
         onFocus: () => this.focusWindow(ex),
         onOpenInEditor: absFilePath =>
-          this.openWindow({
+          void this.openWindow({
             command: 'edit',
             title: `edit — ${absFilePath}`,
             content: [],
@@ -318,29 +321,32 @@ export class Desktop {
       const urlArg = normalizeBrowserUrl(spec.browserUrl ?? DEFAULT_BROWSER_URL)
 
       const existingOpen = this.windows.find(w => w.command === 'browse')
-      if (existingOpen instanceof BrowserWindow) {
-        if (existingOpen.pathMatches(urlArg)) {
+      if (existingOpen) {
+        const br = existingOpen as BrowserWindow
+        if (br.pathMatches(urlArg)) {
           this.closeWindow(existingOpen)
           return
         }
-        existingOpen.navigateTo(urlArg)
+        br.navigateTo(urlArg)
         this.focusWindow(existingOpen)
         return
       }
 
       const minBr = this.minimized.find(m => m.win.command === 'browse')
-      if (minBr?.win instanceof BrowserWindow) {
-        if (minBr.win.pathMatches(urlArg)) {
+      if (minBr) {
+        const br = minBr.win as BrowserWindow
+        if (br.pathMatches(urlArg)) {
           this.restoreMinimized(minBr)
           return
         }
-        minBr.win.navigateTo(urlArg)
+        br.navigateTo(urlArg)
         this.restoreMinimized(minBr)
         return
       }
 
+      const { BrowserWindow: BrowserWindowCtor } = await import('./browser-window')
       let br!: BrowserWindow
-      br = new BrowserWindow({
+      br = new BrowserWindowCtor({
         initialUrl: urlArg,
         onClose: () => this.closeWindow(br),
         onMinimize: () => this.minimizeWindow(br),
@@ -374,8 +380,9 @@ export class Desktop {
       }
 
       if (cmd === 'paint') {
+        const { PaintWindow: PaintWindowCtor } = await import('./paint-window')
         let pw!: PaintWindow
-        pw = new PaintWindow({
+        pw = new PaintWindowCtor({
           onClose: () => this.closeWindow(pw),
           onMinimize: () => this.minimizeWindow(pw),
           onMaximize: () => this.toggleMaximizeContent(pw),
@@ -388,8 +395,9 @@ export class Desktop {
         return
       }
       if (cmd === 'cube') {
+        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
         let cw!: RubikWindow
-        cw = new RubikWindow({
+        cw = new RubikWindowCtor({
           onClose: () => this.closeWindow(cw),
           onMinimize: () => this.minimizeWindow(cw),
           onMaximize: () => this.toggleMaximizeContent(cw),
@@ -402,8 +410,9 @@ export class Desktop {
         return
       }
       if (cmd === 'snake') {
+        const { SnakeWindow: SnakeWindowCtor } = await import('./snake-window')
         let sw!: SnakeWindow
-        sw = new SnakeWindow({
+        sw = new SnakeWindowCtor({
           onClose: () => this.closeWindow(sw),
           onMinimize: () => this.minimizeWindow(sw),
           onMaximize: () => this.toggleMaximizeContent(sw),
@@ -415,8 +424,9 @@ export class Desktop {
         this.focusWindow(sw)
         return
       }
+      const { PongWindow: PongWindowCtor } = await import('./pong-window')
       let pong!: PongWindow
-      pong = new PongWindow({
+      pong = new PongWindowCtor({
         onClose: () => this.closeWindow(pong),
         onMinimize: () => this.minimizeWindow(pong),
         onMaximize: () => this.toggleMaximizeContent(pong),
@@ -514,10 +524,7 @@ export class Desktop {
   private closeWindow(win: TiledWin): void {
     const idx = this.windows.indexOf(win)
     if (idx === -1) return
-    if (win instanceof BrowserWindow) win.dispose()
-    if (win instanceof PongWindow) win.dispose()
-    if (win instanceof SnakeWindow) win.dispose()
-    if (win instanceof RubikWindow) win.dispose()
+    ;(win as { dispose?: () => void }).dispose?.()
     if (win.isMaximized()) this.unmaximizeContent(win)
     win.el.remove()
     this.windows.splice(idx, 1)
@@ -533,13 +540,25 @@ export class Desktop {
     this.termWin.classList.remove('active')
     this.windows.forEach(w => w.setActive(w === win))
     this.sync()
-    if (win instanceof EditorWindow) win.focusEditor()
-    else if (win instanceof FileExplorerWindow) win.focusPanel()
-    else if (win instanceof BrowserWindow) win.focusAddressBar()
-    else if (win instanceof PaintWindow) win.focusCanvas()
-    else if (win instanceof SnakeWindow) win.focusCanvas()
-    else if (win instanceof PongWindow) win.focusCanvas()
-    else if (win instanceof RubikWindow) win.focusCanvas()
+    switch (win.command) {
+      case 'edit':
+        ;(win as EditorWindow).focusEditor()
+        break
+      case 'explorer':
+        ;(win as FileExplorerWindow).focusPanel()
+        break
+      case 'browse':
+        ;(win as BrowserWindow).focusAddressBar()
+        break
+      case 'paint':
+      case 'snake':
+      case 'pong':
+      case 'cube':
+        ;(win as PaintWindow | SnakeWindow | PongWindow | RubikWindow).focusCanvas()
+        break
+      default:
+        break
+    }
   }
 
   // ── private: maximize / restore ─────────────────────────────────────────────
@@ -799,7 +818,7 @@ export class Desktop {
         if (!cmd || !WINDOW_COMMANDS.has(item.cmd)) continue
         btn.innerHTML = `<span class="desktop-icon-glyph">${item.glyph}</span><span class="desktop-icon-label">${item.label}</span>`
         btn.addEventListener('click', () => {
-          this.openWindow({
+          void this.openWindow({
             command: item.cmd,
             title: item.cmd,
             content: cmd.run([]),
@@ -918,7 +937,7 @@ export class Desktop {
     if (!def || !WINDOW_COMMANDS.has(cmd)) return
     if (OPEN_EDITOR_LAUNCH_CMDS.has(cmd)) {
       const heading = cmd === 'vim' ? 'vim' : cmd === 'editor' ? 'editor' : 'edit'
-      this.openWindow({
+      void this.openWindow({
         command: 'edit',
         title: `${heading} — welcome.txt`,
         content: [],
@@ -927,7 +946,7 @@ export class Desktop {
       return
     }
     if (cmd === 'explorer') {
-      this.openWindow({
+      void this.openWindow({
         command: 'explorer',
         title: 'files',
         content: def.run([]),
@@ -936,7 +955,7 @@ export class Desktop {
       return
     }
     if (cmd === 'browse') {
-      this.openWindow({
+      void this.openWindow({
         command: 'browse',
         title: 'browse',
         content: def.run([]),
@@ -945,10 +964,10 @@ export class Desktop {
       return
     }
     if (cmd === 'paint' || cmd === 'cube' || cmd === 'snake' || cmd === 'pong') {
-      this.openWindow({ command: cmd, title: cmd, content: [] })
+      void this.openWindow({ command: cmd, title: cmd, content: [] })
       return
     }
-    this.openWindow({ command: cmd, title: cmd, content: def.run([]) })
+    void this.openWindow({ command: cmd, title: cmd, content: def.run([]) })
   }
 
   private focusTaskbarIndex(index: number): void {

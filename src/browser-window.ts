@@ -2,8 +2,9 @@
 // Iframe + URL bar. Without `allow-same-origin` on the sandbox, embedded pages get an
 // opaque origin and many sites render blank. Many hosts still block all iframes (XFO/CSP).
 
-/** First paint when opening Browse from launcher/dock or running `browse` with no URL */
-export const DEFAULT_BROWSER_URL = 'https://en.wikipedia.org/wiki/Linux'
+import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
+
+export { DEFAULT_BROWSER_URL, normalizeBrowserUrl }
 
 /** Sites that commonly allow iframe embedding (many major sites forbid it). */
 export const BROWSER_BOOKMARKS: ReadonlyArray<{ label: string; url: string }> = [
@@ -29,29 +30,6 @@ h1{font-weight:600;font-size:1.05rem;margin:0 0 .85rem;color:#cba6f7;letter-spac
 <p>Home (⌂) reloads the Linux article on Wikipedia. Try <code>browse https://example.com</code> if you want a simple framing smoke test.</p>
 <p class="note">Google, GitHub, etc. send headers that <strong>forbid embedding</strong> — the iframe stays empty; use <strong>Open tab</strong> in the toolbar. Same-origin pages (this site) always work.</p>
 </body></html>`
-
-/** Safe navigation target; strips javascript:/data:, adds https:// when missing. */
-export function normalizeBrowserUrl(input: string): string {
-  const t = input.trim()
-  if (!t) return 'about:blank'
-  const blocked = /^(javascript|data|vbscript):/i
-  if (blocked.test(t)) return 'about:blank'
-  try {
-    if (/^[a-z][a-z0-9+.-]*:/i.test(t)) {
-      const u = new URL(t)
-      if (u.protocol === 'http:' || u.protocol === 'https:') return u.href
-      if (u.protocol === 'about:') {
-        const href = u.href.toLowerCase()
-        if (href === 'about:blank' || href.startsWith('about:blank#')) return 'about:blank'
-        return 'about:blank'
-      }
-      return 'about:blank'
-    }
-    return new URL('https://' + t).href
-  } catch {
-    return 'about:blank'
-  }
-}
 
 export interface BrowserWindowOptions {
   initialUrl: string
