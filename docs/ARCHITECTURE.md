@@ -77,6 +77,8 @@ My bio copy and ASCII art live here; **`commands`** pulls them into `about`, `sk
 - **`npm run build`** — `tsc`, then Vite → **`dist/`**.
 - **`npm run dev`** — Vite with strict TS.
 
+Polish checkpoints and smoke tests: **`docs/POLISH.md`**.
+
 ---
 
 ## Things I try not to break

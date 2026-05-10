@@ -53,13 +53,63 @@
   --th-badge-fg: #1e1e2e;
   --th-scroll-thumb: #313244;
   --th-scroll-thumb-hover: #45475a;
+
+  /* ── UI tokens (layout / rhythm — unchanged by theme packs) ───────────────── */
+  --ui-font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --ui-font-mono: var(--ui-font-sans);
+
+  --ui-text-2xs: 0.625rem;   /* ~10px */
+  --ui-text-xs: 0.6875rem;   /* ~11px */
+  --ui-text-sm: 0.75rem;     /* ~12px */
+  --ui-text-md: 0.8125rem;   /* ~13px */
+
+  --ui-line-tight: 1.25;
+  --ui-line-snug: 1.35;
+  --ui-line-normal: 1.45;
+
+  /* One rhythm: tiling gaps, splitters, desktop bottom inset */
+  --ui-gap-wm: 7px;
+  --ui-reserve-dock: 44px;
+  --ui-space-3: 10px;
+
+  --ui-touch-min: 44px;
+
+  --ui-radius-pill: 999px;
+  --ui-radius-sm: 10px;
+  --ui-radius-md-inner: clamp(14px, 2.4vmin, 28px);
+  --ui-radius-monitor: clamp(22px, 3.2vmin, 40px);
+  --ui-radius-monitor-inner: clamp(16px, 2.6vmin, 32px);
+  --ui-monitor-pad: clamp(10px, 1.6vmin, 18px);
+
+  --ui-duration-fast: 0.12s;
+  --ui-duration-med: 0.18s;
+  --ui-easing-standard: ease;
+
+  --ui-focus-ring: 2px solid rgba(var(--th-accent-rgb), 0.85);
+  --ui-focus-offset: 2px;
+
+  /* Z stacking — reserve high layers for CRT overlay */
+  --ui-z-base: 1;
+  --ui-z-matrix: 0;
+  --ui-z-wm: 2;
+  --ui-z-splitter: 3;
+  --ui-z-yasb: 40;
+  /* Popovers anchored to bar / dock share a band (different containing blocks). */
+  --ui-z-chrome-popover: 60;
+  --ui-z-yasb-popover: 70;
+  /* Must sit above retro overlay (8999+) so dialogs stay readable. */
+  --ui-z-modal: 10000;
+  --ui-z-retro-vignette: 8999;
+  --ui-z-retro-scanlines: 9000;
 }
 
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--ui-font-sans);
+  font-size: 16px;
+  line-height: var(--ui-line-normal);
 }
 
 /* Room / desk behind the “monitor” */
@@ -78,16 +128,16 @@ body {
   height: 98vh;
   max-width: 100%;
   max-height: 100%;
-  z-index: 1;
+  z-index: var(--ui-z-base);
   display: flex;
   flex-direction: column;
   /* Outer bezel + notch / home-indicator safe areas on phones */
-  padding: max(clamp(10px, 1.6vmin, 18px), env(safe-area-inset-top, 0px))
-    max(clamp(10px, 1.6vmin, 18px), env(safe-area-inset-right, 0px))
-    max(clamp(10px, 1.6vmin, 18px), env(safe-area-inset-bottom, 0px))
-    max(clamp(10px, 1.6vmin, 18px), env(safe-area-inset-left, 0px));
+  padding: max(var(--ui-monitor-pad), env(safe-area-inset-top, 0px))
+    max(var(--ui-monitor-pad), env(safe-area-inset-right, 0px))
+    max(var(--ui-monitor-pad), env(safe-area-inset-bottom, 0px))
+    max(var(--ui-monitor-pad), env(safe-area-inset-left, 0px));
   box-sizing: border-box;
-  border-radius: clamp(22px, 3.2vmin, 40px);
+  border-radius: var(--ui-radius-monitor);
   background: var(--th-monitor-bg);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.06),
@@ -102,7 +152,7 @@ body {
   content: '';
   position: absolute;
   inset: clamp(6px, 1vmin, 12px);
-  border-radius: clamp(16px, 2.6vmin, 32px);
+  border-radius: var(--ui-radius-monitor-inner);
   pointer-events: none;
   z-index: 0;
   box-shadow:
@@ -119,7 +169,7 @@ html.retro-fx body::after {
   inset: 0;
   background: rgba(var(--th-overlay-rgb), 0.35);
   pointer-events: none;
-  z-index: 1;
+  z-index: var(--ui-z-base);
 }
 
 html.retro-fx::after {
@@ -134,7 +184,7 @@ html.retro-fx::after {
     rgba(0,0,0,0.045)   2px
   );
   pointer-events: none;
-  z-index: 9000;
+  z-index: var(--ui-z-retro-scanlines);
 }
 
 html.retro-fx::before {
@@ -147,7 +197,7 @@ html.retro-fx::before {
     rgba(0,0,0,0.55) 100%
   );
   pointer-events: none;
-  z-index: 8999;
+  z-index: var(--ui-z-retro-vignette);
 }
 
 /* ── Desktop (the WM workspace — wallpaper & glass inside the bezel) ─────── */
@@ -155,13 +205,13 @@ html.retro-fx::before {
 /* Wallpaper gradient + matrix canvas layered on top */
 #desktop {
   position: relative;
-  z-index: 1;
+  z-index: var(--ui-z-base);
   flex: 1;
   min-height: 0;
   width: 100%;
-  border-radius: clamp(14px, 2.4vmin, 28px);
+  border-radius: var(--ui-radius-md-inner);
   overflow: hidden;
-  --desktop-bottom-gutter: 7px;
+  --desktop-bottom-gutter: var(--ui-gap-wm);
   padding: 0 0 var(--desktop-bottom-gutter);
   display: flex;
   flex-direction: column;
@@ -174,7 +224,7 @@ html.retro-fx::before {
 #matrix-bg {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: var(--ui-z-matrix);
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -184,11 +234,11 @@ html.retro-fx::before {
   flex: 1;
   min-height: 0;
   position: relative;
-  z-index: 1;
+  z-index: var(--ui-z-base);
   display: flex;
   flex-direction: column;
-  /* Reserve dock height only — .wm-stack already has 7px padding on all sides like top/L/R */
-  --workspace-dock-reserve: 44px;
+  /* Reserve dock height — .wm-stack uses --ui-gap-wm padding on all sides */
+  --workspace-dock-reserve: var(--ui-reserve-dock);
   padding-bottom: var(--workspace-dock-reserve);
   box-sizing: border-box;
 }
@@ -205,11 +255,26 @@ html.retro-fx::before {
   border: 0;
 }
 
+/* Keyboard focus — visible on chrome; xterm keeps its own caret (no double ring) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: var(--ui-focus-offset);
+}
+
+.xterm .xterm-helper-textarea:focus,
+.xterm .xterm-helper-textarea:focus-visible {
+  outline: none !important;
+}
+
 /* ── Top panel (Linux-style: edge-to-edge, flush top) ──────────────────────── */
 
 .yasb-bar {
   flex-shrink: 0;
-  z-index: 40;
+  z-index: var(--ui-z-yasb);
   position: relative;
   width: 100%;
   padding: 0;
@@ -368,20 +433,20 @@ html.retro-fx::before {
   margin: 0;
   padding: 3px 11px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
   color: var(--th-yasb-clock);
   background: var(--th-yasb-btn-bg);
   border: 1px solid rgba(var(--th-accent-rgb), 0.22);
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
   cursor: pointer;
   transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.12s ease;
+    background var(--ui-duration-med) var(--ui-easing-standard),
+    border-color var(--ui-duration-med) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
+    transform var(--ui-duration-fast) var(--ui-easing-standard);
 }
 
 .yasb-clock-btn:hover {
@@ -409,7 +474,7 @@ html.retro-fx::before {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 70;
+  z-index: var(--ui-z-yasb-popover);
   min-width: 220px;
   padding: 10px 12px 12px;
   border-radius: 10px;
@@ -534,7 +599,7 @@ html.retro-fx::before {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 60;
+  z-index: var(--ui-z-chrome-popover);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -600,7 +665,7 @@ html.retro-fx::before {
 }
 
 .yasb-focused {
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--th-text);
@@ -620,19 +685,19 @@ html.retro-fx::before {
   margin: 0;
   padding: 3px 11px 3px 8px;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--ui-text-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--th-yasb-btn-text);
   background: var(--th-yasb-btn-bg);
   border: 1px solid rgba(var(--th-accent-rgb), 0.2);
-  border-radius: 999px;
+  border-radius: var(--ui-radius-pill);
   cursor: pointer;
   transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.12s ease;
+    background var(--ui-duration-med) var(--ui-easing-standard),
+    border-color var(--ui-duration-med) var(--ui-easing-standard),
+    box-shadow var(--ui-duration-med) var(--ui-easing-standard),
+    transform var(--ui-duration-fast) var(--ui-easing-standard);
 }
 
 .yasb-btn:hover {
@@ -667,7 +732,7 @@ html.retro-fx::before {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 7px;
+  padding: var(--ui-gap-wm);
   box-sizing: border-box;
 }
 
@@ -897,7 +962,7 @@ html.retro-fx::before {
 
 #panes {
   position: relative;
-  z-index: 2;
+  z-index: var(--ui-z-wm);
   flex: 1;
   display: flex;
   flex-direction: row;
@@ -936,15 +1001,15 @@ html.retro-fx::before {
 /* ── Splitters (drag-to-resize handles) ───────────────────────────────────── */
 
 .splitter {
-  flex: 0 0 7px;
+  flex: 0 0 var(--ui-gap-wm);
   position: relative;
   background: transparent;
-  z-index: 3;
+  z-index: var(--ui-z-splitter);
   touch-action: none;
 }
 
 .splitter-h { cursor: col-resize; }
-.splitter-v { cursor: row-resize; flex-basis: 7px; }
+.splitter-v { cursor: row-resize; flex-basis: var(--ui-gap-wm); }
 
 /* Visible grip bar in the middle of each splitter */
 .splitter::before {
@@ -1646,7 +1711,7 @@ html.retro-fx .xterm-screen {
 .browser-iframe-tip-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 400;
+  z-index: var(--ui-z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1754,15 +1819,15 @@ html.retro-fx .xterm-screen {
 
 #wm-taskbar.wm-taskbar {
   position: absolute;
-  bottom: max(7px, env(safe-area-inset-bottom, 0px));
+  bottom: max(var(--ui-gap-wm), env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
-  z-index: 60;
+  z-index: var(--ui-z-chrome-popover);
   display: flex;
   justify-content: center;
   align-items: flex-end;
   pointer-events: none;
-  padding: 0 7px;
+  padding: 0 var(--ui-gap-wm);
   box-sizing: border-box;
 }
 
@@ -2304,5 +2369,11 @@ html.retro-fx .xterm-screen {
 
   .wm-task-label {
     max-width: 72px;
+  }
+
+  .yasb-btn,
+  .yasb-clock-btn,
+  .yasb-sound-btn {
+    min-height: var(--ui-touch-min);
   }
 }
