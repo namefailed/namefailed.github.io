@@ -19,6 +19,12 @@ There is also a **`/plain/`** static brochure page (second Vite HTML entry → `
 | `npm run build` | `tsc` + production bundle → **`dist/`** + **`dist/plain/`** |
 | `npm run preview` | Preview `dist/` locally |
 
+## GitHub Pages
+
+The live site must publish **`dist/`** after `npm run build`, not the repo-root `index.html` (that file still points at `/src/main.ts`, which only exists under `vite dev`). This repo uses **`.github/workflows/deploy-pages.yml`**.
+
+**One-time (repo → Settings → Pages):** set **Build and deployment → Source** to **GitHub Actions** (not “Deploy from a branch” on `main` / root). Then pushes to `main` build and deploy automatically.
+
 ## Stack
 
 - TypeScript, Vite 8
