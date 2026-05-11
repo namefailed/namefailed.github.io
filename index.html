@@ -1,145 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>MRGrey</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />  
-        
-        <!-- Update these with your own fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,900|Source+Sans+Pro:300,900&display=swap" rel="stylesheet">
-        
-        <link rel="stylesheet" href="css/style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#181825" />
+    <meta name="color-scheme" content="dark" />
+    <title>mrgrey.dev</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#terminal">Skip to terminal</a>
+    <!-- Vintage CRT-style bezel; inner surface is #desktop -->
+    <div id="monitor-frame">
+    <div id="desktop" data-content-count="0">
 
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <img src="img/mrgrey.png" alt="">
+      <canvas id="matrix-bg" aria-hidden="true"></canvas>
+
+      <div id="desktop-workspace" role="main" aria-label="Desktop workspace">
+        <!-- YASB-style status bar (always visible) -->
+        <header id="yasb-bar" class="yasb-bar" role="banner">
+          <div class="yasb-inner">
+            <div class="yasb-cluster yasb-start">
+              <button
+                type="button"
+                id="btn-applications"
+                class="yasb-btn yasb-btn-apps"
+                aria-expanded="false"
+                aria-controls="launcher-shell"
+              >
+                <span class="yasb-btn-glyph" aria-hidden="true">◆</span>
+                Applications
+              </button>
             </div>
-            <button class="nav-toggle" aria-label="toggle navigation">
-                <span class="hamburger"></span>
-            </button>
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li class="nav__item"><a href="#home" class="nav__link">Home</a></li>
-                    <li class="nav__item"><a href="#services" class="nav__link">My Services</a></li>
-                    <li class="nav__item"><a href="#about" class="nav__link">About me</a></li>
-                    <li class="nav__item"><a href="#work" class="nav__link">My Work</a></li>
-                </ul>
-            </nav>
+            <div class="yasb-cluster yasb-center">
+              <span id="yasb-focused" class="yasb-focused" aria-live="polite"></span>
+            </div>
+            <div class="yasb-cluster yasb-end">
+              <div class="yasb-system" id="yasb-system">
+                <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+                <button
+                  type="button"
+                  id="btn-yasb-clock"
+                  class="yasb-clock-btn"
+                  aria-expanded="false"
+                  aria-haspopup="dialog"
+                  aria-controls="yasb-settings"
+                  title="System menu"
+                >
+                  <span id="yasb-clock-text" class="yasb-clock-text"></span>
+                </button>
+                <div
+                  id="yasb-settings"
+                  class="yasb-settings-panel"
+                  role="dialog"
+                  aria-label="System menu"
+                  aria-hidden="true"
+                >
+                  <div class="yasb-settings-heading">Quick settings</div>
+                  <div class="yasb-settings-row yasb-settings-row--theme">
+                    <label class="yasb-settings-label" for="settings-theme-select">Palette</label>
+                    <select
+                      id="settings-theme-select"
+                      class="yasb-settings-theme-select"
+                      autocomplete="off"
+                      title="Color theme"
+                    ></select>
+                  </div>
+                  <div class="yasb-settings-divider" role="presentation"></div>
+                  <div class="yasb-settings-row">
+                    <span class="yasb-settings-label">UI sounds</span>
+                    <button
+                      type="button"
+                      id="settings-sound-toggle"
+                      class="yasb-settings-switch"
+                      aria-pressed="true"
+                      title="Toggle UI sounds"
+                    >
+                      <span class="yasb-settings-switch-track" aria-hidden="true">
+                        <span class="yasb-settings-switch-thumb"></span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="yasb-settings-row yasb-settings-row--volume">
+                    <span class="yasb-settings-label">Volume</span>
+                    <input
+                      type="range"
+                      id="settings-volume-slider"
+                      class="yasb-settings-volume-slider"
+                      min="0"
+                      max="100"
+                      value="72"
+                      aria-label="UI sound volume"
+                    />
+                  </div>
+                  <div class="yasb-settings-row">
+                    <span class="yasb-settings-label">CRT overlay</span>
+                    <button
+                      type="button"
+                      id="settings-retro-toggle"
+                      class="yasb-settings-switch"
+                      aria-pressed="false"
+                      title="Scanlines &amp; vignette"
+                    >
+                      <span class="yasb-settings-switch-track" aria-hidden="true">
+                        <span class="yasb-settings-switch-thumb"></span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="yasb-settings-row">
+                    <span class="yasb-settings-label">Matrix rain</span>
+                    <button
+                      type="button"
+                      id="settings-matrix-toggle"
+                      class="yasb-settings-switch"
+                      aria-pressed="false"
+                      title="Animated backdrop"
+                    >
+                      <span class="yasb-settings-switch-track" aria-hidden="true">
+                        <span class="yasb-settings-switch-thumb"></span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="yasb-settings-hints" role="group" aria-label="Keyboard shortcuts">
+                    <div class="yasb-settings-hints-title">Shortcuts</div>
+                    <ul class="yasb-settings-hint-list">
+                      <li class="yasb-settings-hint-row">
+                        <kbd class="yasb-settings-hint-k">Ctrl+T</kbd>
+                        <span class="yasb-settings-hint-label">Focus terminal</span>
+                      </li>
+                      <li class="yasb-settings-hint-row">
+                        <kbd class="yasb-settings-hint-k">Ctrl+D</kbd>
+                        <span class="yasb-settings-hint-label">Desktop / launcher</span>
+                      </li>
+                      <li class="yasb-settings-hint-row">
+                        <kbd class="yasb-settings-hint-k">help</kbd>
+                        <span class="yasb-settings-hint-label">Command list</span>
+                      </li>
+                      <li class="yasb-settings-hint-row">
+                        <kbd class="yasb-settings-hint-k">Ctrl+H</kbd>
+                        <kbd class="yasb-settings-hint-k">/</kbd>
+                        <kbd class="yasb-settings-hint-k">Ctrl+K</kbd>
+                        <span class="yasb-settings-hint-label">Earlier / “up” panel</span>
+                      </li>
+                      <li class="yasb-settings-hint-row">
+                        <kbd class="yasb-settings-hint-k">Ctrl+L</kbd>
+                        <kbd class="yasb-settings-hint-k">/</kbd>
+                        <kbd class="yasb-settings-hint-k">Ctrl+J</kbd>
+                        <span class="yasb-settings-hint-label">Later / “down” panel</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </header>
-        
-        <!-- Introduction -->
-        <section class="intro" id="home">
-            <h1 class="section__title section__title--intro">
-                Hi, I am <strong>Matt R. Grey</strong>
-            </h1>
-            <p class="section__subtitle section__subtitle--intro">Programmer/Developer</p>
-            <img src="img/matt-grey.jpg" alt="a picture of Matt Grey" class="intro__img">
-        </section>
-        
-        
-        <!-- My services -->
-        <section class="my-services" id="services">
-            <h2 class="section__title section__title--services">What I do</h2>
-            <div class="services">
-                <div class="service">
-                    <h3>Website Design & Development</h3>
-                    <p>My passion lies in crafting responsive websites that captivate users and deliver a lasting impression. I specialize in clean design, incorporating modern technologies, and staying attuned to current trends for an immersive online experience.</p>
-                </div> <!-- / service -->
-                
-                <div class="service">
-                    <h3>Software Engineering & App Development</h3>
-                    <p>I thrive on building aesthetically pleasing applications. My focus extends to ensuring optimal user experience and accessibility. I take pride in constructing the backbone of applications that shape the world, meticulously coding each line for a robust backend.</p>
-                </div> <!-- / service -->
-                
-                <div class="service">
-                    <h3>Graphic Design & Photography</h3>
-                    <p>Whether it's capturing outdoor moments or editing band photos, my skills extend to creating compelling logos and posters. In today's digital age, I believe that images and digital media offer powerful avenues for expressing ideas, and I'm committed to making that expression easier than ever.</p>
-                </div> <!-- / service -->
-            </div> <!-- / services -->
-            
-            <a href="#work" class="btn">My Work</a>
-        </section>
-        
-        
-        <!-- About me -->
-        <section class="about-me" id="about">
-           <h2 class="section__title section__title--about">Who I am</h2>
-           <p class="section__subtitle section__subtitle--about">Tech professional, based in CENTEX</p>
-           
-           <div class="about-me__body">
-               <p>I'm a vibrant Software Engineering student with hands on experience in Front-end Web Development.</p>
-               <p>I invest time and effort to produce outstanding results. My pursuit of excellence is fueled
-by a genuine passion for my work, strengthened by the dedication that comes with being
-a devoted father to my son. The responsibility of providing a bright future for my child
-serves as a powerful motivator, propelling me to work diligently and demonstrate unwavering
-commitment</p>
-           </div>
-           <a href="Matthew_Grey-Resume.pdf" class="btn about-me__btn">Download My Resume/CV</a>
-           <img src="img/matt-grey-family.jpg" alt="Matt and his family." class="about-me__img">
-        </section>
-        
-        <!-- My Work -->
-        <section class="my-work" id="work">
-            <h2 class="section__title section__title--work">My work</h2>
-            <p class="section__subtitle section__subtitle--work">A few things I've created.</p>
-            
-            <div class="portfolio" tag="#work">
-                <!-- Portfolio item 01 -->
-                <a href="https://www.awfdn.org/" class="portfolio__item">
-                    <img src="img/portfolio-awfdn.png" alt="Army Women's Foundation" class="portfolio__img">
-                </a>
-                
-                <!-- Portfolio item 02 -->
-                <a href="https://www.lopezhouses.com/" class="portfolio__item">
-                    <img src="img/portfolio-hacienda.png" alt="Hacienda Reality" class="portfolio__img">
-                </a>
-                
-                <!-- Portfolio item 03 -->
-                <a href="https://solutionpointplus.com/" class="portfolio__item">
-                    <img src="img/portfolio-solutionpointplus.png" alt="SolutionPoint+" class="portfolio__img">
-                </a>
-                
-                <!-- Portfolio item 04 -->
-                <a href="https://comalcountyesd6.org/" class="portfolio__item">
-                    <img src="img/portfolio-ccesd6.png" alt="" class="portfolio__img">
-                </a>       
 
+        <div class="wm-stack">
+          <!-- Launcher overlay (below bar; Ctrl+D or Applications) -->
+          <div id="launcher-shell" aria-hidden="true">
+            <div id="launcher-backdrop" aria-hidden="true"></div>
+            <div id="launcher-panel" role="region" aria-label="Application launcher">
+              <label class="visually-hidden" for="launcher-search">Search applications</label>
+              <div class="launcher-search-wrap">
+                <span class="launcher-search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="search"
+                  id="launcher-search"
+                  placeholder="Search applications"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div id="desktop-icons" class="launcher-icon-grid"></div>
             </div>
-        </section>
-               
-        <!-- Footer -->
-        <footer class="footer">
-            <h1>Contact Me!</h1>
-            <ul class="social-list">
-                <li class="social-list__item">
-                    <a class="social-list__link" href="tel:254-534-9544">
-                        <i class="fa fa-phone"></i>
-                    </a>
-                </li>
-                <li class="social-list__item">
-                    <a class="social-list__link" href="mailto:namefailedx@gmail.com">
-                        <i class="fa fa-envelope"></i>
-                    </a>
-                    </a>
-                <li class="social-list__item">
-                    <a class="social-list__link" href="https://github.com/Namefailed/">
-                        <i class="fab fa-github"></i>
-                    </a>
-                </li>
-                <li class="social-list__item">
-                    <a class="social-list__link" href="https://www.linkedin.com/in/matthew-grey-215615179/">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
-                </li>
-            </ul>
-        </footer>
-        
-        
-        <script src="js/index.js"></script>
-        
-    </body>
+          </div>
+
+          <!-- Tiling area: terminal + splitter + right-pane -->
+          <div id="panes">
+
+          <!-- Master pane: interactive terminal (always left) -->
+          <div class="app-window active" id="terminal-window">
+            <div class="win-titlebar">
+              <div class="win-title-left">
+                <span class="win-title">namefailed@dev — ~/terminal</span>
+              </div>
+              <div class="win-traffic">
+                <span class="dot dot-min" title="minimize"></span>
+                <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
+                <span class="dot dot-close" title="close terminal"></span>
+              </div>
+            </div>
+            <div class="terminal-stack">
+              <div id="terminal"></div>
+              <div class="terminal-status-bar" aria-label="Shell status">
+                <div class="terminal-hints" role="note" aria-label="Terminal tips">
+                  <span class="terminal-hint-line">
+                    <strong class="terminal-hint-strong">Overwhelmed</strong>? Try
+                    <kbd class="terminal-hint-kbd">"static"</kbd>.
+                    <span class="terminal-hint-sep" aria-hidden="true">·</span>
+                    Fullscreen <kbd class="terminal-hint-kbd">F11</kbd> for the best experience.
+                  </span>
+                </div>
+                <footer id="vim-mode-line" class="vim-mode-line mode-insert" aria-label="Vim input mode">
+                  <span class="vim-mode-glyph" aria-hidden="true">◆</span>
+                  <span class="vim-mode-core">
+                    <span class="vim-mode-dash">—</span>
+                    <span id="vim-mode-text" class="vim-mode-text">INSERT</span>
+                    <span class="vim-mode-dash">—</span>
+                  </span>
+                </footer>
+              </div>
+            </div>
+          </div>
+
+          <!-- Horizontal splitter between terminal and right pane -->
+          <div id="h-splitter" class="splitter splitter-h"></div>
+
+          <!-- Slave pane: content windows appended here by desktop.ts -->
+          <div id="right-pane"></div>
+        </div>
+        </div>
+      </div>
+
+      <!-- Floating dock — order: Terminal … Contact, About me, … (+ running extras); see LAUNCHER_ICONS in desktop.ts -->
+      <nav id="wm-taskbar" class="wm-taskbar" aria-label="Open windows">
+        <div id="wm-taskbar-dock" class="wm-taskbar-dock"></div>
+      </nav>
+    </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

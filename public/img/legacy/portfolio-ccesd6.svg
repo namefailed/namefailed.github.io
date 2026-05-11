@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="cc" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#1a1416"/>
+      <stop offset="100%" stop-color="#2a1212"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="270" fill="url(#cc)"/>
+  <rect y="0" width="480" height="12" fill="#b42318" opacity="0.85"/>
+  <rect y="14" width="480" height="4" fill="#f4e4c0" opacity="0.12"/>
+  <rect x="48" y="52" width="384" height="162" rx="6" fill="rgba(40,32,36,0.55)" stroke="rgba(244,100,92,0.28)" stroke-width="1"/>
+  <text x="66" y="96" fill="#f4e9e9" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="16" letter-spacing="0.08em">
+    COMAL ESD #6
+  </text>
+  <text x="66" y="124" fill="rgba(250,226,226,0.45)" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10" letter-spacing="0.12em">
+    FIRE · EMS · COMMUNITY
+  </text>
+  <circle cx="400" cy="188" r="8" fill="#f87364" opacity="0.85"/>
+</svg>

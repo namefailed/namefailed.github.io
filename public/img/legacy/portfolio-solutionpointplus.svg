@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="55%" stop-color="#0d2844"/>
+      <stop offset="100%" stop-color="#041220"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="270" fill="url(#sp)"/>
+  <path d="M0 206 C120 174 200 258 312 218 S440 154 480 168 V270 H0 Z" fill="rgba(122,207,247,0.08)"/>
+  <circle cx="120" cy="72" r="46" stroke="rgba(147,226,246,0.35)" stroke-width="1.2" fill="none"/>
+  <circle cx="356" cy="118" r="72" stroke="rgba(245,224,231,0.12)" stroke-width="1.5" fill="none"/>
+  <text x="56" y="96" fill="rgba(186,238,253,0.88)" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="20" letter-spacing="-0.02em">
+    SP+
+  </text>
+  <text x="56" y="124" fill="rgba(186,226,246,0.45)" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10" letter-spacing="0.2em">
+    UNDER PRESSURE
+  </text>
+</svg>

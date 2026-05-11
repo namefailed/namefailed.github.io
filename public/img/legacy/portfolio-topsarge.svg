@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ts" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#1a2118"/>
+      <stop offset="50%" stop-color="#2f3628"/>
+      <stop offset="100%" stop-color="#151914"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="270" fill="url(#ts)"/>
+  <path d="M0 218 L72 218 L132 148 L268 218 L382 148 L448 218 H480 V270 H0 Z" fill="rgba(110,148,114,0.12)"/>
+  <rect x="56" y="56" width="368" height="108" rx="4" fill="rgba(255,248,236,0.04)" stroke="rgba(206,217,207,0.18)" stroke-width="1"/>
+  <text x="72" y="108" fill="rgba(237,239,237,0.78)" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="19" letter-spacing="0.12em">
+    TOPSARGE
+  </text>
+  <text x="72" y="132" fill="rgba(206,217,207,0.38)" font-family="'JetBrains Mono',ui-monospace,monospace" font-size="10" letter-spacing="0.16em">
+    AGENCY · CMS · RELEASES
+  </text>
+</svg>
