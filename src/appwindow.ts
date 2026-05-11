@@ -4,10 +4,56 @@
 
 import { ansiToHtml } from './ansi'
 import type { PortfolioProjectEntry } from './content/portfolio'
+import { sectionHeadingLine, skillMeterBarAnsi } from './content/copy/ansi-widgets'
+import {
+  RESUME_SKILL_MATRIX_SECTIONS,
+  RESUME_SKILL_METER_LABEL_WIDTH,
+} from './content/copy/resume-copy'
+import { c } from './theme'
 
 /** WordPress mShots — slow first load but real page pixels for project cards */
 function liveSiteScreenshotUrl(web: string): string {
   return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
+}
+
+function buildResumeSkillMeterRowHtml(label: string, pct: number, lw: number): string {
+  let display = label
+  if (display.length > lw) {
+    display = `${display.slice(0, Math.max(1, lw - 1))}…`
+  }
+  const padded = display.padEnd(lw)
+  const labelAnsi = `  ${c.blue}${padded}${c.reset}`
+  const barAnsi = skillMeterBarAnsi(pct)
+  const pctAnsi = `  ${c.dim}${String(pct).padStart(3)}%${c.reset}`
+  return (
+    `<div class="win-line resume-skill-meter-row">` +
+    `<span class="resume-skill-meter-label">${ansiToHtml(labelAnsi)}</span>` +
+    `<span class="resume-skill-meter-gap" aria-hidden="true"></span>` +
+    `<span class="resume-skill-meter-bar">${ansiToHtml(barAnsi)}</span>` +
+    `<span class="resume-skill-meter-pct">${ansiToHtml(pctAnsi)}</span>` +
+    `</div>`
+  )
+}
+
+/** Structured matrix HTML (bar spans hide in narrow `@container` for percent-only layout). */
+function buildResumeSkillsMatrixInnerHtml(): string {
+  const lw = RESUME_SKILL_METER_LABEL_WIDTH
+  const parts: string[] = []
+  const sections = RESUME_SKILL_MATRIX_SECTIONS
+  for (let si = 0; si < sections.length; si++) {
+    const sec = sections[si]!
+    parts.push(
+      `<div class="win-line">${ansiToHtml(sectionHeadingLine(sec.title)) || ' '}</div>`,
+      `<div class="win-line resume-skills-matrix-spacer" aria-hidden="true"></div>`,
+    )
+    for (const [lab, pct] of sec.pairs) {
+      parts.push(buildResumeSkillMeterRowHtml(lab, pct, lw))
+    }
+    if (si < sections.length - 1) {
+      parts.push(`<div class="win-line resume-skills-matrix-spacer" aria-hidden="true"></div>`)
+    }
+  }
+  return parts.join('')
 }
 
 export interface WindowSpec {
@@ -102,6 +148,8 @@ export class AppWindow {
     } else if (opts.command === 'links') {
       this.el.classList.add('contact-window')
       this.renderContact(opts.content)
+    } else if (opts.command === 'whoami') {
+      this.renderAboutMe(opts.content)
     } else if (opts.command === 'projects' && opts.projectCards?.length) {
       this.el.classList.add('projects-window')
       this.renderProjectCards(opts.projectCards)
@@ -169,37 +217,19 @@ export class AppWindow {
       bodyLines.length > 0
 
     if (structuredLead) {
-      const leadRow = document.createElement('div')
-      leadRow.className = 'resume-lead-row'
+      const leadGrid = document.createElement('div')
+      leadGrid.className = 'resume-lead-grid resume-lead-grid--no-photo'
+
       const leadText = document.createElement('div')
       leadText.className = 'resume-lead-text'
       leadText.innerHTML = mapLines(leadLines!)
-
-      const photoFig = document.createElement('figure')
-      photoFig.className = 'resume-lead-photo'
-      const headImg = document.createElement('img')
-      headImg.className = 'resume-photo resume-lead-photo__img'
-      headImg.alt = 'Portrait'
-      headImg.src = '/portrait.jpg'
-      headImg.loading = 'lazy'
-      headImg.decoding = 'async'
-      headImg.addEventListener(
-        'error',
-        () => {
-          photoFig.remove()
-        },
-        { once: true },
-      )
-      photoFig.appendChild(headImg)
-
-      leadRow.appendChild(leadText)
-      leadRow.appendChild(photoFig)
 
       const bodyBlock = document.createElement('div')
       bodyBlock.className = 'resume-body-block'
       bodyBlock.innerHTML = mapBodyLines(bodyLines!)
 
-      narrativeCol.append(leadRow, bodyBlock)
+      leadGrid.append(leadText, bodyBlock)
+      narrativeCol.appendChild(leadGrid)
     } else {
       narrativeCol.innerHTML = mapLines(lines)
     }
@@ -214,17 +244,34 @@ export class AppWindow {
       const skillsInner = document.createElement('div')
       skillsInner.className = 'resume-skills-body'
 
-      const { matrix, notes } = splitSkillsSections(skillsLines!)
-      const matrixFiltered = matrix.filter(l => stripAnsiForDetect(l).trim() !== '')
+      const { notes } = splitSkillsSections(skillsLines!)
       const matrixEl = document.createElement('div')
       matrixEl.className = 'resume-skills-matrix'
-      matrixEl.innerHTML = mapLines(matrixFiltered.length ? matrixFiltered : matrix)
+      matrixEl.innerHTML = buildResumeSkillsMatrixInnerHtml()
       skillsInner.appendChild(matrixEl)
       const notesFiltered = notes.filter(l => stripAnsiForDetect(l).trim() !== '')
       if (notesFiltered.length) {
         const notesEl = document.createElement('div')
         notesEl.className = 'resume-skills-notes'
-        notesEl.innerHTML = mapLines(notesFiltered)
+        const titleLine = notesFiltered[0]!
+        const rest = notesFiltered
+          .slice(1)
+          .filter(l => stripAnsiForDetect(l).trim() !== '')
+        const titleDiv = document.createElement('div')
+        titleDiv.className = 'resume-skills-notes-title win-line'
+        titleDiv.innerHTML = ansiToHtml(titleLine) || ' '
+        notesEl.appendChild(titleDiv)
+        if (rest.length) {
+          const ul = document.createElement('ul')
+          ul.className = 'resume-skills-notes-list'
+          for (const ln of rest) {
+            const li = document.createElement('li')
+            li.className = 'resume-skills-notes-item'
+            li.innerHTML = ansiToHtml(ln) || ' '
+            ul.appendChild(li)
+          }
+          notesEl.appendChild(ul)
+        }
         skillsInner.appendChild(notesEl)
       }
 
@@ -237,6 +284,16 @@ export class AppWindow {
 
   /** Portrait / placeholder + animated rail beside contact lines */
   private renderContact(lines: string[]): void {
+    this.renderPortraitColumnLayout(lines)
+  }
+
+  /** About me — portrait column (moved off résumé) + ANSI lines */
+  private renderAboutMe(lines: string[]): void {
+    this.renderPortraitColumnLayout(lines)
+  }
+
+  /** Shared by Links (`renderContact`) and About me (`whoami`). */
+  private renderPortraitColumnLayout(lines: string[]): void {
     const wrap = document.createElement('div')
     wrap.className = 'contact-layout'
 

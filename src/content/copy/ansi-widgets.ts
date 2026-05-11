@@ -18,7 +18,8 @@ export function sectionHeadingLine(title: string, ruleTargetWidth = 44): string 
   return `  ${c.pink}${title}${c.reset}  ${c.dim}${'─'.repeat(dashes)}${c.reset}`
 }
 
-function skillBarFilled(pct: number, width = 18): string {
+/** ANSI bar segment only (█/░) — used by `skillMeterLine` and résumé tile HTML */
+export function skillMeterBarAnsi(pct: number, width = 18): string {
   const filled = Math.round((pct / 100) * width)
   const empty = width - filled
   return `${c.pink}${'█'.repeat(filled)}${c.reset}` + `${c.dim}${'░'.repeat(empty)}${c.reset}`
@@ -33,7 +34,7 @@ export function skillMeterLine(label: string, pct: number, labelWidth: number): 
   const padded = display.padEnd(labelWidth)
   return (
     `  ${c.blue}${padded}${c.reset}` +
-    `${skillBarFilled(pct)}  ` +
+    `${skillMeterBarAnsi(pct)}  ` +
     `${c.dim}${String(pct).padStart(3)}%${c.reset}`
   )
 }

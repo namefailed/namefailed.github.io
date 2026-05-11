@@ -84,12 +84,14 @@ export class RubikWindow {
   private onClose: () => void
   private onMinimize: () => void
   private onMaximize: () => void
+  private notifyFocus: () => void
 
   constructor(opts: RubikWindowOptions) {
     this.onClose = opts.onClose
     this.onMinimize = opts.onMinimize
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
+    this.notifyFocus = opts.onFocus
 
     this.state = solvedCube()
 
@@ -123,7 +125,7 @@ export class RubikWindow {
       e.stopPropagation()
       this.onMaximize()
     })
-    bar.addEventListener('mousedown', () => opts.onFocus())
+    bar.addEventListener('mousedown', () => this.notifyFocus())
 
     const toolbar = document.createElement('div')
     toolbar.className = 'rubik-toolbar'
@@ -202,7 +204,7 @@ export class RubikWindow {
       b.textContent = m
       b.addEventListener('click', () => {
         this.commitTurnAnimated(m)
-        opts.onFocus()
+        this.notifyFocus()
         this.el.focus()
       })
       moveRow.appendChild(b)
@@ -222,10 +224,10 @@ export class RubikWindow {
     this.el.appendChild(stack)
 
     this.initThree()
-    this.setupPointerRouter()
+    this.setupStickerClickRouter()
 
     this.el.addEventListener('keydown', e => this.onKey(e), true)
-    this.el.addEventListener('mousedown', () => opts.onFocus())
+    this.el.addEventListener('mousedown', () => this.notifyFocus())
     this.syncStickerMaterials()
     this.updateStatus()
   }
@@ -236,7 +238,11 @@ export class RubikWindow {
     b.className = 'rubik-tool-btn os-toolbar-btn os-toolbar-btn--accent'
     b.textContent = label
     b.title = title
-    b.addEventListener('click', fn)
+    b.addEventListener('click', () => {
+      fn()
+      this.notifyFocus()
+      this.el.focus()
+    })
     return b
   }
 
@@ -268,9 +274,9 @@ export class RubikWindow {
     cam.position.set(2.9, 2.2, 3.8)
     this.camera = cam
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))
-    renderer.setClearColor(0x000000, 0)
+    renderer.setClearColor(0x0c0c12, 1)
     renderer.outputColorSpace = SRGBColorSpace
     this.renderer = renderer
     this.host.appendChild(renderer.domElement)
@@ -282,8 +288,10 @@ export class RubikWindow {
 
     const plastic = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#14141c'),
+      depthWrite: true,
     })
-    const core = new THREE.Mesh(new THREE.BoxGeometry(2.96, 2.96, 2.96), plastic)
+    /* Slightly smaller than the ±1 sticker shell so depth tests stay stable. */
+    const core = new THREE.Mesh(new THREE.BoxGeometry(1.94, 1.94, 1.94), plastic)
     scene.add(core)
 
     this.stickerRoot = new THREE.Group()
@@ -298,6 +306,7 @@ export class RubikWindow {
           geom,
           new THREE.MeshBasicMaterial({
             color: new THREE.Color('#888'),
+            side: THREE.DoubleSide,
             polygonOffset: true,
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1,
@@ -318,6 +327,7 @@ export class RubikWindow {
       }
     }
 
+    /* After Orbit attaches pointer listeners (incl. setPointerCapture), route sticker clicks via `click`. */
     const ctl = new OrbitControls(cam, renderer.domElement)
     ctl.enableDamping = true
     ctl.dampingFactor = 0.06
@@ -345,7 +355,11 @@ export class RubikWindow {
     requestAnimationFrame(() => this.resizeGl())
   }
 
-  private setupPointerRouter(): void {
+  /**
+   * Use `click` (not pointerup) so we stay compatible with OrbitControls'
+   * pointer capture on the same canvas.
+   */
+  private setupStickerClickRouter(): void {
     const el = this.renderer.domElement
     el.style.touchAction = 'none'
 
@@ -354,8 +368,13 @@ export class RubikWindow {
       this.ptrDown = { x: e.clientX, y: e.clientY, button: e.button }
     })
 
-    el.addEventListener('pointerup', e => {
-      if (e.button !== 0 || !this.ptrDown) return
+    el.addEventListener('pointercancel', () => {
+      this.ptrDown = null
+    })
+
+    el.addEventListener('click', (e: MouseEvent) => {
+      if (e.button !== 0) return
+      if (!this.ptrDown) return
       const dx = e.clientX - this.ptrDown.x
       const dy = e.clientY - this.ptrDown.y
       const moved = Math.hypot(dx, dy)
@@ -363,14 +382,16 @@ export class RubikWindow {
       if (moved > this.dragSlop || this.animating) return
 
       const r = el.getBoundingClientRect()
-      this.pointerNdc.x = ((e.clientX - r.left) / r.width) * 2 - 1
-      this.pointerNdc.y = -((e.clientY - r.top) / r.height) * 2 + 1
+      const rw = Math.max(1, r.width)
+      const rh = Math.max(1, r.height)
+      this.pointerNdc.x = ((e.clientX - r.left) / rw) * 2 - 1
+      this.pointerNdc.y = -((e.clientY - r.top) / rh) * 2 + 1
       this.raycaster.setFromCamera(this.pointerNdc, this.camera)
       const hits = this.raycaster.intersectObjects(this.stickerMeshes, false)
       const hit = hits[0]
-      if (!hit) return
+      if (!hit?.face) return
 
-      const nWorld = hit.face!.normal.clone().transformDirection(hit.object.matrixWorld)
+      const nWorld = hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
       const clicked = hit.object.userData.cubeFace as CubeFaceKey
       const hinted = turnFaceFromWorldNormal(nWorld)
       const face =

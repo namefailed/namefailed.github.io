@@ -8,56 +8,77 @@
 import { c } from '../../theme'
 import { dimInterpunct, dimRule, sectionHeadingLine, skillMeterLine } from './ansi-widgets'
 
-function skillsDetailLines(): string[] {
-  const pairs: Array<[string, number]> = [
-    ['TypeScript', 88],
-    ['JavaScript', 88],
-    ['HTML / CSS', 90],
-    ['Java', 72],
-    ['Python', 68],
-    ['SQL', 62],
-    ['Bash', 74],
-    ['Node.js', 78],
-    ['React', 72],
-    ['Responsive UI', 86],
-    ['Vite / tooling', 78],
-    ['Accessibility basics', 68],
-    ['CMS / WordPress', 78],
-    ['REST APIs', 74],
-    ['JSON / HTTP', 82],
-    ['OAuth-style auth', 58],
-    ['Git', 90],
-    ['Linux', 74],
-    ['pnpm / npm', 76],
-    ['PowerShell', 72],
-  ]
-  /* Fixed label width so every bar column lines up in the skills rail */
-  const lw = 22
+/** Label column width for skill meter rows (terminal + tile) */
+export const RESUME_SKILL_METER_LABEL_WIDTH = 22
 
-  return [
-    '',
-    sectionHeadingLine('languages'),
-    '',
-    ...pairs.slice(0, 8).map(([l, p]) => skillMeterLine(l, p, lw)),
-    '',
-    sectionHeadingLine('frontend & UI'),
-    '',
-    ...pairs.slice(8, 13).map(([l, p]) => skillMeterLine(l, p, lw)),
-    '',
-    sectionHeadingLine('backend & integration'),
-    '',
-    ...pairs.slice(13, 16).map(([l, p]) => skillMeterLine(l, p, lw)),
-    '',
-    sectionHeadingLine('tools & workflow'),
-    '',
-    ...pairs.slice(16).map(([l, p]) => skillMeterLine(l, p, lw)),
+export interface ResumeSkillMatrixSection {
+  readonly title: string
+  readonly pairs: ReadonlyArray<readonly [string, number]>
+}
+
+/** Single source for skills matrix — tile builds HTML from this; strings come from `skillsDetailLines` */
+export const RESUME_SKILL_MATRIX_SECTIONS: readonly ResumeSkillMatrixSection[] = [
+  {
+    title: 'languages',
+    pairs: [
+      ['TypeScript', 88],
+      ['JavaScript', 88],
+      ['HTML / CSS', 90],
+      ['Java', 72],
+      ['Python', 68],
+      ['SQL', 62],
+      ['Bash', 74],
+      ['Node.js', 78],
+    ],
+  },
+  {
+    title: 'frontend & UI',
+    pairs: [
+      ['React', 72],
+      ['Responsive UI', 86],
+      ['Vite / tooling', 78],
+      ['Accessibility basics', 68],
+      ['CMS / WordPress', 78],
+    ],
+  },
+  {
+    title: 'backend & integration',
+    pairs: [
+      ['REST APIs', 74],
+      ['JSON / HTTP', 82],
+      ['OAuth-style auth', 58],
+    ],
+  },
+  {
+    title: 'tools & workflow',
+    pairs: [
+      ['Git', 90],
+      ['Linux', 74],
+      ['pnpm / npm', 76],
+      ['PowerShell', 72],
+    ],
+  },
+] as const
+
+export const RESUME_WORKSTYLE_BULLETS: readonly string[] = [
+  'Small commits, descriptive messages, reviews when pairing.',
+  'Prefer boring stacks that teammates can grep six months later.',
+  'Tests where they save regressions; docs where onboarding hurts.',
+  'Ship thin slices: measurable checkpoints instead of big-bang reveals.',
+]
+
+function skillsDetailLines(): string[] {
+  const lw = RESUME_SKILL_METER_LABEL_WIDTH
+  const lines: string[] = ['']
+  for (const sec of RESUME_SKILL_MATRIX_SECTIONS) {
+    lines.push(sectionHeadingLine(sec.title), '', ...sec.pairs.map(([l, p]) => skillMeterLine(l, p, lw)), '')
+  }
+  lines.push(
     '',
     sectionHeadingLine('how I like to work'),
-    `${dimInterpunct} Small commits, descriptive messages, reviews when pairing.`,
-    `${dimInterpunct} Prefer boring stacks that teammates can grep six months later.`,
-    `${dimInterpunct} Tests where they save regressions; docs where onboarding hurts.`,
-    `${dimInterpunct} Ship thin slices: measurable checkpoints instead of big-bang reveals.`,
-  ]
+    ...RESUME_WORKSTYLE_BULLETS.map(b => `${dimInterpunct} ${b}`),
+  )
+  return lines
 }
 
 function resumeHrBar(): string {

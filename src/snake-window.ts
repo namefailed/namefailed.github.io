@@ -1,4 +1,5 @@
 // ── snake-window.ts ───────────────────────────────────────────────────────────
+// Grid snake: fills the tile, adaptive speed, powerups, HUD controls.
 
 export interface SnakeWindowOptions {
   onClose: () => void
@@ -7,8 +8,14 @@ export interface SnakeWindowOptions {
   onFocus: () => void
 }
 
-/** Game tick cadence — snappy but still readable under WM focus */
-const TICK_MS = 82
+const TARGET_CELL = 15
+const MIN_COLS = 18
+const MIN_ROWS = 14
+const BASE_TICK_MS = 82
+const MIN_TICK_MS = 34
+const LENGTH_SPEED_STEP = 2.1 /** ms faster per segment beyond starter length */
+
+type PowerKind = 'ghost' | 'gem' | 'trim' | 'growth'
 
 export class SnakeWindow {
   readonly el: HTMLElement
@@ -19,21 +26,28 @@ export class SnakeWindow {
   private ctx: CanvasRenderingContext2D
   private wrap: HTMLElement
   private scoreEl: HTMLElement
-  private timer: number | null = null
-  /** True while the simulation interval is armed (playing or paused-draw only) */
+  private lengthEl: HTMLElement
+  private btnPause: HTMLButtonElement
+  private btnRestart: HTMLButtonElement
+
+  private timer: ReturnType<typeof window.setTimeout> | null = null
   private playing = false
-  /** Separate from playing — survives until next reset */
   private gameOverActive = false
 
-  private cols = 38
-  private rows = 26
+  private cols = 28
+  private rows = 22
   private snake: { x: number; y: number }[] = []
   private dir: { x: number; y: number } = { x: 1, y: 0 }
   private pendingDir: { x: number; y: number } | null = null
   private food = { x: 5, y: 5 }
+  private powerup: null | { x: number; y: number; kind: PowerKind } = null
   private score = 0
-  /** Food shimmer phase (advance each tick + draw) */
   private foodPhase = 0
+  private powerPhase = 0
+  /** Moves left where self-collision is ignored (ghost orb) */
+  private ghostMovesLeft = 0
+  /** Extra growth segments to apply on next non-food moves */
+  private growDebt = 0
 
   private onClose: () => void
   private onMinimize: () => void
@@ -77,17 +91,51 @@ export class SnakeWindow {
 
     const hud = document.createElement('div')
     hud.className = 'snake-hud'
+
+    const scoreBlock = document.createElement('div')
+    scoreBlock.className = 'snake-hud-scoreblock'
+    const scoreLabel = document.createElement('span')
+    scoreLabel.className = 'snake-score-label'
+    scoreLabel.textContent = 'score'
     this.scoreEl = document.createElement('span')
     this.scoreEl.className = 'snake-score'
     this.scoreEl.textContent = '0'
     this.scoreEl.setAttribute('aria-label', 'score')
-    const scoreLabel = document.createElement('span')
-    scoreLabel.className = 'snake-score-label'
-    scoreLabel.textContent = 'score'
+    const lenLabel = document.createElement('span')
+    lenLabel.className = 'snake-score-label snake-score-label--dim'
+    lenLabel.textContent = 'len'
+    this.lengthEl = document.createElement('span')
+    this.lengthEl.className = 'snake-length'
+    this.lengthEl.textContent = '3'
+    scoreBlock.append(scoreLabel, this.scoreEl, lenLabel, this.lengthEl)
+
     const hint = document.createElement('span')
     hint.className = 'snake-hint'
-    hint.textContent = 'arrows · wasd · p pause · space restart'
-    hud.append(scoreLabel, this.scoreEl, hint)
+    hint.textContent = 'arrows · wasd · fruit · orbs: ghost · gem · trim · growth'
+
+    const tools = document.createElement('div')
+    tools.className = 'snake-hud-tools'
+    this.btnRestart = document.createElement('button')
+    this.btnRestart.type = 'button'
+    this.btnRestart.className = 'snake-hud-btn snake-hud-btn--primary'
+    this.btnRestart.textContent = 'Restart'
+    this.btnRestart.title = 'Restart game (Space)'
+    this.btnRestart.addEventListener('click', e => {
+      e.stopPropagation()
+      this.resetGame()
+    })
+    this.btnPause = document.createElement('button')
+    this.btnPause.type = 'button'
+    this.btnPause.className = 'snake-hud-btn'
+    this.btnPause.textContent = 'Pause'
+    this.btnPause.title = 'Pause / resume (P)'
+    this.btnPause.addEventListener('click', e => {
+      e.stopPropagation()
+      this.togglePause()
+    })
+    tools.append(this.btnRestart, this.btnPause)
+
+    hud.append(scoreBlock, hint, tools)
 
     this.wrap = document.createElement('div')
     this.wrap.className = 'snake-canvas-wrap'
@@ -98,7 +146,7 @@ export class SnakeWindow {
     this.canvas.setAttribute('role', 'img')
     this.canvas.setAttribute(
       'aria-label',
-      'Snake playfield · green snake, eat pink fruit · arrow keys',
+      'Snake · eat fruit · collect powerups · arrow keys',
     )
 
     const g = this.canvas.getContext('2d')
@@ -115,30 +163,90 @@ export class SnakeWindow {
     this.el.appendChild(bar)
     this.el.appendChild(stack)
 
-    this.resetGame()
-
-    const ro = new ResizeObserver(() => this.draw())
+    const ro = new ResizeObserver(() => this.onWrapResize())
     ro.observe(this.wrap)
 
     this.el.addEventListener('keydown', e => this.onKey(e), true)
-
     this.el.addEventListener('mousedown', () => opts.onFocus())
     bar.addEventListener('mousedown', () => opts.onFocus())
+
+    requestAnimationFrame(() => {
+      this.syncGridFromWrap()
+      this.resetGame()
+    })
+  }
+
+  private onWrapResize(): void {
+    const prevC = this.cols
+    const prevR = this.rows
+    this.syncGridFromWrap()
+    if (this.cols !== prevC || this.rows !== prevR) {
+      if (this.playing && !this.gameOverActive) {
+        this.resetGame()
+        return
+      }
+    }
+    this.draw()
+  }
+
+  private syncGridFromWrap(): void {
+    const cw = Math.max(140, Math.floor(this.wrap.clientWidth || 400))
+    const ch = Math.max(140, Math.floor(this.wrap.clientHeight || 320))
+    this.cols = Math.max(MIN_COLS, Math.floor(cw / TARGET_CELL))
+    this.rows = Math.max(MIN_ROWS, Math.floor(ch / TARGET_CELL))
   }
 
   private stopLoop(): void {
     this.playing = false
     if (this.timer != null) {
-      window.clearInterval(this.timer)
+      window.clearTimeout(this.timer)
       this.timer = null
     }
+    this.syncPauseButton()
+  }
+
+  private getTickMs(): number {
+    const extra = Math.max(0, this.snake.length - 3)
+    const faster = Math.min(48, extra * LENGTH_SPEED_STEP)
+    return Math.max(MIN_TICK_MS, Math.floor(BASE_TICK_MS - faster))
+  }
+
+  private scheduleNextTick(): void {
+    if (!this.playing || this.gameOverActive) return
+    if (this.timer != null) window.clearTimeout(this.timer)
+    this.timer = window.setTimeout(() => {
+      this.timer = null
+      this.tick()
+    }, this.getTickMs())
+  }
+
+  private togglePause(): void {
+    if (this.gameOverActive) return
+    if (this.playing) {
+      this.stopLoop()
+    } else {
+      this.playing = true
+      this.scheduleNextTick()
+    }
+    this.draw()
+  }
+
+  private syncPauseButton(): void {
+    this.btnPause.textContent = this.playing ? 'Pause' : 'Resume'
+    this.btnPause.disabled = this.gameOverActive
+    this.btnPause.classList.toggle('snake-hud-btn--active', !this.playing && !this.gameOverActive)
   }
 
   private resetGame(): void {
     this.stopLoop()
     this.gameOverActive = false
+    this.syncGridFromWrap()
+    this.ghostMovesLeft = 0
+    this.growDebt = 0
+    this.powerup = null
+
     const midY = Math.floor(this.rows / 2)
-    const headX = Math.min(this.cols - 4, Math.max(3, Math.floor(this.cols / 3)))
+    const headX = Math.min(this.cols - 6, Math.max(5, Math.floor(this.cols / 2)))
     this.snake = [
       { x: headX, y: midY },
       { x: headX - 1, y: midY },
@@ -148,22 +256,49 @@ export class SnakeWindow {
     this.pendingDir = null
     this.score = 0
     this.scoreEl.textContent = '0'
+    this.lengthEl.textContent = String(this.snake.length)
     this.foodPhase = 0
+    this.powerPhase = 0
     this.placeFood()
+    this.trySpawnPowerup(0.22)
     this.playing = true
-    this.timer = window.setInterval(() => this.tick(), TICK_MS)
+    this.syncPauseButton()
     this.draw()
+    requestAnimationFrame(() => {
+      if (this.playing && !this.gameOverActive) this.scheduleNextTick()
+    })
+  }
+
+  private emptyCell(): { x: number; y: number } | null {
+    const taken = new Set(this.snake.map(s => `${s.x},${s.y}`))
+    taken.add(`${this.food.x},${this.food.y}`)
+    if (this.powerup) taken.add(`${this.powerup.x},${this.powerup.y}`)
+    const holes: { x: number; y: number }[] = []
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        const k = `${x},${y}`
+        if (!taken.has(k)) holes.push({ x, y })
+      }
+    }
+    if (!holes.length) return null
+    return holes[Math.floor(Math.random() * holes.length)]!
   }
 
   private placeFood(): void {
-    let ok = false
-    while (!ok) {
-      this.food = {
-        x: Math.floor(Math.random() * this.cols),
-        y: Math.floor(Math.random() * this.rows),
-      }
-      ok = !this.snake.some(s => s.x === this.food.x && s.y === this.food.y)
-    }
+    const c = this.emptyCell()
+    if (!c) return
+    this.food = c
+  }
+
+  private trySpawnPowerup(baseChance: number): void {
+    if (this.powerup) return
+    if (Math.random() > baseChance) return
+    const c = this.emptyCell()
+    if (!c) return
+    const roll = Math.random()
+    const kind: PowerKind =
+      roll < 0.26 ? 'ghost' : roll < 0.5 ? 'gem' : roll < 0.72 ? 'trim' : 'growth'
+    this.powerup = { ...c, kind }
   }
 
   private onKey(ev: KeyboardEvent): void {
@@ -177,13 +312,7 @@ export class SnakeWindow {
       ev.preventDefault()
       ev.stopPropagation()
       if (this.gameOverActive) return
-      if (this.playing) {
-        this.stopLoop()
-      } else {
-        this.playing = true
-        this.timer = window.setInterval(() => this.tick(), TICK_MS)
-      }
-      this.draw()
+      this.togglePause()
       return
     }
     if (this.gameOverActive) return
@@ -222,8 +351,12 @@ export class SnakeWindow {
 
   private tick(): void {
     if (!this.playing) return
-    if (this.el.classList.contains('minimized')) return
+    if (this.el.classList.contains('minimized')) {
+      this.scheduleNextTick()
+      return
+    }
     this.foodPhase += 0.11
+    this.powerPhase += 0.09
 
     if (this.pendingDir) {
       this.dir = this.pendingDir
@@ -235,32 +368,82 @@ export class SnakeWindow {
       this.enterGameOver()
       return
     }
-    if (this.snake.some(s => s.x === nh.x && s.y === nh.y)) {
+
+    const willEatFood = nh.x === this.food.x && nh.y === this.food.y
+    const willEatPower = this.powerup && nh.x === this.powerup.x && nh.y === this.powerup.y
+
+    const tail = this.snake[this.snake.length - 1]
+    const ignoreTail =
+      !willEatFood &&
+      !willEatPower &&
+      this.growDebt === 0 &&
+      tail &&
+      nh.x === tail.x &&
+      nh.y === tail.y
+
+    const hitSelf =
+      !this.ghostMovesLeft &&
+      this.snake.some((s, i) => {
+        if (s.x !== nh.x || s.y !== nh.y) return false
+        if (ignoreTail && i === this.snake.length - 1) return false
+        return true
+      })
+
+    if (hitSelf) {
       this.enterGameOver()
       return
     }
+
     this.snake.unshift(nh)
-    if (nh.x === this.food.x && nh.y === this.food.y) {
+    if (this.ghostMovesLeft > 0) this.ghostMovesLeft--
+
+    if (willEatFood) {
       this.score++
       this.scoreEl.textContent = String(this.score)
       this.placeFood()
-    } else {
+      this.trySpawnPowerup(0.12)
+    } else if (willEatPower && this.powerup) {
       this.snake.pop()
+      const k = this.powerup.kind
+      this.powerup = null
+      if (k === 'ghost') {
+        this.ghostMovesLeft += 16
+        this.score += 2
+      } else if (k === 'gem') {
+        this.score += 6
+      } else if (k === 'growth') {
+        this.growDebt += 2
+        this.score += 1
+      } else {
+        const cut = Math.min(4, Math.max(0, this.snake.length - 4))
+        for (let i = 0; i < cut; i++) this.snake.pop()
+      }
+      this.scoreEl.textContent = String(this.score)
+      this.trySpawnPowerup(0.08)
+    } else {
+      if (this.growDebt > 0) {
+        this.growDebt--
+      } else {
+        this.snake.pop()
+      }
     }
+
+    this.lengthEl.textContent = String(this.snake.length)
     this.draw()
+    if (this.playing && !this.gameOverActive) this.scheduleNextTick()
   }
 
   private enterGameOver(): void {
     if (this.timer != null) {
-      window.clearInterval(this.timer)
+      window.clearTimeout(this.timer)
       this.timer = null
     }
     this.playing = false
     this.gameOverActive = true
+    this.syncPauseButton()
     this.draw()
   }
 
-  /** Cell center in pixel space */
   private cc(x: number, y: number, cs: number): { ox: number; oy: number } {
     return { ox: x * cs + cs * 0.5, oy: y * cs + cs * 0.5 }
   }
@@ -285,30 +468,40 @@ export class SnakeWindow {
   }
 
   private draw(): void {
+    this.syncGridFromWrap()
     const r = this.wrap.getBoundingClientRect()
-    const cw = Math.max(120, r.width)
-    const ch = Math.max(120, r.height)
-    const cs = Math.floor(Math.min(cw / this.cols, ch / this.rows))
-    const gw = cs * this.cols
-    const gh = cs * this.rows
+    const cw = Math.max(120, Math.floor(r.width))
+    const ch = Math.max(120, Math.floor(r.height))
+    const cs = Math.min(cw / this.cols, ch / this.rows)
+    const gw = this.cols * cs
+    const gh = this.rows * cs
+    const ox = Math.floor((cw - gw) * 0.5)
+    const oy = Math.floor((ch - gh) * 0.5)
 
     const dpr = Math.min(2.25, window.devicePixelRatio || 1)
-    this.canvas.width = Math.floor(gw * dpr)
-    this.canvas.height = Math.floor(gh * dpr)
-    this.canvas.style.width = `${gw}px`
-    this.canvas.style.height = `${gh}px`
+    this.canvas.width = Math.floor(cw * dpr)
+    this.canvas.height = Math.floor(ch * dpr)
+    this.canvas.style.width = `${cw}px`
+    this.canvas.style.height = `${ch}px`
     const ctx = this.ctx
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    const bg0 = this.cssColor('--snake-bg-a', '#0c0d12')
-    const bg1 = this.cssColor('--snake-bg-b', '#13151e')
-    const body = this.cssColor('--snake-fg', '#a6e3a1')
-    const bodyMid = this.cssColor('--snake-fg-mid', '#7abf8f')
-    const outline = this.cssColor('--snake-outline', '#1a3d29')
-    const headFill = this.cssColor('--snake-head', '#b8efc2')
-    const food = this.cssColor('--snake-food', '#f38ba8')
-    const foodHot = this.cssColor('--snake-food-hot', '#ffeefb')
-    const grid = this.cssColor('--snake-grid', 'rgba(148,156,212,0.06)')
+    const bg0 = this.cssColor('--snake-bg-a', '#0a0b10')
+    const bg1 = this.cssColor('--snake-bg-b', '#161825')
+    const body = this.cssColor('--snake-fg', '#8fe0a8')
+    const bodyMid = this.cssColor('--snake-fg-mid', '#5cb87a')
+    const outline = this.cssColor('--snake-outline', '#153428')
+    const headFill = this.cssColor('--snake-head', '#c8fad3')
+    const food = this.cssColor('--snake-food', '#f591b2')
+    const foodHot = this.cssColor('--snake-food-hot', '#fff5fb')
+    const gridMaj = this.cssColor('--snake-grid-major', 'rgba(180,190,255,0.09)')
+    const gridMin = this.cssColor('--snake-grid-minor', 'rgba(180,190,255,0.045)')
+
+    ctx.fillStyle = '#05060a'
+    ctx.fillRect(0, 0, cw, ch)
+
+    ctx.save()
+    ctx.translate(ox, oy)
 
     const gLin = ctx.createLinearGradient(0, 0, gw, gh)
     gLin.addColorStop(0, bg0)
@@ -316,63 +509,60 @@ export class SnakeWindow {
     ctx.fillStyle = gLin
     ctx.fillRect(0, 0, gw, gh)
 
-    // Subtle vignette corners
-    const vig = ctx.createRadialGradient(gw * 0.5, gh * 0.45, cs * 1.5, gw * 0.5, gh * 0.5, Math.hypot(gw, gh) * 0.72)
+    const vig = ctx.createRadialGradient(gw * 0.5, gh * 0.45, cs * 1.2, gw * 0.5, gh * 0.5, Math.hypot(gw, gh) * 0.75)
     vig.addColorStop(0, 'rgba(15,17,26,0)')
-    vig.addColorStop(1, 'rgba(8,8,14,0.55)')
+    vig.addColorStop(1, 'rgba(6,6,12,0.5)')
     ctx.fillStyle = vig
     ctx.fillRect(0, 0, gw, gh)
 
-    // Grid dots (lighter than stroked lines — less cafeteria-table)
-    ctx.fillStyle = grid
-    const stepDots = cs >= 28 ? 1 : cs >= 20 ? 2 : 3
-    for (let gy = stepDots; gy < this.rows; gy += stepDots) {
-      for (let gx = stepDots; gx < this.cols; gx += stepDots) {
-        const cx = gx * cs
-        const cy = gy * cs
-        ctx.beginPath()
-        ctx.arc(cx + cs * 0.12, cy + cs * 0.12, 0.85, 0, Math.PI * 2)
-        ctx.fill()
-      }
+    // Light grid lines
+    ctx.lineWidth = 1
+    ctx.strokeStyle = gridMin
+    ctx.beginPath()
+    for (let gx = 0; gx <= this.cols; gx++) {
+      const x = gx * cs
+      ctx.moveTo(x, 0)
+      ctx.lineTo(x, gh)
     }
+    for (let gy = 0; gy <= this.rows; gy++) {
+      const y = gy * cs
+      ctx.moveTo(0, y)
+      ctx.lineTo(gw, y)
+    }
+    ctx.stroke()
+
+    ctx.strokeStyle = gridMaj
+    ctx.lineWidth = 1
+    ctx.strokeRect(0.5, 0.5, gw - 1, gh - 1)
 
     const path = this.buildSnakePath(cs, gw, gh)
     const thick = cs * 0.78
 
     if (this.snake.length >= 1) {
       ctx.save()
-
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
-
-      ctx.shadowColor = 'rgba(138,243,173,0.35)'
-      ctx.shadowBlur = cs * 0.42
+      ctx.shadowColor = 'rgba(138,243,173,0.32)'
+      ctx.shadowBlur = cs * 0.38
       ctx.strokeStyle = outline
       ctx.lineWidth = thick + cs * 0.06
       ctx.stroke(path)
-
       ctx.shadowBlur = 0
-
       const gBody = ctx.createLinearGradient(0, 0, gw, gh)
       gBody.addColorStop(0, headFill)
       gBody.addColorStop(0.45, body)
       gBody.addColorStop(1, bodyMid)
-
       ctx.strokeStyle = outline
       ctx.lineWidth = thick + cs * 0.035
       ctx.stroke(path)
-
       ctx.strokeStyle = gBody
       ctx.lineWidth = thick
       ctx.stroke(path)
-
       ctx.restore()
 
-      // Head capsule + eyes
       const hd = this.snake[0]!
       const { ox: hx, oy: hy } = this.cc(hd.x, hd.y, cs)
       const headR = cs * 0.44
-
       ctx.save()
       const headGrad = ctx.createRadialGradient(hx - headR * 0.35, hy - headR * 0.35, cs * 0.05, hx, hy, headR + 2)
       headGrad.addColorStop(0, headFill)
@@ -381,18 +571,14 @@ export class SnakeWindow {
       ctx.beginPath()
       ctx.arc(hx, hy, headR, 0, Math.PI * 2)
       ctx.fill()
-
       ctx.lineWidth = 1.25
       ctx.strokeStyle = 'rgba(26,61,41,0.55)'
       ctx.stroke()
-
-      // Eyes (sit slightly forward relative to velocity)
       const ex = Math.max(-1, Math.min(1, this.dir.x)) * cs * 0.06
       const ey = Math.max(-1, Math.min(1, this.dir.y)) * cs * 0.06
       const perp = this.dir.x === 0 ? { px: cs * 0.15, py: 0 } : { px: 0, py: cs * 0.15 }
       const eBaseX = hx + ex
       const eBaseY = hy + ey
-
       const eyeR = cs * 0.11
       for (const sgn of [-1, 1] as const) {
         ctx.fillStyle = 'rgba(255,253,246,0.96)'
@@ -407,20 +593,16 @@ export class SnakeWindow {
       ctx.restore()
     }
 
-    // Fruit
-    const { ox: fx, oy: fy } = this.cc(this.food.x, this.food.y, cs)
     const pulse = (Math.sin(this.foodPhase) + 1) * 0.5
-    const fr = cs * (0.32 + pulse * 0.05)
-
+    const { ox: fx, oy: fy } = this.cc(this.food.x, this.food.y, cs)
+    const fr = cs * (0.3 + pulse * 0.06)
     ctx.save()
-    ctx.shadowColor = 'rgba(243,139,168,0.55)'
-    ctx.shadowBlur = cs * (0.35 + pulse * 0.2)
-
+    ctx.shadowColor = 'rgba(243,139,168,0.5)'
+    ctx.shadowBlur = cs * (0.32 + pulse * 0.18)
     const fGrad = ctx.createRadialGradient(fx - fr * 0.35, fy - fr * 0.4, cs * 0.02, fx, fy, fr * 1.25)
     fGrad.addColorStop(0, foodHot)
     fGrad.addColorStop(0.45, food)
     fGrad.addColorStop(1, '#7a2942')
-
     ctx.fillStyle = fGrad
     ctx.beginPath()
     ctx.arc(fx, fy, fr, 0, Math.PI * 2)
@@ -430,50 +612,88 @@ export class SnakeWindow {
     ctx.stroke()
     ctx.restore()
 
-    // Paused (mid-game)
-    if (!this.playing && !this.gameOverActive) {
+    if (this.powerup) {
+      const { ox: px, oy: py } = this.cc(this.powerup.x, this.powerup.y, cs)
+      const pr = cs * (0.28 + Math.sin(this.powerPhase) * 0.04)
       ctx.save()
-      ctx.fillStyle = 'rgba(5,7,14,0.35)'
-      ctx.fillRect(0, 0, gw, gh)
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillStyle = this.cssColor('--snake-msg', '#e8eaf6')
-      ctx.font = `600 ${Math.max(14, cs * 0.38)}px "JetBrains Mono", ui-monospace, system-ui`
-      ctx.fillText('paused', gw * 0.5, gh * 0.48)
-      ctx.fillStyle = 'rgba(214,217,239,0.62)'
-      ctx.font = `${Math.max(11, cs * 0.26)}px "JetBrains Mono", ui-monospace, system-ui`
-      ctx.fillText('p · resume          space · restart', gw * 0.5, gh * 0.58)
-      ctx.restore()
-    }
-
-    // Game overlay
-    if (this.gameOverActive) {
-      ctx.save()
-      ctx.fillStyle = 'rgba(5,7,14,0.58)'
-      ctx.fillRect(0, 0, gw, gh)
-
-      ctx.strokeStyle = 'rgba(245,194,231,0.22)'
-      ctx.lineWidth = 1
-      const mx = gw * 0.5
-      const my = gh * 0.42
-      const bw = Math.min(gw * 0.72, 320)
-      const bh = gh * 0.28
+      if (this.powerup.kind === 'ghost') {
+        ctx.shadowColor = 'rgba(203,166,247,0.65)'
+        ctx.fillStyle = 'rgba(203,166,247,0.92)'
+        ctx.strokeStyle = 'rgba(245,194,231,0.5)'
+      } else if (this.powerup.kind === 'gem') {
+        ctx.shadowColor = 'rgba(137,180,250,0.55)'
+        ctx.fillStyle = 'rgba(137,180,250,0.95)'
+        ctx.strokeStyle = 'rgba(180,210,255,0.45)'
+      } else if (this.powerup.kind === 'growth') {
+        ctx.shadowColor = 'rgba(166,227,161,0.55)'
+        ctx.fillStyle = 'rgba(166,227,161,0.88)'
+        ctx.strokeStyle = 'rgba(80,140,100,0.55)'
+      } else {
+        ctx.shadowColor = 'rgba(249,226,175,0.45)'
+        ctx.fillStyle = 'rgba(249,226,175,0.9)'
+        ctx.strokeStyle = 'rgba(200,170,120,0.5)'
+      }
+      ctx.shadowBlur = cs * 0.35
       ctx.beginPath()
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(mx - bw * 0.5, my - bh * 0.5 - cs * 0.2, bw, bh, 10)
-      } else ctx.rect(mx - bw * 0.5, my - bh * 0.5 - cs * 0.2, bw, bh)
+      ctx.arc(px, py, pr, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.lineWidth = 1.5
       ctx.stroke()
-
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillStyle = this.cssColor('--snake-msg', '#e8eaf6')
-      ctx.font = `600 ${Math.max(15, cs * 0.46)}px "JetBrains Mono", ui-monospace, system-ui`
-      ctx.fillText('game over', mx, my - cs * 0.06)
-      ctx.fillStyle = 'rgba(214,217,239,0.68)'
-      ctx.font = `${Math.max(11, cs * 0.28)}px "JetBrains Mono", ui-monospace, system-ui`
-      ctx.fillText('space · restart          score ' + String(this.score), mx, my + cs * 0.44)
       ctx.restore()
     }
+
+    if (this.ghostMovesLeft > 0) {
+      ctx.save()
+      ctx.font = `${Math.max(10, cs * 0.28)}px ui-monospace, monospace`
+      ctx.fillStyle = 'rgba(203,166,247,0.75)'
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'top'
+      ctx.fillText(`ghost ${this.ghostMovesLeft}`, gw - 4, 4)
+      ctx.restore()
+    }
+
+    ctx.restore()
+
+    if (!this.playing && !this.gameOverActive) {
+      this.drawOverlay(ctx, cw, ch, cs, 'paused', 'p · resume    space · restart')
+    }
+    if (this.gameOverActive) {
+      this.drawOverlay(ctx, cw, ch, cs, 'game over', `space · restart    score ${this.score}`)
+    }
+  }
+
+  private drawOverlay(
+    ctx: CanvasRenderingContext2D,
+    cw: number,
+    ch: number,
+    cs: number,
+    title: string,
+    sub: string,
+  ): void {
+    ctx.save()
+    ctx.fillStyle = 'rgba(5,7,14,0.55)'
+    ctx.fillRect(0, 0, cw, ch)
+    const mx = cw * 0.5
+    const my = ch * 0.46
+    const bw = Math.min(cw * 0.78, 360)
+    const bh = Math.min(ch * 0.32, 160)
+    ctx.strokeStyle = 'rgba(245,194,231,0.28)'
+    ctx.fillStyle = 'rgba(22,24,38,0.72)'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    if (typeof ctx.roundRect === 'function') ctx.roundRect(mx - bw * 0.5, my - bh * 0.5, bw, bh, 14)
+    else ctx.rect(mx - bw * 0.5, my - bh * 0.5, bw, bh)
+    ctx.fill()
+    ctx.stroke()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = this.cssColor('--snake-msg', '#e8eaf6')
+    ctx.font = `700 ${Math.max(16, cs * 0.5)}px "JetBrains Mono", ui-monospace, system-ui`
+    ctx.fillText(title, mx, my - cs * 0.12)
+    ctx.fillStyle = 'rgba(214,217,239,0.72)'
+    ctx.font = `${Math.max(11, cs * 0.28)}px "JetBrains Mono", ui-monospace, system-ui`
+    ctx.fillText(sub, mx, my + cs * 0.38)
+    ctx.restore()
   }
 
   focusCanvas(): void {
