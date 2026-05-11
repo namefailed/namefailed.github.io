@@ -8,6 +8,20 @@
     />
     <meta name="theme-color" content="#181825" />
     <meta name="color-scheme" content="dark" />
+    <script>
+      (function () {
+        var p = location.pathname || ''
+        if (/\/static(\/|$)/.test(p)) return
+        var ua = navigator.userAgent || ''
+        var coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches
+        var narrow = window.innerWidth <= 768
+        var phone =
+          /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+          (narrow && coarse)
+        if (!phone) return
+        location.replace(location.origin + '/static/')
+      })()
+    </script>
     <title>mrgrey.dev</title>
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"

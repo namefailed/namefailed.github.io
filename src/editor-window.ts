@@ -440,7 +440,7 @@ export class EditorWindow {
     }
     if (line === '' || lower === 'help') {
       this.flashStatus(
-        ':w :wq :q :q! :e path — NORMAL: hjkl ^ 0 $ · G gg · r J D · x X · dd yy p · u · ^R · i I a A o O · counts (3j, 5yy) · Esc',
+        ':w :wq :q :q! :e path — NORMAL: hjkl ^ 0 $ · G gg · r J D · x X · dd yy p · u · ^R · i I a A o O · w b e · counts (3j, 5yy) · Esc',
         false,
       )
       this.leaveCmd()
@@ -554,7 +554,7 @@ export class EditorWindow {
         ? 'Enter · Esc cancel · :w :q :e'
         : this.mode === 'insert'
           ? 'Esc → NORMAL · thin caret'
-          : 'hjkl · ^ 0 $ · G gg · r · J · D · x X · dd yy p · u · ^R · i a'
+          : 'hjkl · ^ 0 $ · G gg · r · J · D · x X · dd yy p · u · ^R · w b e · i a'
 
     this.statusEl.append(glyph, core, dash1, this.modeMetaEl, dash2, pathSpan, dirtySpan, hints)
     this.refreshModeMeta()
@@ -589,6 +589,10 @@ export class EditorWindow {
     if (this.mode === 'insert') this.textarea.classList.add('editor-textarea--insert')
     else if (this.mode === 'cmd') this.textarea.classList.add('editor-textarea--cmd')
     else this.textarea.classList.add('editor-textarea--normal')
+
+    const st = this.textarea.style as CSSStyleDeclaration & { caretShape?: string }
+    st.caretShape =
+      this.mode === 'insert' ? 'bar' : this.mode === 'cmd' ? 'auto' : 'block'
   }
 
   private onEditorKeydown(e: KeyboardEvent): void {
@@ -866,6 +870,15 @@ export class EditorWindow {
       return
     }
 
+    if (k === 'e') {
+      e.preventDefault()
+      const n = this.consumeCount(1)
+      let p = cur()
+      for (let i = 0; i < n; i++) p = this.wordEndForward(p)
+      setCur(p)
+      return
+    }
+
     if (k === 'i') {
       e.preventDefault()
       this.consumeCount(1)
@@ -1037,6 +1050,19 @@ export class EditorWindow {
     if (p > 0) p--
     while (p > 0 && !this.isWordChar(t[p]!)) p--
     while (p > 0 && this.isWordChar(t[p - 1]!)) p--
+    return p
+  }
+
+  /** End of next word — vim-like `e` */
+  private wordEndForward(pos: number): number {
+    const t = this.textarea.value
+    if (t.length === 0) return 0
+    let p = Math.min(Math.max(0, pos), t.length - 1)
+    if (!this.isWordChar(t[p]!)) {
+      while (p < t.length && !this.isWordChar(t[p]!)) p++
+      if (p >= t.length) return t.length - 1
+    }
+    while (p < t.length - 1 && this.isWordChar(t[p + 1]!)) p++
     return p
   }
 

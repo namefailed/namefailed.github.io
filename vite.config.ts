@@ -10,7 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(repoRoot, 'index.html'),
-        plain: path.resolve(repoRoot, 'plain/index.html'),
+        static: path.resolve(repoRoot, 'static/index.html'),
       },
     },
     chunkSizeWarningLimit: 600,

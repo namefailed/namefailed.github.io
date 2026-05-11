@@ -1,5 +1,5 @@
 /**
- * Project cards for the `projects` tile and plain page.
+ * Project cards for the `projects` tile and `/static/` brochure page.
  * Facts/URLs/thumbs were scraped from an old GitHub Pages deploy; blurbs are rewritten here.
  */
 

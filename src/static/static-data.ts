@@ -1,5 +1,5 @@
 /**
- * Copy for `/plain/` résumé-style sections.
+ * Copy for `/static/` résumé-style sections.
  * **Projects** render from `PORTFOLIO_PROJECTS` in `content/portfolio.ts` (see `main.ts`). Keep profile,
  * skills tags, experience, education, certs, and contact aligned with portfolio when facts change.
  */

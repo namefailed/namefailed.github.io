@@ -43,6 +43,28 @@ function defaultRoot(): FsDir {
     t: 'f',
     body: 'Nothing here yet — touch notes.txt is already taken.\n',
   }
+  const mkEmptyDir = (): FsDir => ({ t: 'd', c: {} })
+  const desk = mkEmptyDir()
+  desk.c['.keep'] = { t: 'f', body: '' }
+  user.c['Desktop'] = desk
+  const docs = mkEmptyDir()
+  docs.c['readme.txt'] = {
+    t: 'f',
+    body: 'Fake Documents — drop ideas for portfolio copy or client notes here.\n',
+  }
+  user.c['Documents'] = docs
+  const dl = mkEmptyDir()
+  dl.c['.keep'] = { t: 'f', body: '' }
+  user.c['Downloads'] = dl
+  const pics = mkEmptyDir()
+  pics.c['.keep'] = { t: 'f', body: '' }
+  user.c['Pictures'] = pics
+  const cfg = mkEmptyDir()
+  cfg.c['user-dirs.dirs'] = {
+    t: 'f',
+    body: '# XDG nonsense for tourists\nXDG_DESKTOP_DIR="$HOME/Desktop"\n',
+  }
+  user.c['.config'] = cfg
   home.c['namefailed'] = user
   root.c['home'] = home
 

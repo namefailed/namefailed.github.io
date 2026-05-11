@@ -3,6 +3,7 @@
 // keyboard + toolbar, undo + alg line (Scratch / virtual-cube style).
 
 import * as THREE from 'three'
+import { SRGBColorSpace } from 'three'
 import { MOUSE } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import {
@@ -270,6 +271,7 @@ export class RubikWindow {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))
     renderer.setClearColor(0x000000, 0)
+    renderer.outputColorSpace = SRGBColorSpace
     this.renderer = renderer
     this.host.appendChild(renderer.domElement)
 
@@ -278,10 +280,8 @@ export class RubikWindow {
     d.position.set(4, 8, 6)
     scene.add(d)
 
-    const plastic = new THREE.MeshStandardMaterial({
-      color: '#0b0b10',
-      roughness: 0.55,
-      metalness: 0.06,
+    const plastic = new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#14141c'),
     })
     const core = new THREE.Mesh(new THREE.BoxGeometry(2.96, 2.96, 2.96), plastic)
     scene.add(core)
@@ -296,10 +296,8 @@ export class RubikWindow {
       for (let i = 0; i < 9; i++) {
         const mesh = new THREE.Mesh(
           geom,
-          new THREE.MeshStandardMaterial({
+          new THREE.MeshBasicMaterial({
             color: new THREE.Color('#888'),
-            roughness: 0.38,
-            metalness: 0.04,
             polygonOffset: true,
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1,
@@ -412,7 +410,7 @@ export class RubikWindow {
     for (const face of FACET_FACE_ORDER) {
       for (let i = 0; i < 9; i++) {
         const col = COLOR_HEX[this.state[face][i]!] ?? '#888'
-        ;(this.stickerMeshes[s]!.material as THREE.MeshStandardMaterial).color.set(col)
+        ;(this.stickerMeshes[s]!.material as THREE.MeshBasicMaterial).color.set(col)
         s++
       }
     }

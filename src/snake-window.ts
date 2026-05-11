@@ -7,8 +7,8 @@ export interface SnakeWindowOptions {
   onFocus: () => void
 }
 
-/** Game tick cadence — slightly slower reads friendlier under terminal focus */
-const TICK_MS = 94
+/** Game tick cadence — snappy but still readable under WM focus */
+const TICK_MS = 82
 
 export class SnakeWindow {
   readonly el: HTMLElement
@@ -25,8 +25,8 @@ export class SnakeWindow {
   /** Separate from playing — survives until next reset */
   private gameOverActive = false
 
-  private cols = 20
-  private rows = 15
+  private cols = 38
+  private rows = 26
   private snake: { x: number; y: number }[] = []
   private dir: { x: number; y: number } = { x: 1, y: 0 }
   private pendingDir: { x: number; y: number } | null = null
@@ -86,7 +86,7 @@ export class SnakeWindow {
     scoreLabel.textContent = 'score'
     const hint = document.createElement('span')
     hint.className = 'snake-hint'
-    hint.textContent = 'arrows · wasd · space restart'
+    hint.textContent = 'arrows · wasd · p pause · space restart'
     hud.append(scoreLabel, this.scoreEl, hint)
 
     this.wrap = document.createElement('div')
@@ -137,10 +137,12 @@ export class SnakeWindow {
   private resetGame(): void {
     this.stopLoop()
     this.gameOverActive = false
+    const midY = Math.floor(this.rows / 2)
+    const headX = Math.min(this.cols - 4, Math.max(3, Math.floor(this.cols / 3)))
     this.snake = [
-      { x: 4, y: 7 },
-      { x: 3, y: 7 },
-      { x: 2, y: 7 },
+      { x: headX, y: midY },
+      { x: headX - 1, y: midY },
+      { x: headX - 2, y: midY },
     ]
     this.dir = { x: 1, y: 0 }
     this.pendingDir = null
@@ -169,6 +171,19 @@ export class SnakeWindow {
       ev.preventDefault()
       ev.stopPropagation()
       this.resetGame()
+      return
+    }
+    if (ev.code === 'KeyP') {
+      ev.preventDefault()
+      ev.stopPropagation()
+      if (this.gameOverActive) return
+      if (this.playing) {
+        this.stopLoop()
+      } else {
+        this.playing = true
+        this.timer = window.setInterval(() => this.tick(), TICK_MS)
+      }
+      this.draw()
       return
     }
     if (this.gameOverActive) return
@@ -414,6 +429,22 @@ export class SnakeWindow {
     ctx.strokeStyle = 'rgba(94,42,61,0.45)'
     ctx.stroke()
     ctx.restore()
+
+    // Paused (mid-game)
+    if (!this.playing && !this.gameOverActive) {
+      ctx.save()
+      ctx.fillStyle = 'rgba(5,7,14,0.35)'
+      ctx.fillRect(0, 0, gw, gh)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillStyle = this.cssColor('--snake-msg', '#e8eaf6')
+      ctx.font = `600 ${Math.max(14, cs * 0.38)}px "JetBrains Mono", ui-monospace, system-ui`
+      ctx.fillText('paused', gw * 0.5, gh * 0.48)
+      ctx.fillStyle = 'rgba(214,217,239,0.62)'
+      ctx.font = `${Math.max(11, cs * 0.26)}px "JetBrains Mono", ui-monospace, system-ui`
+      ctx.fillText('p · resume          space · restart', gw * 0.5, gh * 0.58)
+      ctx.restore()
+    }
 
     // Game overlay
     if (this.gameOverActive) {

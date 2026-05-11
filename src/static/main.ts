@@ -1,4 +1,4 @@
-import './plain.css'
+import './static.css'
 import { PORTFOLIO_PROJECTS } from '../content/portfolio'
 import {
   CERTIFICATIONS,
@@ -8,7 +8,7 @@ import {
   PROFILE,
   type PlainProject,
   SKILLS_PRIMARY,
-} from './plain-data'
+} from './static-data'
 
 /** Omit roadmap placeholder tiles; prose and links follow `portfolio.ts`. */
 function plainProjectsFromPortfolio(): PlainProject[] {
@@ -23,7 +23,7 @@ function plainProjectsFromPortfolio(): PlainProject[] {
   )
 }
 
-/** SPA lives one level up (`/`) from `/plain/`; `file:` needs an explicit sibling `index.html`. */
+/** SPA lives one level up (`/`) from `/static/`; `file:` needs an explicit sibling `index.html`. */
 function spaHomeHref(): string {
   if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
     return new URL('../index.html', window.location.href).href
@@ -87,7 +87,7 @@ function projectCard(project: PlainProject): HTMLElement {
 }
 
 function mount(): void {
-  const root = document.getElementById('plain-root')
+  const root = document.getElementById('static-root')
   if (!root) return
 
   const homeHref = spaHomeHref()

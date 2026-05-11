@@ -2037,26 +2037,60 @@ html.retro-fx .xterm-screen {
 }
 
 .resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-matrix .win-line {
-  white-space: nowrap;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
 }
 
 .resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes {
   margin-top: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.12);
+  background: rgba(var(--th-overlay-rgb), 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes .win-line {
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-break: normal;
-  line-height: 1.58;
-  padding-left: 0;
-  margin-left: 0;
-  text-indent: 0;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0.12em 0 0.12em 1.15em;
+  text-indent: -1.05em;
+  list-style: none;
 }
 
 .resume-layout.resume-layout--with-skills .resume-lead-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ui-space-4) var(--ui-space-5);
   min-width: 0;
   margin-bottom: var(--ui-space-2);
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-photo {
+  flex: 0 0 auto;
+  margin: 0;
+  max-width: 7.5rem;
+  align-self: flex-start;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-photo__img {
+  display: block;
+  width: 100%;
+  max-width: 7.5rem;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
 }
 
 .resume-layout.resume-layout--with-skills .resume-lead-text,
@@ -2267,17 +2301,20 @@ html.retro-fx .xterm-screen {
   }
 
   .resume-layout.resume-layout--with-skills .resume-skills-matrix .win-line {
-    white-space: nowrap;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
   }
 
   .resume-layout.resume-layout--with-skills .resume-skills-notes .win-line {
     white-space: pre-wrap;
     overflow-wrap: break-word;
     word-break: normal;
-    line-height: 1.58;
-    padding-left: 0;
-    margin-left: 0;
-    text-indent: 0;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0.12em 0 0.12em 1.15em;
+    text-indent: -1.05em;
+    list-style: none;
   }
 }
 
@@ -2399,17 +2436,20 @@ html.retro-fx .xterm-screen {
   }
 
   .resume-layout.resume-layout--with-skills .resume-skills-matrix .win-line {
-    white-space: nowrap;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
   }
 
   .resume-layout.resume-layout--with-skills .resume-skills-notes .win-line {
     white-space: pre-wrap;
     overflow-wrap: break-word;
     word-break: normal;
-    line-height: 1.58;
-    padding-left: 0;
-    margin-left: 0;
-    text-indent: 0;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0.12em 0 0.12em 1.15em;
+    text-indent: -1.05em;
+    list-style: none;
   }
 }
 
@@ -4183,7 +4223,7 @@ html.retro-fx .xterm-screen {
 
 .paint-app .paint-canvas-wrap {
   flex: 1;
-  min-height: 140px;
+  min-height: min(52vh, 420px);
   border-radius: 0 0 var(--ui-radius-sm) var(--ui-radius-sm);
   overflow: auto;
 }
@@ -4572,7 +4612,7 @@ html.retro-fx .xterm-screen {
 
 .snake-app .snake-canvas-wrap {
   flex: 1;
-  min-height: 140px;
+  min-height: min(68vh, 520px);
   display: flex;
   align-items: center;
   justify-content: center;

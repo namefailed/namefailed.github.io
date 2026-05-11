@@ -23,6 +23,10 @@ export class PaintWindow {
   private lineStart: { x: number; y: number } | null = null
   private tool: PaintTool = 'brush'
 
+  /** Pixel snapshots for Undo (bounded — full canvas copies) */
+  private undoStack: ImageData[] = []
+  private static readonly UNDO_CAP = 12
+
   private onClose: () => void
   private onMinimize: () => void
   private onMaximize: () => void
@@ -115,9 +119,41 @@ export class PaintWindow {
     btnClear.className = 'paint-btn paint-btn--danger os-toolbar-btn'
     btnClear.textContent = 'Clear'
     btnClear.addEventListener('click', () => {
+      this.pushPaintUndo()
       const r = this.wrap.getBoundingClientRect()
       this.ctx.fillStyle = this.canvasBgCss()
       this.ctx.fillRect(0, 0, r.width, r.height)
+      btnUndo.disabled = this.undoStack.length === 0
+    })
+
+    const btnUndo = document.createElement('button')
+    btnUndo.type = 'button'
+    btnUndo.className = 'paint-btn os-toolbar-btn'
+    btnUndo.textContent = 'Undo'
+    btnUndo.disabled = true
+    btnUndo.title = 'Undo last stroke or fill (up to 12 steps)'
+    btnUndo.addEventListener('click', () => {
+      this.popPaintUndo()
+      btnUndo.disabled = this.undoStack.length === 0
+    })
+
+    const btnSave = document.createElement('button')
+    btnSave.type = 'button'
+    btnSave.className = 'paint-btn os-toolbar-btn'
+    btnSave.textContent = 'Save PNG'
+    btnSave.title = 'Download drawing as PNG'
+    btnSave.addEventListener('click', () => {
+      this.canvas.toBlob(blob => {
+        if (!blob) return
+        const u = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+        a.href = u
+        a.download = `paint-${stamp}.png`
+        a.rel = 'noopener'
+        a.click()
+        URL.revokeObjectURL(u)
+      }, 'image/png')
     })
 
     toolbar.append(
@@ -127,6 +163,8 @@ export class PaintWindow {
       btnEraser,
       btnLine,
       btnFill,
+      btnUndo,
+      btnSave,
       btnClear,
     )
 
@@ -163,6 +201,8 @@ export class PaintWindow {
       const bg = this.canvasBgCss()
       this.ctx.fillStyle = bg
       this.ctx.fillRect(0, 0, r.width, r.height)
+      this.undoStack.length = 0
+      btnUndo.disabled = true
     }
 
     const ro = new ResizeObserver(() => resize())
@@ -198,6 +238,7 @@ export class PaintWindow {
     }
 
     const floodFill = (sx: number, sy: number): void => {
+      this.pushPaintUndo()
       const b = this.canvas.getBoundingClientRect()
       const px = Math.min(this.canvas.width - 1, Math.max(0, Math.floor((sx / b.width) * this.canvas.width)))
       const py = Math.min(this.canvas.height - 1, Math.max(0, Math.floor((sy / b.height) * this.canvas.height)))
@@ -243,8 +284,10 @@ export class PaintWindow {
       opts.onFocus()
       if (this.tool === 'fill') {
         floodFill(p.x, p.y)
+        btnUndo.disabled = this.undoStack.length === 0
         return
       }
+      this.pushPaintUndo()
       this.canvas.setPointerCapture(ev.pointerId)
       this.painting = true
       if (this.tool === 'line') {
@@ -276,6 +319,7 @@ export class PaintWindow {
       this.painting = false
       this.last = null
       this.lineStart = null
+      btnUndo.disabled = this.undoStack.length === 0
     }
     this.canvas.addEventListener('pointerup', end)
     this.canvas.addEventListener('pointercancel', end)
@@ -297,6 +341,32 @@ export class PaintWindow {
 
   private canvasBgCss(): string {
     return getComputedStyle(this.canvas).getPropertyValue('--paint-bg').trim() || '#181825'
+  }
+
+  private pushPaintUndo(): void {
+    const w = this.canvas.width
+    const h = this.canvas.height
+    if (w < 1 || h < 1) return
+    try {
+      const snap = this.ctx.getImageData(0, 0, w, h)
+      this.undoStack.push(snap)
+      while (this.undoStack.length > PaintWindow.UNDO_CAP) this.undoStack.shift()
+    } catch {
+      /* ignore quota / tainted */
+    }
+  }
+
+  private popPaintUndo(): void {
+    const prev = this.undoStack.pop()
+    if (!prev) return
+    const w = this.canvas.width
+    const h = this.canvas.height
+    if (prev.width !== w || prev.height !== h) return
+    try {
+      this.ctx.putImageData(prev, 0, 0)
+    } catch {
+      /* ignore */
+    }
   }
 
   focusCanvas(): void {

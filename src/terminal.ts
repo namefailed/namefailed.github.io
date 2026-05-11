@@ -61,19 +61,19 @@ const BOOT_LINES: Array<{ text: string; delay: number }> = [
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
 
-/** Resolves `/plain/` for http(s); uses `plain/index.html` next to `index.html` for `file:` pages. */
-function resolvePlainPortfolioHref(): string {
+/** Resolves `/static/` for http(s); uses `static/index.html` next to `index.html` for `file:` pages. */
+function resolveStaticPortfolioHref(): string {
   const configuredBase = import.meta.env.BASE_URL ?? '/'
-  const pathSegments = `${configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`}plain/`
+  const pathSegments = `${configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`}static/`
 
-  if (typeof window === 'undefined') return '/plain/'
+  if (typeof window === 'undefined') return '/static/'
   try {
     if (window.location.protocol === 'file:') {
-      return new URL('plain/index.html', window.location.href).href
+      return new URL('static/index.html', window.location.href).href
     }
     return new URL(pathSegments, window.location.origin).href
   } catch {
-    return new URL('plain/index.html', window.location.href).href
+    return new URL('static/index.html', window.location.href).href
   }
 }
 
@@ -330,7 +330,7 @@ export class TerminalApp {
       if (cmd.loadMs) await this.showSpinner(name, cmd.loadMs)
 
       if (name === 'static' || name === 'plain' || name === 'x') {
-        const target = resolvePlainPortfolioHref()
+        const target = resolveStaticPortfolioHref()
         this.writeln('')
         this.writeln(`  ${c.dim}Opening the static portfolio…${c.reset}`)
         this.writeln(`  ${c.green}→${c.reset} ${c.blue}${target}${c.reset}`)

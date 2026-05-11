@@ -1,5 +1,5 @@
 /**
- * Résumé + skills matrix strings for CLI `resume`, the résumé tile, and `/plain/` data imports.
+ * Résumé + skills matrix strings for CLI `resume`, the résumé tile, and `/static/` page data imports.
  *
  * Split from the barrel on purpose: this file churns whenever I tweak jobs or skill bars,
  * while `projects-catalog.ts` is a different mental mode (client work list).
@@ -31,8 +31,8 @@ function skillsDetailLines(): string[] {
     ['pnpm / npm', 76],
     ['PowerShell', 72],
   ]
-  /* Cap label width so the skills rail stays one visual column beside the bars */
-  const lw = Math.min(22, Math.max(14, ...pairs.map(([a]) => a.length)))
+  /* Fixed label width so every bar column lines up in the skills rail */
+  const lw = 22
 
   return [
     '',
@@ -53,13 +53,10 @@ function skillsDetailLines(): string[] {
     ...pairs.slice(16).map(([l, p]) => skillMeterLine(l, p, lw)),
     '',
     sectionHeadingLine('how I like to work'),
-    '',
     `${dimInterpunct} Small commits, descriptive messages, reviews when pairing.`,
     `${dimInterpunct} Prefer boring stacks that teammates can grep six months later.`,
-    '',
     `${dimInterpunct} Tests where they save regressions; docs where onboarding hurts.`,
     `${dimInterpunct} Ship thin slices: measurable checkpoints instead of big-bang reveals.`,
-    '',
   ]
 }
 

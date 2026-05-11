@@ -61,7 +61,7 @@ export const commands: Record<string, Command> = {
 
   static: {
     description:
-      'Static portfolio — résumé, projects & contact as a plain page (`/plain/`, without the desktop UI)',
+      'Static portfolio — résumé, projects & contact at `/static/` (no desktop UI; phones auto-redirect here)',
     run: () => [],
   },
 

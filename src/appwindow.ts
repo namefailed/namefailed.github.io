@@ -5,6 +5,11 @@
 import { ansiToHtml } from './ansi'
 import type { PortfolioProjectEntry } from './content/portfolio'
 
+/** WordPress mShots — slow first load but real page pixels for project cards */
+function liveSiteScreenshotUrl(web: string): string {
+  return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
+}
+
 export interface WindowSpec {
   /** Unique tile id — the same CLI again focuses or closes this window. */
   command: string
@@ -169,7 +174,26 @@ export class AppWindow {
       const leadText = document.createElement('div')
       leadText.className = 'resume-lead-text'
       leadText.innerHTML = mapLines(leadLines!)
+
+      const photoFig = document.createElement('figure')
+      photoFig.className = 'resume-lead-photo'
+      const headImg = document.createElement('img')
+      headImg.className = 'resume-photo resume-lead-photo__img'
+      headImg.alt = 'Portrait'
+      headImg.src = '/portrait.jpg'
+      headImg.loading = 'lazy'
+      headImg.decoding = 'async'
+      headImg.addEventListener(
+        'error',
+        () => {
+          photoFig.remove()
+        },
+        { once: true },
+      )
+      photoFig.appendChild(headImg)
+
       leadRow.appendChild(leadText)
+      leadRow.appendChild(photoFig)
 
       const bodyBlock = document.createElement('div')
       bodyBlock.className = 'resume-body-block'
@@ -191,14 +215,16 @@ export class AppWindow {
       skillsInner.className = 'resume-skills-body'
 
       const { matrix, notes } = splitSkillsSections(skillsLines!)
+      const matrixFiltered = matrix.filter(l => stripAnsiForDetect(l).trim() !== '')
       const matrixEl = document.createElement('div')
       matrixEl.className = 'resume-skills-matrix'
-      matrixEl.innerHTML = mapLines(matrix)
+      matrixEl.innerHTML = mapLines(matrixFiltered.length ? matrixFiltered : matrix)
       skillsInner.appendChild(matrixEl)
-      if (notes.length) {
+      const notesFiltered = notes.filter(l => stripAnsiForDetect(l).trim() !== '')
+      if (notesFiltered.length) {
         const notesEl = document.createElement('div')
         notesEl.className = 'resume-skills-notes'
-        notesEl.innerHTML = mapLines(notes)
+        notesEl.innerHTML = mapLines(notesFiltered)
         skillsInner.appendChild(notesEl)
       }
 
@@ -280,7 +306,7 @@ export class AppWindow {
     const sub = document.createElement('p')
     sub.className = 'projects-head-sub'
     sub.textContent =
-      'Live client and product work. Thumbnails are local previews; open web for the current site.'
+      'Live work — card art is a live screenshot when we have a URL (cached by wp.com); repo links stay manual.'
     head.appendChild(h2)
     head.appendChild(sub)
 
@@ -296,6 +322,7 @@ export class AppWindow {
           ? p.thumb
           : `/${p.thumb}`
         : null
+      const liveShot = p.web ? liveSiteScreenshotUrl(p.web) : null
 
       const mediaEl = p.web
         ? (() => {
@@ -316,24 +343,35 @@ export class AppWindow {
       const fig = document.createElement('figure')
       fig.className = 'project-card-figure'
 
-      if (thumbPath) {
-        const img = document.createElement('img')
-        img.className = 'project-card-thumb'
-        img.src = thumbPath
-        img.alt = `${p.title} preview`
-        img.loading = 'lazy'
-        img.decoding = 'async'
-        const ph = AppWindow.makeThumbPlaceholder(p.title)
-        img.addEventListener(
-          'error',
-          () => {
-            fig.replaceChildren(ph)
-          },
-          { once: true },
-        )
-        fig.appendChild(img)
+      const img = document.createElement('img')
+      img.className = 'project-card-thumb'
+      img.alt = `${p.title} preview`
+      img.loading = 'lazy'
+      img.decoding = 'async'
+      img.referrerPolicy = 'no-referrer'
+      const ph = AppWindow.makeThumbPlaceholder(p.title)
+      if (!liveShot && !thumbPath) {
+        fig.appendChild(ph)
       } else {
-        fig.appendChild(AppWindow.makeThumbPlaceholder(p.title))
+        if (liveShot) {
+          img.src = liveShot
+          if (thumbPath) {
+            img.addEventListener(
+              'error',
+              () => {
+                img.src = thumbPath
+                img.addEventListener('error', () => fig.replaceChildren(ph), { once: true })
+              },
+              { once: true },
+            )
+          } else {
+            img.addEventListener('error', () => fig.replaceChildren(ph), { once: true })
+          }
+        } else {
+          img.src = thumbPath!
+          img.addEventListener('error', () => fig.replaceChildren(ph), { once: true })
+        }
+        fig.appendChild(img)
       }
 
       mediaEl.appendChild(fig)

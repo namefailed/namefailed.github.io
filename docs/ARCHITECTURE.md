@@ -7,9 +7,9 @@ Personal site dressed up as a toy desktop. The goal is: **one brain (TypeScript)
 - **`index.html`** — Shell markup: CRT frame, workspace, YASB bar, launcher, docking bar, terminal host, placeholders for tiled panes.
 - **`src/main.ts`** — Dead-simple Vite hook: stylesheet imports + **`bootstrapShellUi()`** from `bootstrap-shell.ts` (everything else intentionally not here).
 - **`src/bootstrap-shell.ts`** — The real startup sequence: storages/theme/sound/systray, DOM lookups, **`Desktop`** before **`TerminalApp`**, idle-deferred Matrix init, skip-link. If something fires too early or too late, this is the place.
-- **`src/plain/`** — Second Vite entry: same copy data, zero fake OS chrome (good for recruiters who just want prose).
+- **`static/index.html`** + **`src/static/`** — Second Vite entry: same copy data, zero fake OS chrome (good for recruiters who just want prose, or small screens).
 
-Build is plain Vite; **`vite.config.ts`** names both HTML inputs so `dist/` gets `main` + `plain`.
+Build is plain Vite; **`vite.config.ts`** names both HTML inputs so `dist/` gets `main` + `static`.
 
 ## Rough layers
 
