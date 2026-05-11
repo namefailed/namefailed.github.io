@@ -1,8 +1,7 @@
 # mrgrey.dev
 
 **Live site:** https://namefailed.github.io/  
-**Canonical repo (clone / issues / PRs):** https://github.com/namefailed/namefailed.github.io  
-The older **`mrgrey.dev`** GitHub project is no longer the source of truth; this codebase is developed and deployed from **`namefailed.github.io`** (GitHub Pages at the live URL above).
+**Repository:** https://github.com/namefailed/namefailed.github.io  
 
 I built my portfolio as an in-browser **window manager**: tiling layout, **xterm.js** terminal, a toy filesystem, themes, and optional CRT/matrix effects—so visitors land in something that feels like a workspace, not a scrolling brochure.
 
