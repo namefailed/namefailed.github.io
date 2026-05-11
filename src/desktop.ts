@@ -1,21 +1,8 @@
-// ── desktop.ts ────────────────────────────────────────────────────────────────
-// Tiling shell: terminal column on the left; portfolio / editor / browser / games on the right.
-//
-// Command types:
-//   • Opens a tile — resume, links, projects, whoami, …, edit, explorer, browse, paint, cube, snake, pong;
-//     repeats the same path/URL or toggles focus/close per command rules in `openWindow`.
-//   • Terminal-only — help, vfs, … (see commands/index.ts).
-//
-// Keyboard (Ctrl chords, WM-style):
-//   Ctrl+T ............ focus terminal (restore if minimized)
-//   Ctrl+1..9 ......... dock slots (Terminal→Browse→Files→Editor→Resume→Projects→Contact, then running extras)
-//   Ctrl+H / Ctrl+K ... focus toward terminal / earlier tile (+ K = “up” the stack toward bar)
-//   Ctrl+L / Ctrl+J ... focus toward later tile (+ J = “down” the stack)
-//   Ctrl+Q ............ close focused content window, or close terminal if focused
-//   Ctrl+M ............ minimize focused window
-//   Ctrl+F ............ maximize / restore focused window or terminal
-//   Ctrl+D ............ toggle show-desktop (launcher overlay + wallpaper)
-//   Applications .... opens/closes the launcher (same overlay; bar button)
+/**
+ * Tiling shell: terminal column plus portfolio / editor / browser / games tiles (`openWindow`).
+ * Tile commands repeat path/URL or toggle per command rules; plain shell commands stay in `commands/index.ts`.
+ * Keys: Ctrl+T terminal; Ctrl+1–9 docks; Ctrl+H/K vs L/J along stack; Ctrl+Q/M/F/D close/min/max/show-desktop; Applications = launcher.
+ */
 
 import { AppWindow } from './appwindow'
 import type { WindowSpec } from './appwindow'
@@ -43,6 +30,7 @@ import {
 } from './launcher-catalog'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
+import { pushToast } from './os-systray'
 
 export interface PsSnapshotRow {
   pid: number
@@ -356,18 +344,23 @@ export class Desktop {
         return
       }
       if (cmd === 'cube') {
-        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
-        let cw!: RubikWindow
-        cw = new RubikWindowCtor({
-          onClose: () => this.closeWindow(cw),
-          onMinimize: () => this.minimizeWindow(cw),
-          onMaximize: () => this.toggleMaximizeContent(cw),
-          onFocus: () => this.focusWindow(cw),
-        })
-        this.appendToRightPane(cw.el)
-        this.windows.push(cw)
-        this.attachVerticalSplitters()
-        this.focusWindow(cw)
+        try {
+          const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
+          let cw!: RubikWindow
+          cw = new RubikWindowCtor({
+            onClose: () => this.closeWindow(cw),
+            onMinimize: () => this.minimizeWindow(cw),
+            onMaximize: () => this.toggleMaximizeContent(cw),
+            onFocus: () => this.focusWindow(cw),
+          })
+          this.appendToRightPane(cw.el)
+          this.windows.push(cw)
+          this.attachVerticalSplitters()
+          this.focusWindow(cw)
+        } catch (err) {
+          console.error('[desktop] cube tile failed to open', err)
+          pushToast('Cube failed to load — see console for details.', 6200, 'toast--warn')
+        }
         return
       }
       if (cmd === 'snake') {
@@ -780,6 +773,15 @@ export class Desktop {
     this.desktop.classList.toggle('launchers-visible', show)
 
     const shell = document.getElementById('launcher-shell')
+    /*
+     * Hiding `#launcher-shell` with aria-hidden while focus stays on a `.desktop-icon`
+     * trips the browser a11y warning (focused node under aria-hidden ancestor). Blur first.
+     */
+    if (shell && !show) {
+      const ae = document.activeElement
+      if (ae instanceof HTMLElement && shell.contains(ae)) ae.blur()
+    }
+
     if (shell) shell.setAttribute('aria-hidden', show ? 'false' : 'true')
 
     document.getElementById('btn-applications')?.setAttribute(

@@ -49,8 +49,6 @@ import type { Command } from './types'
 
 export type { Command } from './types'
 
-// ── commands ──────────────────────────────────────────────────────────────────
-
 export const commands: Record<string, Command> = {
 
   help: {
@@ -81,7 +79,7 @@ export const commands: Record<string, Command> = {
 
   links: {
     description:
-      'Contact tile — portrait rail, GitHub/email/phone/site, browse hints (CLI alias: `contact`)',
+      'Contact tile — portrait rail, GitHub/LinkedIn/email/phone/site, browse hints (CLI alias: `contact`)',
     loadMs: 400,
     run: () => linksAndContactLines(),
   },
@@ -188,7 +186,7 @@ export const commands: Record<string, Command> = {
 
   whoami: {
     description:
-      'About me tile — hobbies and informal bits (résumé is `resume`, outbound lines are `links`)',
+      'About me tile — work story, SCA persona Graee na Uile, links (résumé: `resume`; outbound: `links`)',
     loadMs: 350,
     run: () => whoamiAboutLines(),
   },

@@ -36,8 +36,6 @@ import { windowSpawnEcho } from './cli-window-echo'
 import { randomPick } from './random-pick'
 import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog'
 
-// ── constants ─────────────────────────────────────────────────────────────────
-
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 const BOOT_LINES: Array<{ text: string; delay: number }> = [
@@ -76,8 +74,6 @@ function resolveStaticPortfolioHref(): string {
     return new URL('static/index.html', window.location.href).href
   }
 }
-
-// ── TerminalApp ───────────────────────────────────────────────────────────────
 
 export class TerminalApp {
   private xterm: Terminal

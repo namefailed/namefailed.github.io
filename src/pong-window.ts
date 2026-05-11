@@ -1,5 +1,4 @@
-// ── pong-window.ts ────────────────────────────────────────────────────────────
-// vs CPU (default) or local two-player — W/S vs ↑/↓ · fixed-timestep feel on rAF
+/** Local Pong vs CPU or P2 — W/S vs arrows; fixed step on requestAnimationFrame. */
 
 export interface PongWindowOptions {
   onClose: () => void

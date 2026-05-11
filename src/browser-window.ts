@@ -1,7 +1,7 @@
-// ── browser-window.ts ─────────────────────────────────────────────────────────
-// Sandboxed iframe + URL chrome. Sandbox includes `allow-same-origin` so framed pages keep
-// real origins (without it many SPAs render as opaque-origin blanks). Many sites still send
-// X-Frame-Options / CSP that block embedding entirely.
+/**
+ * Embedded browse tile (iframe + URL bar). Sandbox keeps `allow-same-origin`; target sites may
+ * still refuse frames (XFO / CSP frame-ancestors).
+ */
 
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 

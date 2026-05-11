@@ -1,9 +1,6 @@
 /** Short terminal banner lines after Desktop opens a window from the shell. */
+import { randomPick } from './random-pick'
 import { c } from './theme'
-
-function pick(xs: readonly string[]): string {
-  return xs[Math.floor(Math.random() * xs.length)]!
-}
 
 /** Lines printed in the terminal right after Desktop accepts a window spawn. */
 export function windowSpawnEcho(cmd: string, args: readonly string[]): string[] {
@@ -16,20 +13,20 @@ export function windowSpawnEcho(cmd: string, args: readonly string[]): string[] 
       return [
         '',
         `  ${c.green}►${c.reset} ${c.dim}raising résumé tile (${c.blue}portfolio + skill matrix${c.dim}) …${c.reset}`,
-        `  ${c.dim}${pick(['paper PDF still validates in elevators', 'skills rail tucks beside the story on wide layouts', 'HIRING=yes in this universe'])}.${c.reset}`,
+        `  ${c.dim}${randomPick(['paper PDF still validates in elevators', 'skills rail tucks beside the story on wide layouts', 'HIRING=yes in this universe'])}.${c.reset}`,
         '',
       ]
     case 'links':
     case 'contact':
       return [
         '',
-        `  ${c.green}►${c.reset} ${c.dim}contact tile — photo rail + outbound lines …${c.reset}`,
+        `  ${c.green}►${c.reset} ${c.dim}contact tile — photo rail + GitHub/LinkedIn/email/phone …${c.reset}`,
         '',
       ]
     case 'projects':
       return [
         '',
-        `  ${c.green}►${c.reset} ${c.dim}project mosaic tiling … ${pick([
+        `  ${c.green}►${c.reset} ${c.dim}project mosaic tiling … ${randomPick([
           'ship logs attached later',
           'demos queued behind courage',
           'README empathy included',
@@ -39,10 +36,10 @@ export function windowSpawnEcho(cmd: string, args: readonly string[]): string[] 
     case 'whoami':
       return [
         '',
-        `  ${c.green}►${c.reset} ${c.dim}about-me tile — ${pick([
-          'hobbies routed to the humane layer',
-          'off‑clock anecdotes welcome',
-          'no metrics in this annex',
+        `  ${c.green}►${c.reset} ${c.dim}about-me tile — ${randomPick([
+          'SCA stories live next to the engineer ones',
+          'Graee na Uile / Ansteorra in the copy',
+          'off‑clock anecdotes, no KPIs',
         ])}.${c.reset}`,
         '',
       ]
@@ -71,7 +68,7 @@ export function windowSpawnEcho(cmd: string, args: readonly string[]): string[] 
     case 'editor':
     case 'vim': {
       const f = args[0]?.trim() || 'welcome.txt'
-      return ['', `  ${c.green}►${c.reset} ${c.dim}mini‑vim ⇢ ${c.blue}${f}${c.reset}${c.dim} · ${pick([
+      return ['', `  ${c.green}►${c.reset} ${c.dim}mini‑vim ⇢ ${c.blue}${f}${c.reset}${c.dim} · ${randomPick([
         ':wq writes to fake disk',
         'hjkl diplomacy',
         'buffers are bravery',

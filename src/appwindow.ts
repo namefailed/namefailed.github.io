@@ -1,56 +1,82 @@
-// ── appwindow.ts ──────────────────────────────────────────────────────────────
-// Read-only tiled window: chrome + `.win-body` renders ANSI-ish lines as HTML.
-// Editing lives in `EditorWindow` / the terminal, not here.
+/** Read-only tiled window chrome; `.win-body` renders ANSI-ish lines as HTML (editing → EditorWindow / terminal). */
 
-import { ansiToHtml } from './ansi'
+import { ansiToHtmlWithLinks } from './ansi'
 import type { PortfolioProjectEntry } from './content/portfolio'
-import { sectionHeadingLine, skillMeterBarAnsi } from './content/copy/ansi-widgets'
 import {
   RESUME_SKILL_MATRIX_SECTIONS,
-  RESUME_SKILL_METER_LABEL_WIDTH,
+  RESUME_WORKSTYLE_BULLETS,
 } from './content/copy/resume-copy'
-import { c } from './theme'
 
 /** WordPress mShots — slow first load but real page pixels for project cards */
 function liveSiteScreenshotUrl(web: string): string {
   return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
 }
 
-function buildResumeSkillMeterRowHtml(label: string, pct: number, lw: number): string {
-  let display = label
-  if (display.length > lw) {
-    display = `${display.slice(0, Math.max(1, lw - 1))}…`
-  }
-  const padded = display.padEnd(lw)
-  const labelAnsi = `  ${c.blue}${padded}${c.reset}`
-  const barAnsi = skillMeterBarAnsi(pct)
-  const pctAnsi = `  ${c.dim}${String(pct).padStart(3)}%${c.reset}`
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/** `/portrait.jpg` with MG fallback — shared by contact / about / résumé lead. */
+function mountPortfolioPortrait(
+  holder: HTMLElement,
+  imgClassName: string,
+  opts?: { framePlaceholderClass?: string },
+): void {
+  const phClass = opts?.framePlaceholderClass ?? 'contact-photo-frame--placeholder'
+  const img = document.createElement('img')
+  img.className = imgClassName
+  img.alt = 'Portrait'
+  img.src = '/portrait.jpg'
+  img.loading = 'lazy'
+  img.decoding = 'async'
+  img.addEventListener(
+    'error',
+    () => {
+      const ph = document.createElement('div')
+      ph.className = 'contact-photo-placeholder'
+      ph.setAttribute('role', 'img')
+      ph.setAttribute('aria-label', 'Placeholder portrait')
+      ph.innerHTML = '<span class="contact-photo-initials" aria-hidden="true">MG</span>'
+      holder.replaceChildren(ph)
+      holder.classList.add(phClass)
+    },
+    { once: true },
+  )
+  holder.appendChild(img)
+}
+
+/** Résumé tile: real layout + CSS tracks — avoids monospace ███ bars colliding with labels. */
+function buildResumeSkillMeterRowHtml(label: string, pct: number): string {
+  const n = Math.min(100, Math.max(0, Math.round(pct)))
+  const display = label.length > 42 ? `${label.slice(0, 40)}…` : label
   return (
-    `<div class="win-line resume-skill-meter-row">` +
-    `<span class="resume-skill-meter-label">${ansiToHtml(labelAnsi)}</span>` +
-    `<span class="resume-skill-meter-gap" aria-hidden="true"></span>` +
-    `<span class="resume-skill-meter-bar">${ansiToHtml(barAnsi)}</span>` +
-    `<span class="resume-skill-meter-pct">${ansiToHtml(pctAnsi)}</span>` +
+    `<div class="resume-skill-meter-row">` +
+    `<span class="resume-skill-meter-label">${escapeHtml(display)}</span>` +
+    `<span class="resume-skill-meter-track" aria-hidden="true">` +
+    `<span class="resume-skill-meter-fill" style="width:${n}%"></span>` +
+    `</span>` +
+    `<span class="resume-skill-meter-pct">${n}%</span>` +
     `</div>`
   )
 }
 
-/** Structured matrix HTML (bar spans hide in narrow `@container` for percent-only layout). */
+/** Structured matrix HTML for the skills rail (plain section titles + meter rows). */
 function buildResumeSkillsMatrixInnerHtml(): string {
-  const lw = RESUME_SKILL_METER_LABEL_WIDTH
   const parts: string[] = []
   const sections = RESUME_SKILL_MATRIX_SECTIONS
   for (let si = 0; si < sections.length; si++) {
     const sec = sections[si]!
-    parts.push(
-      `<div class="win-line">${ansiToHtml(sectionHeadingLine(sec.title)) || ' '}</div>`,
-      `<div class="win-line resume-skills-matrix-spacer" aria-hidden="true"></div>`,
-    )
+    parts.push(`<div class="resume-skills-section-head">${escapeHtml(sec.title)}</div>`)
+    parts.push(`<div class="resume-skills-matrix-spacer" aria-hidden="true"></div>`)
     for (const [lab, pct] of sec.pairs) {
-      parts.push(buildResumeSkillMeterRowHtml(lab, pct, lw))
+      parts.push(buildResumeSkillMeterRowHtml(lab, pct))
     }
     if (si < sections.length - 1) {
-      parts.push(`<div class="win-line resume-skills-matrix-spacer" aria-hidden="true"></div>`)
+      parts.push(`<div class="resume-skills-matrix-spacer" aria-hidden="true"></div>`)
     }
   }
   return parts.join('')
@@ -149,6 +175,7 @@ export class AppWindow {
       this.el.classList.add('contact-window')
       this.renderContact(opts.content)
     } else if (opts.command === 'whoami') {
+      this.el.classList.add('whoami-window')
       this.renderAboutMe(opts.content)
     } else if (opts.command === 'projects' && opts.projectCards?.length) {
       this.el.classList.add('projects-window')
@@ -160,7 +187,7 @@ export class AppWindow {
 
   private render(lines: string[]): void {
     this.bodyEl.innerHTML = lines
-      .map(line => `<div class="win-line">${ansiToHtml(line) || ' '}</div>`)
+      .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
       .join('')
   }
 
@@ -187,7 +214,7 @@ export class AppWindow {
     const stripAnsiForDetect = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '')
 
     const mapLines = (raw: string[]) =>
-      raw.map(line => `<div class="win-line">${ansiToHtml(line) || ' '}</div>`).join('')
+      raw.map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`).join('')
 
     /** Body bullets (·) get a hanging indent when wrapped */
     const mapBodyLines = (raw: string[]) =>
@@ -196,15 +223,9 @@ export class AppWindow {
           const visual = stripAnsiForDetect(line)
           const hang = /^\s*·/.test(visual)
           const cls = hang ? 'win-line win-line--hang' : 'win-line'
-          return `<div class="${cls}">${ansiToHtml(line) || ' '}</div>`
+          return `<div class="${cls}">${ansiToHtmlWithLinks(line) || ' '}</div>`
         })
         .join('')
-
-    const splitSkillsSections = (raw: string[]) => {
-      const idx = raw.findIndex(l => /how I like to work/i.test(stripAnsiForDetect(l)))
-      if (idx <= 0) return { matrix: raw, notes: [] as string[] }
-      return { matrix: raw.slice(0, idx), notes: raw.slice(idx) }
-    }
 
     const narrativeCol = document.createElement('div')
     narrativeCol.className = 'resume-main-col resume-text-col'
@@ -218,17 +239,26 @@ export class AppWindow {
 
     if (structuredLead) {
       const leadGrid = document.createElement('div')
-      leadGrid.className = 'resume-lead-grid resume-lead-grid--no-photo'
+      leadGrid.className = 'resume-lead-grid'
+
+      const dropVisuallyBlank = (raw: string[]) =>
+        raw.filter(l => stripAnsiForDetect(l).trim() !== '')
+
+      const leadPhoto = document.createElement('figure')
+      leadPhoto.className = 'resume-lead-photo'
+      mountPortfolioPortrait(leadPhoto, 'resume-lead-photo__img resume-photo', {
+        framePlaceholderClass: 'resume-lead-photo--placeholder',
+      })
 
       const leadText = document.createElement('div')
       leadText.className = 'resume-lead-text'
-      leadText.innerHTML = mapLines(leadLines!)
+      leadText.innerHTML = mapLines(dropVisuallyBlank(leadLines!))
 
       const bodyBlock = document.createElement('div')
       bodyBlock.className = 'resume-body-block'
-      bodyBlock.innerHTML = mapBodyLines(bodyLines!)
+      bodyBlock.innerHTML = mapBodyLines(dropVisuallyBlank(bodyLines!))
 
-      leadGrid.append(leadText, bodyBlock)
+      leadGrid.append(leadPhoto, leadText, bodyBlock)
       narrativeCol.appendChild(leadGrid)
     } else {
       narrativeCol.innerHTML = mapLines(lines)
@@ -244,36 +274,27 @@ export class AppWindow {
       const skillsInner = document.createElement('div')
       skillsInner.className = 'resume-skills-body'
 
-      const { notes } = splitSkillsSections(skillsLines!)
       const matrixEl = document.createElement('div')
       matrixEl.className = 'resume-skills-matrix'
       matrixEl.innerHTML = buildResumeSkillsMatrixInnerHtml()
       skillsInner.appendChild(matrixEl)
-      const notesFiltered = notes.filter(l => stripAnsiForDetect(l).trim() !== '')
-      if (notesFiltered.length) {
-        const notesEl = document.createElement('div')
-        notesEl.className = 'resume-skills-notes'
-        const titleLine = notesFiltered[0]!
-        const rest = notesFiltered
-          .slice(1)
-          .filter(l => stripAnsiForDetect(l).trim() !== '')
-        const titleDiv = document.createElement('div')
-        titleDiv.className = 'resume-skills-notes-title win-line'
-        titleDiv.innerHTML = ansiToHtml(titleLine) || ' '
-        notesEl.appendChild(titleDiv)
-        if (rest.length) {
-          const ul = document.createElement('ul')
-          ul.className = 'resume-skills-notes-list'
-          for (const ln of rest) {
-            const li = document.createElement('li')
-            li.className = 'resume-skills-notes-item'
-            li.innerHTML = ansiToHtml(ln) || ' '
-            ul.appendChild(li)
-          }
-          notesEl.appendChild(ul)
-        }
-        skillsInner.appendChild(notesEl)
+
+      const notesEl = document.createElement('div')
+      notesEl.className = 'resume-skills-notes'
+      const heading = document.createElement('div')
+      heading.className = 'resume-skills-notes-heading'
+      heading.textContent = 'how I like to work'
+      notesEl.appendChild(heading)
+      const ul = document.createElement('ul')
+      ul.className = 'resume-skills-notes-list'
+      for (const line of RESUME_WORKSTYLE_BULLETS) {
+        const li = document.createElement('li')
+        li.className = 'resume-skills-notes-item'
+        li.textContent = line
+        ul.appendChild(li)
       }
+      notesEl.appendChild(ul)
+      skillsInner.appendChild(notesEl)
 
       aside.appendChild(skillsInner)
       wrap.appendChild(aside)
@@ -284,18 +305,27 @@ export class AppWindow {
 
   /** Portrait / placeholder + animated rail beside contact lines */
   private renderContact(lines: string[]): void {
-    this.renderPortraitColumnLayout(lines)
+    this.renderPortraitColumnLayout(lines, {
+      asideHint: 'portrait.jpg · optional',
+    })
   }
 
   /** About me — portrait column (moved off résumé) + ANSI lines */
   private renderAboutMe(lines: string[]): void {
-    this.renderPortraitColumnLayout(lines)
+    this.renderPortraitColumnLayout(lines, {
+      asideHint: 'Drop portrait.jpg in /public if you want a face beside the rant.',
+      variant: 'about',
+    })
   }
 
   /** Shared by Links (`renderContact`) and About me (`whoami`). */
-  private renderPortraitColumnLayout(lines: string[]): void {
+  private renderPortraitColumnLayout(
+    lines: string[],
+    options?: { asideHint?: string; variant?: 'contact' | 'about' },
+  ): void {
     const wrap = document.createElement('div')
-    wrap.className = 'contact-layout'
+    wrap.className =
+      options?.variant === 'about' ? 'contact-layout contact-layout--about' : 'contact-layout'
 
     const aside = document.createElement('aside')
     aside.className = 'contact-aside'
@@ -309,40 +339,19 @@ export class AppWindow {
 
     const frame = document.createElement('figure')
     frame.className = 'contact-photo-frame'
-
-    const img = document.createElement('img')
-    img.className = 'resume-photo contact-photo-slot'
-    img.alt = 'Portrait'
-    img.src = '/portrait.jpg'
-    img.loading = 'lazy'
-    img.decoding = 'async'
-    img.addEventListener(
-      'error',
-      () => {
-        const ph = document.createElement('div')
-        ph.className = 'contact-photo-placeholder'
-        ph.setAttribute('role', 'img')
-        ph.setAttribute('aria-label', 'Placeholder portrait')
-        ph.innerHTML = '<span class="contact-photo-initials" aria-hidden="true">MG</span>'
-        frame.replaceChildren(ph)
-        frame.classList.add('contact-photo-frame--placeholder')
-      },
-      { once: true },
-    )
-
-    frame.appendChild(img)
+    mountPortfolioPortrait(frame, 'resume-photo contact-photo-slot')
 
     aside.appendChild(orbit)
     aside.appendChild(frame)
     const hint = document.createElement('p')
     hint.className = 'contact-aside-hint'
-    hint.textContent = 'portrait.jpg · optional'
+    hint.textContent = options?.asideHint ?? 'portrait.jpg · optional'
     aside.appendChild(hint)
 
     const col = document.createElement('div')
     col.className = 'contact-text-col'
     col.innerHTML = lines
-      .map(line => `<div class="win-line">${ansiToHtml(line) || ' '}</div>`)
+      .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
       .join('')
 
     wrap.appendChild(aside)
@@ -379,7 +388,8 @@ export class AppWindow {
           ? p.thumb
           : `/${p.thumb}`
         : null
-      const liveShot = p.web ? liveSiteScreenshotUrl(p.web) : null
+      const liveShot =
+        p.web && !p.skipLiveScreenshot ? liveSiteScreenshotUrl(p.web) : null
 
       const mediaEl = p.web
         ? (() => {

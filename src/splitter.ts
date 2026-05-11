@@ -1,8 +1,6 @@
-// ── splitter.ts ───────────────────────────────────────────────────────────────
-// Drag-to-resize using Pointer Events (mouse + touch). Separate mouse-only handlers
-// often miss reliable touch dragging.
-//
-// `h`: horizontal split — adjusts width of the left target (terminal). `v`: vertical — height above.
+/**
+ * Pointer-based splitters (`h`: terminal vs stack width; `v`: height above pane). Mouse + touch.
+ */
 
 export type SplitterOrientation = 'h' | 'v'
 

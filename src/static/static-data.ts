@@ -14,11 +14,11 @@ export interface PlainProject {
 
 export const PROFILE = {
   name: 'Matt Grey',
-  headline: 'Developer / engineer',
-  location: 'Killeen, TX · US Central',
+  headline: 'Software engineer / web developer',
+  location: 'Killeen–Temple, TX · US Central',
   statusOpen: true,
   summary:
-    'Software developer with 8+ years delivering web work end-to-end — scoping, UI implementation, integrations, and hand-off. Comfortable on the browser stack (TypeScript, React, HTML/CSS) alongside Java-heavy coursework habits (REST, HTTP clients, unit tests). Pragmatic testing, concise docs, iterative delivery.',
+    'Software developer with 8+ years delivering web work end-to-end — scoping, UI implementation, integrations, and hand-off. SNHU software engineering undergrad (Kenzie track): designing, building, and shipping software. Comfortable on the browser stack (TypeScript, React, HTML/CSS) alongside Java-heavy coursework habits (REST, HTTP clients, unit tests). Pragmatic testing, concise docs, iterative delivery. Family is a pillar — partner and son keep the bar honest.',
 } as const
 
 export const CONTACT = [
@@ -27,6 +27,11 @@ export const CONTACT = [
     label: 'GitHub',
     href: 'https://github.com/namefailed',
     text: 'github.com/namefailed',
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/matthew-grey-215615179/',
+    text: 'Matthew Grey — profile & experience',
   },
   { label: 'Email', href: 'mailto:namefailedx@gmail.com', text: 'namefailedx@gmail.com' },
   {

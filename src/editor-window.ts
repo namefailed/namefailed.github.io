@@ -1,6 +1,4 @@
-// ── editor-window.ts ────────────────────────────────────────────────────────────
-// In-browser editor with normal / insert / ex-line modes over `vfsReadRaw` / `vfsWrite`.
-// Separate from terminal-line editing in `vim.ts`.
+/** Modal editor over the fake VFS (normal / insert / ex); not the terminal one-line vim widget. */
 
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
 

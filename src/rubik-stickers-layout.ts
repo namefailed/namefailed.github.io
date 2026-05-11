@@ -1,6 +1,4 @@
-// ── rubik-stickers-layout.ts ───────────────────────────────────────────────────
-// Fixed 54 sticker slots (face × 9) positions on a nominal ±1 cube for layout,
-// hover/raycast picking, per-move layer masking, and turn-preview clones.
+/** 54 sticker meshes on a nominal ±1 cube: layout, hover/raycast picks, layer masks for animation. */
 
 import * as THREE from 'three'
 import type { CubeFaceKey } from './rubik-model'

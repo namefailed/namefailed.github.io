@@ -1,5 +1,4 @@
-// ── retro-fx.ts ───────────────────────────────────────────────────────────────
-// CRT-style overlays (off by default). Toggle with `retro` / `retro on|off`.
+/** Optional CRT-style filter; toggled with `retro` / `retro on|off`. */
 
 const CLASS = 'retro-fx'
 const STORAGE_KEY = 'mrgrey-retro-fx'

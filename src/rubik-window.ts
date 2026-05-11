@@ -1,6 +1,4 @@
-// ── rubik-window.ts ───────────────────────────────────────────────────────────
-// Playable 3×3: 54 fixed sticker plates, slice rotation animation, click-to-turn,
-// keyboard + toolbar, undo + alg line (Scratch / virtual-cube style).
+/** Interactive 3×3 cube: sticker plates, slice rotation, toolbar + keyboard + undo/alg strip. */
 
 import * as THREE from 'three'
 import { SRGBColorSpace } from 'three'
@@ -67,8 +65,12 @@ export class RubikWindow {
   private algInput!: HTMLInputElement
 
   private raf = 0
-  private resizeRo!: ResizeObserver
+  private resizeRo: ResizeObserver | null = null
   private glDisposed = false
+  /** Set after WebGL + scene boot completes — `dispose` is a no-op until then. */
+  private glInited = false
+  /** Clears mount-animation listeners / fallback timer if GL boot is cancelled or completes. */
+  private glBootCleanup: (() => void) | null = null
   private animating = false
 
   private undoStack: Array<{ cube: CubeFaces; moveCount: number }> = []
@@ -223,13 +225,59 @@ export class RubikWindow {
     this.el.appendChild(bar)
     this.el.appendChild(stack)
 
-    this.initThree()
-    this.setupStickerClickRouter()
-
     this.el.addEventListener('keydown', e => this.onKey(e), true)
     this.el.addEventListener('mousedown', () => this.notifyFocus())
-    this.syncStickerMaterials()
-    this.updateStatus()
+
+    /*
+     * WebGL is unreliable while the WM mount animation applies 3D transforms / blur
+     * to this tile (black canvas or lost context). Wait for `wm-window-mount` to end
+     * (or a fallback timeout — reduced-motion disables CSS animation so `animationend`
+     * may never fire).
+     */
+    queueMicrotask(() => this.scheduleGlBootAfterWmMount())
+  }
+
+  /** After `appendToRightPane` + `wm-animate-mount` — see `Desktop.playMountAnim`. */
+  private scheduleGlBootAfterWmMount(): void {
+    if (this.glDisposed || this.glInited) return
+
+    const boot = (): void => {
+      if (this.glDisposed || this.glInited) return
+      try {
+        this.initThree()
+        this.setupStickerClickRouter()
+        this.syncStickerMaterials()
+        this.updateStatus()
+      } catch (err) {
+        console.error('[rubik-window] WebGL boot failed', err)
+        this.host.innerHTML =
+          '<p class="rubik-gl-fallback">WebGL did not start in this tile — try closing other GPU tabs, resizing the window, or another browser.</p>'
+      }
+    }
+
+    let finished = false
+    const runOnce = (): void => {
+      if (finished) return
+      finished = true
+      this.glBootCleanup?.()
+      this.glBootCleanup = null
+      if (this.glDisposed) return
+      requestAnimationFrame(boot)
+    }
+
+    const onEnd = (e: AnimationEvent): void => {
+      if (e.target !== this.el) return
+      if (e.animationName !== 'wm-window-mount') return
+      runOnce()
+    }
+
+    this.el.addEventListener('animationend', onEnd)
+    const tid = window.setTimeout(runOnce, 720)
+
+    this.glBootCleanup = (): void => {
+      this.el.removeEventListener('animationend', onEnd)
+      window.clearTimeout(tid)
+    }
   }
 
   private mkToolBtn(label: string, title: string, fn: () => void): HTMLButtonElement {
@@ -267,6 +315,7 @@ export class RubikWindow {
   }
 
   private initThree(): void {
+    if (this.glDisposed) return
     const scene = new THREE.Scene()
     this.scene = scene
 
@@ -275,6 +324,10 @@ export class RubikWindow {
     this.camera = cam
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
+    if (!renderer.getContext()) {
+      renderer.dispose()
+      throw new Error('WebGLRenderer.getContext() returned null')
+    }
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))
     renderer.setClearColor(0x0c0c12, 1)
     renderer.outputColorSpace = SRGBColorSpace
@@ -350,6 +403,8 @@ export class RubikWindow {
     }
     animate()
 
+    /* Before `observe` — ResizeObserver can fire synchronously and call `resizeGl`. */
+    this.glInited = true
     this.resizeRo = new ResizeObserver(() => this.resizeGl())
     this.resizeRo.observe(this.host)
     requestAnimationFrame(() => this.resizeGl())
@@ -438,6 +493,7 @@ export class RubikWindow {
   }
 
   private resizeGl(): void {
+    if (this.glDisposed) return
     const r = this.host.getBoundingClientRect()
     const w = Math.max(160, r.width)
     const h = Math.max(160, r.height)
@@ -511,6 +567,7 @@ export class RubikWindow {
 
   /** Animated slice + undo snapshot + move counter. */
   private commitTurnAnimated(token: TurnToken): void {
+    if (!this.glInited) return
     if (this.animating) return
     if (!MOVE_MAP[token]) return
 
@@ -522,6 +579,7 @@ export class RubikWindow {
   }
 
   private onKey(e: KeyboardEvent): void {
+    if (!this.glInited) return
     if (e.code === 'Space') {
       e.preventDefault()
       e.stopPropagation()
@@ -612,8 +670,12 @@ export class RubikWindow {
   dispose(): void {
     if (this.glDisposed) return
     this.glDisposed = true
+    this.glBootCleanup?.()
+    this.glBootCleanup = null
     cancelAnimationFrame(this.raf)
-    this.resizeRo.disconnect()
+    if (!this.glInited) return
+    this.resizeRo?.disconnect()
+    this.resizeRo = null
     this.controls.dispose()
     for (const m of this.stickerMeshes) {
       const mat = m.material

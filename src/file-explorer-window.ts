@@ -1,5 +1,4 @@
-// ── file-explorer-window.ts ───────────────────────────────────────────────────
-// Virtual FS browser: navigate, rename, delete, clipboard cut/copy/paste.
+/** File browser over the fake VFS: navigate, rename, delete, clipboard cut/copy/paste. */
 
 import {
   vfsFormatPath,

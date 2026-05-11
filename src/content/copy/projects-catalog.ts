@@ -13,6 +13,11 @@ export type PortfolioProjectEntry = {
   web?: string
   /** Path under site root (`public/`) — thumbnails from legacy GitHub Pages */
   thumb?: string
+  /**
+   * Skip WordPress mShots for this card. Set for domains where s0.wp.com/mshots returns
+   * 403/HTML so the `<img>` never paints a frame; we then rely on {@link thumb} (or placeholder).
+   */
+  skipLiveScreenshot?: boolean
 }
 
 export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
@@ -27,6 +32,8 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     repo: 'https://github.com/namefailed/mrgrey.dev',
     web: 'https://mrgrey.dev',
     thumb: 'img/legacy/portfolio-mrgrey.svg',
+    /* mShots often 403 / non-image for personal domains — card art is the bundled SVG */
+    skipLiveScreenshot: true,
   },
   {
     title: 'Army Women’s Foundation',

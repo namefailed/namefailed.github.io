@@ -1,5 +1,4 @@
-// ── paint-window.ts ───────────────────────────────────────────────────────────
-// Brush, eraser (canvas background), line, fill — pointer + touch.
+/** Canvas raster tools: brush, eraser-to-bg, line, fill; mouse + touch. */
 
 export interface PaintWindowOptions {
   onClose: () => void

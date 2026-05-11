@@ -1,5 +1,4 @@
-// ── rubik-model.ts ───────────────────────────────────────────────────────────
-// 3×3 facelet model (U R F D L B net). Moves verified: U4, D4, R4, L4, F4, B4 = identity.
+/** 3×3 face arrays on standard U/R/F/D/L/B layout; repeated quarter-turns return to identity for each face. */
 
 export interface CubeFaces {
   U: number[]

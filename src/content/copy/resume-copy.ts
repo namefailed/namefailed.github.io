@@ -90,8 +90,8 @@ function resumeEducationEndLines(): string[] {
   return [
     '',
     `  ${c.pink}${c.bold}MATT GREY${c.reset}  ${c.dim}·${c.reset}  Developer / Engineer`,
-    `  ${c.dim}Killeen, TX  ·  namefailedx@gmail.com  ·  +1 254-534-9544${c.reset}`,
-    `  ${c.dim}github.com/namefailed  ·  mrgrey.dev${c.reset}`,
+    `  ${c.dim}Killeen–Temple, TX  ·  namefailedx@gmail.com  ·  +1 254-534-9544${c.reset}`,
+    `  ${c.dim}github.com/namefailed  ·  mrgrey.dev  ·  linkedin.com/in/matthew-grey-215615179${c.reset}`,
     '',
     hr,
     `  ${c.pink}PROFILE${c.reset}`,
@@ -141,11 +141,15 @@ export function resumeWindowMainLines(): string[] {
   return [...resumeEducationEndLines(), ...resumeCertTailLines()]
 }
 
-/** First lines only — paired with `resumeWindowBodyLines` when the tile splits lead vs body */
+/**
+ * Header block only (name + contact) — no leading/trailing blank lines so the tile
+ * does not reserve a tall “dead” gap before PROFILE when lead/body sit in separate grids.
+ */
 export function resumeWindowLeadLines(): string[] {
-  return resumeEducationEndLines().slice(0, 5)
+  return resumeEducationEndLines().slice(1, 4)
 }
 
+/** From the first rule line (hr before PROFILE) through certs — pairs with {@link resumeWindowLeadLines}. */
 export function resumeWindowBodyLines(): string[] {
   return [...resumeEducationEndLines().slice(5), ...resumeCertTailLines()]
 }

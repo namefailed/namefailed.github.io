@@ -1,5 +1,4 @@
-// ── snake-window.ts ───────────────────────────────────────────────────────────
-// Grid snake: fills the tile, adaptive speed, powerups, HUD controls.
+/** Full-tile Snake with adaptive difficulty, pickups, HUD. */
 
 export interface SnakeWindowOptions {
   onClose: () => void
@@ -8,9 +7,10 @@ export interface SnakeWindowOptions {
   onFocus: () => void
 }
 
-const TARGET_CELL = 15
-const MIN_COLS = 18
-const MIN_ROWS = 14
+/** Larger target cell ⇒ fewer columns/rows ⇒ bigger snake & orbs (more “zoomed in”). */
+const TARGET_CELL = 24
+const MIN_COLS = 12
+const MIN_ROWS = 10
 const BASE_TICK_MS = 82
 const MIN_TICK_MS = 34
 const LENGTH_SPEED_STEP = 2.1 /** ms faster per segment beyond starter length */
@@ -655,10 +655,10 @@ export class SnakeWindow {
     ctx.restore()
 
     if (!this.playing && !this.gameOverActive) {
-      this.drawOverlay(ctx, cw, ch, cs, 'paused', 'p · resume    space · restart')
+      this.drawOverlay(ctx, cw, ch, cs, 'paused', ['p · resume', 'space · restart'])
     }
     if (this.gameOverActive) {
-      this.drawOverlay(ctx, cw, ch, cs, 'game over', `space · restart    score ${this.score}`)
+      this.drawOverlay(ctx, cw, ch, cs, 'game over', ['space · restart', `score ${this.score}`])
     }
   }
 
@@ -668,31 +668,50 @@ export class SnakeWindow {
     ch: number,
     cs: number,
     title: string,
-    sub: string,
+    subLines: readonly string[],
   ): void {
     ctx.save()
     ctx.fillStyle = 'rgba(5,7,14,0.55)'
     ctx.fillRect(0, 0, cw, ch)
+
+    const titleSize = Math.max(17, Math.min(30, cs * 0.55))
+    const subSize = Math.max(12, Math.min(16, cs * 0.32))
+    const titleFont = `700 ${titleSize}px "JetBrains Mono", ui-monospace, system-ui`
+    const subFont = `${subSize}px "JetBrains Mono", ui-monospace, system-ui`
+
+    const titleLineH = titleSize * 1.12
+    const subLineH = subSize * 1.38
+    const gapTitleSub = Math.max(8, subSize * 0.5)
+    const padV = 20
+    const contentH = titleLineH + gapTitleSub + subLines.length * subLineH
+    const bh = Math.min(ch * 0.46, Math.max(112, contentH + padV * 2))
+    const bw = Math.min(cw * 0.88, 440)
+    const boxLeft = (cw - bw) * 0.5
+    const boxTop = (ch - bh) * 0.5
     const mx = cw * 0.5
-    const my = ch * 0.46
-    const bw = Math.min(cw * 0.78, 360)
-    const bh = Math.min(ch * 0.32, 160)
+
     ctx.strokeStyle = 'rgba(245,194,231,0.28)'
     ctx.fillStyle = 'rgba(22,24,38,0.72)'
     ctx.lineWidth = 1.5
     ctx.beginPath()
-    if (typeof ctx.roundRect === 'function') ctx.roundRect(mx - bw * 0.5, my - bh * 0.5, bw, bh, 14)
-    else ctx.rect(mx - bw * 0.5, my - bh * 0.5, bw, bh)
+    if (typeof ctx.roundRect === 'function') ctx.roundRect(boxLeft, boxTop, bw, bh, 14)
+    else ctx.rect(boxLeft, boxTop, bw, bh)
     ctx.fill()
     ctx.stroke()
+
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
+    ctx.textBaseline = 'top'
+    let y = boxTop + padV
     ctx.fillStyle = this.cssColor('--snake-msg', '#e8eaf6')
-    ctx.font = `700 ${Math.max(16, cs * 0.5)}px "JetBrains Mono", ui-monospace, system-ui`
-    ctx.fillText(title, mx, my - cs * 0.12)
-    ctx.fillStyle = 'rgba(214,217,239,0.72)'
-    ctx.font = `${Math.max(11, cs * 0.28)}px "JetBrains Mono", ui-monospace, system-ui`
-    ctx.fillText(sub, mx, my + cs * 0.38)
+    ctx.font = titleFont
+    ctx.fillText(title, mx, y)
+    y += titleLineH + gapTitleSub
+    ctx.fillStyle = 'rgba(214,217,239,0.78)'
+    ctx.font = subFont
+    for (const line of subLines) {
+      ctx.fillText(line, mx, y)
+      y += subLineH
+    }
     ctx.restore()
   }
 

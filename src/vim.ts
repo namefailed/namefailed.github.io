@@ -1,7 +1,4 @@
-// ── vim.ts ────────────────────────────────────────────────────────────────────
-// Single-line vim-mode input widget for a terminal REPL.
-// Handles: insert / normal / visual modes, operators (d/c/y + motion),
-// f/F/t/T char-find, paste, undo, case toggle, visual selection with ANSI.
+/** Single-line vim-like input for the shell prompt (modes, operators, f/F/t/T, visuals with ANSI spans). */
 
 export type VimMode = 'insert' | 'normal' | 'visual'
 

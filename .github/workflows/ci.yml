@@ -1,0 +1,22 @@
+# Runs on pull requests and non-main branches so pushes to `main` are not double-tested
+# alongside the Pages deploy workflow (which also runs `npm test`).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
