@@ -32,6 +32,8 @@ When that slips, refactor beats comments.
 
 ## If you clone this
 
+Git history and releases use **`https://github.com/namefailed/namefailed.github.io`** (Pages host at **`https://namefailed.github.io/`**). An older repo name exists on my account; ignore it unless you are spelunking history.
+
 1. **`npm install`**, **`npm run dev`**.
 2. TypeScript ships as devDependency; **`npm run build`** runs `tsc` then `vite build`.
 3. No backend — static hosting friendly. Persisted state is **`localStorage`** (VFS, theme, CRT flag, matrix switch, sound preference).

@@ -3,9 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://namefailed.github.io/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/namefailed/mrgrey.dev.git"
+    "url": "https://github.com/namefailed/namefailed.github.io.git"
   },
   "scripts": {
     "dev": "vite",
