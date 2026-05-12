@@ -90,7 +90,7 @@ const HELP_GROUPS: ReadonlyArray<{ title: string; keys: readonly string[] }> = [
   { title: 'Portfolio & contact', keys: ['links', 'projects', 'resume', 'static'] },
   {
     title: 'Programs',
-    keys: ['explorer', 'browse', 'edit', 'editor', 'vim', 'whoami', 'paint', 'cube', 'snake', 'pong'],
+    keys: ['explorer', 'browse', 'edit', 'editor', 'vim', 'whoami', 'paint', 'snake', 'pong'],
   },
   { title: 'Filesystem', keys: ['pwd', 'ls', 'cd', 'cat', 'touch', 'mkdir', 'rm', 'wc', 'head', 'tail'] },
   { title: 'Shell & misc', keys: ['help', 'keybinds', 'cookies', 'clear', 'echo', 'reboot', 'ps', 'date', 'uptime', 'cal'] },
@@ -306,7 +306,6 @@ export function renderKeybindsLegend(): string[] {
     kbRow("Snake",      "WASD / arrows  Space to restart after game over"),
     kbRow("Pong",       "W/S player 1  up/down player 2  vs AI by default"),
     kbRow("Paint",      "[ / ] adjust brush size  click and drag to draw"),
-    kbRow("Cube",       "U D L R F B + Shift prime  Space scramble  drag orbit"),
     "",
     `  ${c.dim}Tip: ${c.reset}${c.blue}help -v${c.reset}${c.dim} for the full command glossary.${c.reset}`,
     "",

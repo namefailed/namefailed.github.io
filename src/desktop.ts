@@ -311,7 +311,6 @@ export class Desktop {
 
     const miniGameOpen = (
       spec.command === 'paint' ||
-      spec.command === 'cube' ||
       spec.command === 'snake' ||
       spec.command === 'pong'
     )
@@ -344,23 +343,8 @@ export class Desktop {
         return
       }
       if (cmd === 'cube') {
-        try {
-          const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
-          let cw!: RubikWindow
-          cw = new RubikWindowCtor({
-            onClose: () => this.closeWindow(cw),
-            onMinimize: () => this.minimizeWindow(cw),
-            onMaximize: () => this.toggleMaximizeContent(cw),
-            onFocus: () => this.focusWindow(cw),
-          })
-          this.appendToRightPane(cw.el)
-          this.windows.push(cw)
-          this.attachVerticalSplitters()
-          this.focusWindow(cw)
-        } catch (err) {
-          console.error('[desktop] cube tile failed to open', err)
-          pushToast('Cube failed to load — see console for details.', 6200, 'toast--warn')
-        }
+        // Temporarily disabled — sticker rotation math needs revisiting.
+        pushToast('Cube is temporarily unavailable while we fix the rotation math.', 4800, 'toast--warn')
         return
       }
       if (cmd === 'snake') {
@@ -1050,8 +1034,12 @@ export class Desktop {
       })
       return
     }
-    if (cmd === 'paint' || cmd === 'cube' || cmd === 'snake' || cmd === 'pong') {
+    if (cmd === 'paint' || cmd === 'snake' || cmd === 'pong') {
       void this.openWindow({ command: cmd, title: cmd, content: [] })
+      return
+    }
+    if (cmd === 'cube') {
+      pushToast('Cube is temporarily unavailable while we fix the rotation math.', 4800, 'toast--warn')
       return
     }
     if (cmd === 'resume') {

@@ -58,8 +58,6 @@ export function windowSpawnEcho(cmd: string, args: readonly string[]): string[] 
     }
     case 'paint':
       return ['', `  ${c.green}►${c.reset} ${c.dim}MS Paint energy unlocked — Undo is therapy.${c.reset}`, '']
-    case 'cube':
-      return ['', `  ${c.green}►${c.reset} ${c.dim}3×3 gremlin containment field … U/D/L/R/F/B drive faces.${c.reset}`, '']
     case 'snake':
       return ['', `  ${c.green}►${c.reset} ${c.dim}Snake HUD allocated — collisions are pedagogical.${c.reset}`, '']
     case 'pong':

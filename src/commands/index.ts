@@ -132,11 +132,9 @@ export const commands: Record<string, Command> = {
     run: () => [],
   },
 
-  cube: {
-    description:
-      '3×3 cube — face keys UDLRFB + Shift prime, Space scramble, drag to orbit, on-screen moves',
-    run: () => [],
-  },
+  // cube: temporarily disabled while we revisit the rotation math.
+  // Keeping the entry out of the registry hides it from help/autocomplete;
+  // desktop.ts intercepts any 'cube' invocation and shows a toast.
 
   snake: {
     description: 'Snake — WASD / arrows; rounded cells; Space restarts after game over',
