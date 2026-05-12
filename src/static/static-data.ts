@@ -18,6 +18,10 @@ export interface ExperienceEntry {
   period: string
   location: string
   bullets: readonly string[]
+  /** Role category — drives the colour strip on the card */
+  type?: 'freelance' | 'contract' | 'fulltime' | 'volunteer'
+  /** Highlight with a "Featured" badge */
+  featured?: boolean
 }
 
 export const PROFILE = {
@@ -65,35 +69,64 @@ export const SKILLS_PRIMARY = [
 
 export const EXPERIENCE: readonly ExperienceEntry[] = [
   {
-    title: 'Freelance Web Developer',
-    company: 'Independent',
+    title: 'Freelance Web Developer / Designer',
+    company: 'Self-employed',
     period: 'Jan 2017 – present',
-    location: 'Killeen, TX (remote)',
+    location: 'Remote / hybrid',
+    type: 'freelance',
     bullets: [
-      'End-to-end delivery for small businesses and nonprofits: scoping, UI build, integrations, hand-off docs.',
+      'Delivered end-to-end web projects for small businesses and nonprofits: scoping, design, development, deployment, and client training.',
       'Stack varies by project — TypeScript, React, Vite, vanilla JS/CSS, Node.js, CMS platforms.',
-      'Current focus: accessible component patterns, performance budgets, and iterative client feedback loops.',
+      'Sole point of contact across all phases; long-term repeat client relationships built on direct communication and full ownership.',
+    ],
+  },
+  {
+    title: 'Deputy Web Minister',
+    company: 'Society for Creative Anachronism',
+    period: 'Feb 2025 – Aug 2025',
+    location: 'Killeen–Temple Area · hybrid',
+    type: 'volunteer',
+    bullets: [
+      'Maintained and updated the official SCA website for a large volunteer-driven historical recreation organization.',
+      'Kept officer rosters, event listings, and announcements accurate and compliant with SCA digital policies.',
+      'Coordinated with the Web Minister and regional officers to publish timely, consistent updates across multiple branches.',
+    ],
+  },
+  {
+    title: 'Frontend Developer',
+    company: 'Vertalo',
+    period: 'Jan 2021 – Jan 2022',
+    location: 'Austin, TX · hybrid',
+    type: 'contract',
+    featured: true,
+    bullets: [
+      'Designed and built the entire public-facing Vertalo.com website from the ground up — responsive, performant, and accessible.',
+      'Implemented on Craft CMS, integrated with Vertalo\'s React / PostgreSQL / AWS stack.',
+      'Translated complex blockchain and digital-asset concepts into clear, institutional-grade web copy and layout.',
+      'Collaborated directly with leadership on messaging, UX structure, SEO, and content throughout the contract.',
     ],
   },
   {
     title: 'Web Developer',
-    company: 'Topsarge / milMedia',
+    company: 'milMedia Group',
     period: 'Jun 2018 – Jan 2020',
-    location: 'Killeen, TX',
+    location: 'Killeen, TX · on-site',
+    type: 'fulltime',
     bullets: [
-      'Built and maintained marketing sites under tight deadlines for military-adjacent clients.',
-      'Responsive HTML/CSS layouts, WordPress theming, cross-browser QA, and hosting ticket triage.',
-      'Coordinated with designers, content editors, and stakeholders across multiple concurrent campaigns.',
+      'Built and maintained marketing sites for military-adjacent clients using HTML, CSS, JavaScript, and React.',
+      'WordPress theming, CMS customization, hosting management, and cross-browser QA under tight deadlines.',
+      'Represented the company at conventions; coordinated with designers, editors, and stakeholders across campaigns.',
     ],
   },
   {
-    title: 'Technical Support Specialist (Tier 2)',
-    company: 'Sykes',
+    title: 'Technical Support Specialist',
+    company: 'Sykes Enterprises',
     period: 'Sep 2017 – Jan 2018',
-    location: 'Temple, TX',
+    location: 'Remote',
+    type: 'fulltime',
     bullets: [
-      'Escalated customer issues, documented resolutions, and maintained ticket queues.',
-      'Built troubleshooting familiarity with network and software configurations under production pressure.',
+      'Tier-2 technical support: diagnosed hardware, OS, and application-layer issues for customers.',
+      'Documented resolutions and escalated edge cases; maintained strong satisfaction scores throughout.',
     ],
   },
 ]

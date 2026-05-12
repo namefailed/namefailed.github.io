@@ -23,7 +23,7 @@ export type PortfolioProjectEntry = {
 export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
   {
     title: 'Vertalo',
-    period: 'vertalo.com · 2024–present',
+    period: 'vertalo.com · 2021–2022',
     lines: [
       `Tokenization & cap-table infrastructure for regulated digital assets.`,
       `Modern web app surface: TypeScript, React, secure REST flows.`,
