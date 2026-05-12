@@ -239,16 +239,10 @@ export class AppWindow {
 
     if (structuredLead) {
       const leadGrid = document.createElement('div')
-      leadGrid.className = 'resume-lead-grid'
+      leadGrid.className = 'resume-lead-grid resume-lead-grid--no-photo'
 
       const dropVisuallyBlank = (raw: string[]) =>
         raw.filter(l => stripAnsiForDetect(l).trim() !== '')
-
-      const leadPhoto = document.createElement('figure')
-      leadPhoto.className = 'resume-lead-photo'
-      mountPortfolioPortrait(leadPhoto, 'resume-lead-photo__img resume-photo', {
-        framePlaceholderClass: 'resume-lead-photo--placeholder',
-      })
 
       const leadText = document.createElement('div')
       leadText.className = 'resume-lead-text'
@@ -258,7 +252,7 @@ export class AppWindow {
       bodyBlock.className = 'resume-body-block'
       bodyBlock.innerHTML = mapBodyLines(dropVisuallyBlank(bodyLines!))
 
-      leadGrid.append(leadPhoto, leadText, bodyBlock)
+      leadGrid.append(leadText, bodyBlock)
       narrativeCol.appendChild(leadGrid)
     } else {
       narrativeCol.innerHTML = mapLines(lines)
