@@ -12,6 +12,8 @@ export interface PlainProject {
   repo?: string
   /** Path relative to the site root (e.g. `img/legacy/portfolio-awfdn.svg`). When present, rendered as a preview image above the card body. */
   thumb?: string
+  /** When true, skip the WordPress mShots live screenshot and rely solely on {@link thumb}. */
+  skipLiveScreenshot?: boolean
 }
 
 export interface ExperienceEntry {
