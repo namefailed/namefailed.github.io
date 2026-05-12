@@ -53,9 +53,9 @@ export function latticeStickerCenter(face: CubeFaceKey, idx: number): THREE.Vect
     case 'B':
       return new THREE.Vector3(-xa, ya, -1 - EPS_SHIFT)
     case 'R':
-      return new THREE.Vector3(1 + EPS_SHIFT, ya, za)
+      return new THREE.Vector3(1 + EPS_SHIFT, ya, xa)
     case 'L':
-      return new THREE.Vector3(-1 - EPS_SHIFT, ya, -za)
+      return new THREE.Vector3(-1 - EPS_SHIFT, ya, -xa)
   }
 }
 

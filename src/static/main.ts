@@ -5,6 +5,7 @@ import {
   CONTACT,
   EDUCATION,
   EXPERIENCE,
+  type ExperienceEntry,
   PROFILE,
   type PlainProject,
   SKILLS_PRIMARY,
@@ -42,6 +43,39 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
+function anim(node: HTMLElement, delayMs = 0): HTMLElement {
+  node.dataset['anim'] = ''
+  if (delayMs) node.style.transitionDelay = `${delayMs}ms`
+  return node
+}
+
+/** Avatar with spinning ring + portrait.jpg → MG fallback. */
+function avatarEl(): HTMLElement {
+  const wrap = el('div', 'plain-avatar-wrap')
+  wrap.setAttribute('aria-hidden', 'true')
+
+  const ring = el('div', 'plain-avatar-ring')
+  const fig = el('figure', 'plain-avatar')
+  fig.style.margin = '0'
+
+  const img = document.createElement('img')
+  img.className = 'plain-avatar-img'
+  img.src = '/portrait.jpg'
+  img.alt = ''
+  img.loading = 'eager'
+  img.decoding = 'async'
+  img.onerror = () => {
+    const fb = el('div', 'plain-avatar-fallback')
+    fb.textContent = 'MG'
+    fig.replaceChildren(fb)
+    fig.classList.add('plain-avatar--fallback')
+  }
+
+  fig.appendChild(img)
+  wrap.append(ring, fig)
+  return wrap
+}
+
 function linkRow(label: string, href: string, text: string): HTMLElement {
   const row = el('div', 'plain-contact-row')
   row.append(el('span', 'plain-contact-label', label))
@@ -52,15 +86,37 @@ function linkRow(label: string, href: string, text: string): HTMLElement {
   return row
 }
 
-function projectCard(project: PlainProject): HTMLElement {
-  const card = el('article', 'plain-project')
+function experienceCard(entry: ExperienceEntry, delay = 0): HTMLElement {
+  const card = anim(el('article', 'plain-exp-card'), delay)
+
+  const header = el('div', 'plain-exp-header')
+  header.append(
+    el('span', 'plain-exp-title', entry.title),
+    el('span', 'plain-exp-company', entry.company),
+  )
+  card.appendChild(header)
+
+  const meta = el('div', 'plain-exp-meta')
+  meta.append(
+    el('span', 'plain-exp-period', entry.period),
+    el('span', 'plain-exp-location', entry.location),
+  )
+  card.appendChild(meta)
+
+  const ul = el('ul', 'plain-exp-bullets')
+  for (const b of entry.bullets) ul.appendChild(el('li', undefined, b))
+  card.appendChild(ul)
+
+  return card
+}
+
+function projectCard(project: PlainProject, delay = 0): HTMLElement {
+  const card = anim(el('article', 'plain-project'), delay)
   const h = document.createElement('h3')
-  const title = el('span', 'plain-project-title', project.title)
-  h.appendChild(title)
-  if (project.meta) {
-    h.appendChild(el('span', 'plain-project-meta', ` · ${project.meta}`))
-  }
+  h.appendChild(el('span', 'plain-project-title', project.title))
+  if (project.meta) h.appendChild(el('span', 'plain-project-meta', ` · ${project.meta}`))
   card.appendChild(h)
+
   if (project.blurb) card.appendChild(el('p', 'plain-project-blurb', project.blurb))
 
   const actions = el('div', 'plain-project-actions')
@@ -86,84 +142,115 @@ function projectCard(project: PlainProject): HTMLElement {
   return card
 }
 
+/** Fade-up each [data-anim] element as it scrolls into view. */
+function observeAnimations(): void {
+  if (!('IntersectionObserver' in window)) {
+    // Fallback: just show everything
+    document.querySelectorAll<HTMLElement>('[data-anim]').forEach(n => n.classList.add('is-visible'))
+    return
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          io.unobserve(entry.target)
+        }
+      }
+    },
+    { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
+  )
+  document.querySelectorAll('[data-anim]').forEach(n => io.observe(n))
+}
+
 function mount(): void {
   const root = document.getElementById('static-root')
   if (!root) return
 
   const homeHref = spaHomeHref()
 
+  // ── Banner ──────────────────────────────────────────────────────────────
   const banner = el('header', 'plain-banner')
   const bannerInner = el('div', 'plain-banner-inner')
   const backLink = document.createElement('a')
   backLink.href = homeHref
   backLink.className = 'plain-back'
   backLink.textContent = '← Full desktop experience'
-  bannerInner.appendChild(backLink)
-  bannerInner.appendChild(
-    el('p', 'plain-banner-meta', 'Static page · same substance, less chrome.'),
-  )
+  bannerInner.append(backLink, el('p', 'plain-banner-meta', 'Portfolio · mobile view'))
   banner.appendChild(bannerInner)
 
+  // ── Hero ─────────────────────────────────────────────────────────────────
   const hero = el('section', 'plain-hero')
   hero.setAttribute('aria-labelledby', 'plain-name')
 
-  hero.appendChild(el('h1', 'plain-name', PROFILE.name))
+  // Avatar
+  hero.appendChild(anim(avatarEl(), 0))
 
-  hero.appendChild(
-    el('p', 'plain-headline', `${PROFILE.headline} · ${PROFILE.location}`),
-  )
+  // Name
+  const nameEl = anim(el('h1', 'plain-name', PROFILE.name), 80)
+  nameEl.id = 'plain-name'
+  hero.appendChild(nameEl)
 
-  const pill = document.createElement('span')
-  pill.className = 'plain-status'
+  // Headline
+  hero.appendChild(anim(el('p', 'plain-headline', `${PROFILE.headline} · ${PROFILE.location}`), 140))
+
+  // Status pill
+  const pill = anim(document.createElement('span'), 200)
+  pill.className = PROFILE.statusOpen ? 'plain-status' : 'plain-status plain-status--muted'
   pill.textContent = PROFILE.statusOpen ? 'Open to work' : 'Unavailable'
-  if (!PROFILE.statusOpen) pill.classList.add('plain-status--muted')
   hero.appendChild(pill)
 
-  hero.appendChild(el('p', 'plain-lede', PROFILE.summary))
+  // Summary
+  hero.appendChild(anim(el('p', 'plain-lede', PROFILE.summary), 260))
 
-  hero.appendChild(el('h2', 'plain-heading', 'Skills'))
+  // ── Skills ───────────────────────────────────────────────────────────────
+  hero.appendChild(anim(el('h2', 'plain-heading', 'Skills'), 0))
 
-  const skillWrap = el('div', 'plain-skills')
-  for (const s of SKILLS_PRIMARY) {
-    skillWrap.appendChild(el('span', 'plain-skill-chip', s))
-  }
+  const skillWrap = anim(el('div', 'plain-skills'), 60)
+  SKILLS_PRIMARY.forEach((s, i) => {
+    const chip = el('span', 'plain-skill-chip', s)
+    chip.style.transitionDelay = `${i * 35}ms`
+    skillWrap.appendChild(chip)
+  })
   hero.appendChild(skillWrap)
 
-  hero.appendChild(el('h2', 'plain-heading', 'Experience'))
+  // ── Experience ───────────────────────────────────────────────────────────
+  hero.appendChild(anim(el('h2', 'plain-heading', 'Experience'), 0))
 
-  const expList = el('ul', 'plain-ul')
-  for (const tx of EXPERIENCE) expList.appendChild(el('li', undefined, tx))
+  const expList = el('div', 'plain-exp-list')
+  EXPERIENCE.forEach((entry, i) => expList.appendChild(experienceCard(entry, i * 60)))
   hero.appendChild(expList)
 
-  hero.appendChild(el('h2', 'plain-heading', 'Education'))
+  // ── Education ────────────────────────────────────────────────────────────
+  hero.appendChild(anim(el('h2', 'plain-heading', 'Education'), 0))
 
-  const eduList = el('ul', 'plain-ul')
+  const eduList = anim(el('ul', 'plain-ul'), 60)
   for (const tx of EDUCATION) eduList.appendChild(el('li', undefined, tx))
   hero.appendChild(eduList)
 
-  hero.appendChild(el('h2', 'plain-heading', 'Certifications'))
+  // ── Certifications ───────────────────────────────────────────────────────
+  hero.appendChild(anim(el('h2', 'plain-heading', 'Certifications'), 0))
 
-  const certList = el('ul', 'plain-ul')
+  const certList = anim(el('ul', 'plain-ul'), 60)
   for (const tx of CERTIFICATIONS) certList.appendChild(el('li', undefined, tx))
   hero.appendChild(certList)
 
-  hero.appendChild(el('h2', 'plain-heading', 'Selected projects'))
+  // ── Projects ─────────────────────────────────────────────────────────────
+  hero.appendChild(anim(el('h2', 'plain-heading', 'Selected projects'), 0))
 
   const grid = el('div', 'plain-project-grid')
-  for (const p of plainProjectsFromPortfolio()) grid.appendChild(projectCard(p))
+  plainProjectsFromPortfolio().forEach((p, i) => grid.appendChild(projectCard(p, i * 55)))
   hero.appendChild(grid)
 
-  hero.appendChild(el('h2', 'plain-heading', 'Contact'))
+  // ── Contact ──────────────────────────────────────────────────────────────
+  hero.appendChild(anim(el('h2', 'plain-heading', 'Contact'), 0))
 
-  const contactBlock = el('div', 'plain-contact-block')
-  for (const item of CONTACT) {
-    contactBlock.appendChild(linkRow(item.label, item.href, item.text))
-  }
-
+  const contactBlock = anim(el('div', 'plain-contact-block'), 60)
+  for (const item of CONTACT) contactBlock.appendChild(linkRow(item.label, item.href, item.text))
   hero.appendChild(contactBlock)
 
+  // ── Footer ───────────────────────────────────────────────────────────────
   const footer = el('footer', 'plain-footer')
-
   const fLink = document.createElement('a')
   fLink.href = homeHref
   fLink.textContent = 'Back to interactive mrgrey.dev'
@@ -172,12 +259,14 @@ function mount(): void {
   const main = el('main', 'plain-main')
   main.id = 'content'
   main.setAttribute('role', 'main')
-  main.appendChild(hero)
-  main.appendChild(footer)
+  main.append(hero, footer)
 
   root.replaceChildren(banner, main)
 
   document.title = `${PROFILE.name} — Portfolio`
+
+  // Boot scroll animations on the next frame so elements are in the DOM
+  requestAnimationFrame(() => observeAnimations())
 }
 
 mount()

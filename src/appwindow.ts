@@ -304,12 +304,14 @@ export class AppWindow {
     })
   }
 
-  /** About me — portrait column (moved off résumé) + ANSI lines */
+  /** About me — plain scrollable text column, no portrait aside. */
   private renderAboutMe(lines: string[]): void {
-    this.renderPortraitColumnLayout(lines, {
-      asideHint: 'Drop portrait.jpg in /public if you want a face beside the rant.',
-      variant: 'about',
-    })
+    const col = document.createElement('div')
+    col.className = 'about-text-col'
+    col.innerHTML = lines
+      .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
+      .join('')
+    this.bodyEl.appendChild(col)
   }
 
   /** Shared by Links (`renderContact`) and About me (`whoami`). */

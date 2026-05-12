@@ -11,17 +11,3 @@ export const BANNER: string[] = [
   `${c.pink}|_| |_| |_|_|  \\__, |_|  \\___||__, |${c.reset}`,
   `${c.dim}                |___/          |___/ ${c.reset}`,
 ]
-
-// ── ABOUT_ART ─────────────────────────────────────────────────────────────────
-// Ghost sidebar art — Catppuccin pink body, blue eyes
-
-export const ABOUT_ART: string[] = [
-  `   ${c.pink}▄▓▓▓▓▓▓▓▓▓▄${c.reset}   `,
-  `  ${c.pink}▓██████████▓${c.reset}   `,
-  `  ${c.pink}▓█${c.reset} ${c.blue}◉${c.reset}    ${c.blue}◉${c.reset} ${c.pink}█▓${c.reset}  `,
-  `  ${c.pink}▓█${c.reset}   ${c.yellow}────${c.reset}  ${c.pink}█▓${c.reset}  `,
-  `  ${c.pink}▓████████████▓${c.reset}`,
-  `  ${c.pink}▒▓▒${c.reset}${c.dim}░▓██▓░${c.reset}${c.pink}▒▓▒${c.reset} `,
-  `  ${c.dim}░▒░${c.reset}${c.dim}      ${c.reset}${c.dim}░▒░${c.reset} `,
-  `   ${c.dim}░░░░░░░░░░${c.reset}   `,
-]

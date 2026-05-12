@@ -1,11 +1,10 @@
-/**
+﻿/**
  * `whoami` tile (About me) + `aboutInfoLines` neofetch column.
  * Long-form personal copy pulls from: résumé facts, `old/` portfolio HTML, projects catalog,
  * `docs/ARCHITECTURE.md` voice — not live social scraping.
  * SCA awards line is sourced from Kingdom of Ansteorra order of precedence (public OP URL in copy).
  */
 
-import { ABOUT_ART } from '../../ascii'
 import { c } from '../../theme'
 
 export function aboutInfoLines(): string[] {
@@ -35,41 +34,40 @@ export function aboutInfoLines(): string[] {
 }
 
 export function whoamiAboutLines(): string[] {
-  const art = ABOUT_ART.map(line => `  ${line}`)
   return [
     '',
-    `  ${c.pink}${c.bold}Matt Grey${c.reset}  ${c.dim}engineer · Killeen / Central TX ·${c.reset} ${c.cyan}mrgrey.dev${c.reset}`,
-    `  ${c.dim}Building things you can steer without README archaeology.${c.reset}`,
+    `  ${c.pink}${c.bold}Matt Grey${c.reset}  ${c.dim}software engineer · Killeen, TX ·${c.reset} ${c.cyan}mrgrey.dev${c.reset}`,
+    `  ${c.dim}I build interfaces people can navigate without reading the manual.${c.reset}`,
     '',
-    ...art,
+    `  ${c.pink}${c.bold}Work${c.reset}`,
+    `  ${c.dim}Freelance web since 2017 — ${c.bold}scoping → building → shipping${c.reset}${c.dim} for small businesses,${c.reset}`,
+    `  ${c.dim}nonprofits, and product teams. TypeScript-first, with a bias toward${c.reset}`,
+    `  ${c.dim}layouts that survive edge cases: narrow viewports, zoom, reduced-motion.${c.reset}`,
+    `  ${c.dim}Finishing a B.S. in Software Engineering at SNHU / Kenzie Academy.${c.reset}`,
     '',
-    `  ${c.pink}${c.bold}At the keyboard${c.reset}`,
-    `  ${c.dim}Interfaces with legible hierarchy, layouts that behave when the viewport lies,${c.reset}`,
-    `  ${c.dim}and the unglamorous glue — Git hygiene, ticket trails, READMEs someone will read.${c.reset}`,
-    `  ${c.dim}Freelance web since 2017 (${c.bold}scope → build → launch${c.reset}${c.dim}). SNHU Software Engineering.${c.reset}`,
+    `  ${c.pink}${c.bold}This site${c.reset}`,
+    `  ${c.dim}An in-browser window manager — tiling layout, xterm.js terminal,${c.reset}`,
+    `  ${c.dim}toy filesystem, seven colour themes, Three.js, and Web Audio.${c.reset}`,
+    `  ${c.dim}Pure TypeScript + Vite, no framework. Source at ${c.cyan}github.com/namefailed${c.reset}${c.dim}.${c.reset}`,
+    `  ${c.dim}Type ${c.reset}${c.blue}help${c.reset}${c.dim} to see what the terminal can do, or ${c.reset}${c.blue}theme list${c.reset}${c.dim} to switch palettes.${c.reset}`,
     '',
-    `  ${c.pink}${c.bold}SCA — persona Graee na Uile${c.reset}`,
-    `  ${c.dim}Outside work I play in the ${c.bold}Society for Creative Anachronism${c.reset}${c.dim}: research and recreation${c.reset}`,
-    `  ${c.dim}of pre-17th-century skills — fencing, scribal quirks, feast gear, muddy parking-lot castles.${c.reset}`,
-    `  ${c.dim}Kingdom of ${c.cyan}Ansteorra${c.reset}${c.dim} (${c.bold}Texas + Oklahoma${c.reset}${c.dim}, loosely) keeps the calendar full.${c.reset}`,
-    `  ${c.dim}Kingdom records list me as Graee na Uile — Irish-flavored spelling, sincere pageantry.${c.reset}`,
-    `  ${c.dim}Orders of precedence show ${c.bold}Queen’s Rapier of Ansteorra${c.reset}${c.dim} (9 Nov 2024)${c.reset}`,
-    `  ${c.dim}and an ${c.bold}Award of Arms${c.reset}${c.dim} (16 Nov 2024); if you duel in a hat feather, come say hi.${c.reset}`,
+    `  ${c.pink}${c.bold}SCA — Graee na Uile${c.reset}`,
+    `  ${c.dim}Member of the ${c.bold}Society for Creative Anachronism${c.reset}${c.dim}, Kingdom of ${c.cyan}Ansteorra${c.reset}${c.dim}${c.reset}`,
+    `  ${c.dim}(Texas + Oklahoma). I fence, do scribal work, and show up to events${c.reset}`,
+    `  ${c.dim}with good feast gear and worse parking-lot navigation.${c.reset}`,
+    `  ${c.dim}Awards: ${c.bold}Queen's Rapier of Ansteorra${c.reset}${c.dim} · ${c.bold}Award of Arms${c.reset}${c.dim} (Nov 2024).${c.reset}`,
     '',
-    `  ${c.pink}${c.bold}Kid + craft${c.reset}`,
-    `  ${c.dim}Parent first — deadlines make more sense when someone’s counting on dinner.${c.reset}`,
-    `  ${c.dim}Still reach for a camera for bands, posters, and outdoor light; this fake OS is ${c.bold}TypeScript + Vite${c.reset}${c.dim}.${c.reset}`,
-    `  ${c.dim}Older static shell lives in ${c.cyan}/old${c.reset}${c.dim} if you like time capsules.${c.reset}`,
+    `  ${c.pink}${c.bold}Outside the terminal${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.dim}Parent first — deadlines make sense when dinner is on the line.${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.dim}Gravel cycling before the Texas heat wins.${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.dim}Mechanical keyboards, custom layouts, cats who own the chair.${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.dim}Doom Emacs, org-mode notes, and an unhealthy interest in CSS.${c.reset}`,
     '',
     `  ${c.pink}${c.bold}Links${c.reset}`,
-    `    ${c.yellow}·${c.reset} ${c.green}in${c.reset}  ${c.dim}https://www.linkedin.com/in/matthew-grey-215615179/${c.reset}`,
-    `    ${c.yellow}·${c.reset} ${c.green}gh${c.reset}  ${c.dim}https://github.com/namefailed${c.reset}`,
-    `    ${c.yellow}·${c.reset} ${c.green}op${c.reset}  ${c.dim}https://op.ansteorra.org/people/id/12122 · kingdom order of precedence${c.reset}`,
-    '',
-    `  ${c.pink}${c.bold}Off the clock${c.reset}`,
-    `    ${c.yellow}·${c.reset} ${c.dim}Gravel before the Texas heat clocks in.${c.reset}`,
-    `    ${c.yellow}·${c.reset} ${c.dim}Clicky keyboards, layout experiments, cats who own the couch.${c.reset}`,
-    `    ${c.yellow}·${c.reset} ${c.dim}Rewatching soft sci-fi and calling it culture study.${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.green}gh${c.reset}   ${c.dim}github.com/namefailed${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.green}in${c.reset}   ${c.dim}linkedin.com/in/matthew-grey-215615179${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.green}mail${c.reset} ${c.dim}namefailedx@gmail.com${c.reset}`,
+    `    ${c.yellow}·${c.reset} ${c.green}op${c.reset}   ${c.dim}op.ansteorra.org/people/id/12122${c.reset}`,
     '',
   ]
 }

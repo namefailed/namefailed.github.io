@@ -12,13 +12,21 @@ export interface PlainProject {
   repo?: string
 }
 
+export interface ExperienceEntry {
+  title: string
+  company: string
+  period: string
+  location: string
+  bullets: readonly string[]
+}
+
 export const PROFILE = {
   name: 'Matt Grey',
-  headline: 'Software engineer / web developer',
+  headline: 'Software engineer · TypeScript · React · browser UI',
   location: 'Killeen–Temple, TX · US Central',
   statusOpen: true,
   summary:
-    'Software developer with 8+ years delivering web work end-to-end — scoping, UI implementation, integrations, and hand-off. SNHU software engineering undergrad (Kenzie track): designing, building, and shipping software. Comfortable on the browser stack (TypeScript, React, HTML/CSS) alongside Java-heavy coursework habits (REST, HTTP clients, unit tests). Pragmatic testing, concise docs, iterative delivery. Family is a pillar — partner and son keep the bar honest.',
+    'I build web interfaces from discovery to delivery — scoping requirements, implementing UI, wiring integrations, and handing off something maintainable. 8+ years freelance, backed by a B.S. in Software Engineering (SNHU / Kenzie Academy). TypeScript-first, with a bias toward layouts that survive real conditions: narrow viewports, zoom, reduced-motion, and the next developer who reads the code.',
 } as const
 
 export const CONTACT = [
@@ -31,7 +39,7 @@ export const CONTACT = [
   {
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/in/matthew-grey-215615179/',
-    text: 'Matthew Grey — profile & experience',
+    text: 'Matthew Grey — LinkedIn profile',
   },
   { label: 'Email', href: 'mailto:namefailedx@gmail.com', text: 'namefailedx@gmail.com' },
   {
@@ -45,20 +53,49 @@ export const CONTACT = [
 export const SKILLS_PRIMARY = [
   'TypeScript',
   'JavaScript',
-  'HTML/CSS',
   'React',
+  'HTML / CSS',
   'Node.js',
-  'REST',
-  'Git',
   'Vite',
-  'Accessibility-aware UI',
-  'WordPress/CMS',
+  'REST APIs',
+  'Git',
+  'Accessibility',
+  'WordPress / CMS',
 ]
 
-export const EXPERIENCE: readonly string[] = [
-  'Freelance web — Jan 2017–present · Killeen, TX — discovery through launch for small businesses and nonprofits; HTML/CSS/JS/React/Git and CMS stacks as needed.',
-  'Web developer · Topsarge / milMedia — Jun 2018–Jan 2020 — marketing sites under deadline, responsive layouts, WordPress/CMS, ticket fixes across hosting and stakeholders.',
-  'Technical support (tier 2) · Sykes — Sept 2017–Jan 2018 · Temple, TX — troubleshooting and documented resolutions.',
+export const EXPERIENCE: readonly ExperienceEntry[] = [
+  {
+    title: 'Freelance Web Developer',
+    company: 'Independent',
+    period: 'Jan 2017 – present',
+    location: 'Killeen, TX (remote)',
+    bullets: [
+      'End-to-end delivery for small businesses and nonprofits: scoping, UI build, integrations, hand-off docs.',
+      'Stack varies by project — TypeScript, React, Vite, vanilla JS/CSS, Node.js, CMS platforms.',
+      'Current focus: accessible component patterns, performance budgets, and iterative client feedback loops.',
+    ],
+  },
+  {
+    title: 'Web Developer',
+    company: 'Topsarge / milMedia',
+    period: 'Jun 2018 – Jan 2020',
+    location: 'Killeen, TX',
+    bullets: [
+      'Built and maintained marketing sites under tight deadlines for military-adjacent clients.',
+      'Responsive HTML/CSS layouts, WordPress theming, cross-browser QA, and hosting ticket triage.',
+      'Coordinated with designers, content editors, and stakeholders across multiple concurrent campaigns.',
+    ],
+  },
+  {
+    title: 'Technical Support Specialist (Tier 2)',
+    company: 'Sykes',
+    period: 'Sep 2017 – Jan 2018',
+    location: 'Temple, TX',
+    bullets: [
+      'Escalated customer issues, documented resolutions, and maintained ticket queues.',
+      'Built troubleshooting familiarity with network and software configurations under production pressure.',
+    ],
+  },
 ]
 
 export const EDUCATION: readonly string[] = [
@@ -67,6 +104,6 @@ export const EDUCATION: readonly string[] = [
 ]
 
 export const CERTIFICATIONS: readonly string[] = [
-  'MIT OpenCourseWare — Introduction to CS & programming',
-  'freeCodeCamp — JS, HTML, CSS certificates',
+  'MIT OpenCourseWare — Introduction to Computer Science & Programming',
+  'freeCodeCamp — JavaScript, HTML, and CSS certificates',
 ]
