@@ -534,6 +534,12 @@ a:hover { color: var(--plain-accent); }
     background 0.22s ease;
 }
 
+/* When a thumbnail is present, the image fills the card top and the text goes in .plain-project-body */
+.plain-project--has-thumb {
+  padding: 0;
+  overflow: hidden;
+}
+
 .plain-project:hover {
   transform: translateY(-3px);
   background: var(--plain-surface-hover);
@@ -542,6 +548,37 @@ a:hover { color: var(--plain-accent); }
     0 1px 0 rgba(255, 255, 255, 0.07) inset,
     0 0 0 1px rgba(137, 180, 250, 0.1),
     0 28px 56px rgba(0, 0, 0, 0.28);
+}
+
+/* ── Project thumbnail ───────────────────────────────────────────────────── */
+
+.plain-project-thumb-link {
+  display: block;
+  overflow: hidden;
+  /* top corners match the card; bottom edge is flat (body sits below) */
+  border-radius: calc(var(--plain-radius-card) - 1px) calc(var(--plain-radius-card) - 1px) 0 0;
+  line-height: 0; /* collapse inline-block gap */
+  background: #11111b; /* fallback colour while image loads */
+}
+
+.plain-project-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.32s var(--plain-ease), filter 0.32s ease;
+  will-change: transform;
+}
+
+.plain-project:hover .plain-project-thumb {
+  transform: scale(1.025);
+  filter: brightness(1.08);
+}
+
+/* Body padding when a thumbnail sits above */
+.plain-project-body {
+  padding: 1.1rem 1.25rem 1.18rem;
 }
 
 .plain-project h3 {
@@ -1007,4 +1044,7 @@ a:hover { color: var(--plain-accent); }
   .plain-stat-num      { transition: none; }
   .plain-nav-dot,
   .plain-nav-dot--active { transform: none !important; }
+  /* Suppress thumbnail scale + brightness on hover */
+  .plain-project-thumb { transition: none; will-change: auto; }
+  .plain-project:hover .plain-project-thumb { transform: none; filter: none; }
 }

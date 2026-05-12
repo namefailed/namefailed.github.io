@@ -32,6 +32,45 @@ import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { pushToast } from './os-systray'
 
+// ── Launcher icon lookup ───────────────────────────────────────────────────────
+//
+// `LAUNCHER_ICON_ROWS` is a small constant array (~10 items) that never changes after
+// module load. Pre-index it by `cmd` so `syncTaskbar` avoids an O(n²) scan per render.
+
+type AppIconRow = { kind: 'app'; cmd: string; label: string; glyph: string }
+type TerminalIconRow = { kind: 'terminal'; label: string; glyph: string }
+
+/** Fast O(1) lookup of icon metadata by command id. */
+const ICON_META_BY_CMD = new Map<string, AppIconRow>(
+  LAUNCHER_ICON_ROWS
+    .filter((r): r is AppIconRow => r.kind === 'app')
+    .map(r => [r.cmd, r]),
+)
+
+/** The single terminal row — stored once to avoid repeated linear search. */
+const TERMINAL_ICON_ROW = LAUNCHER_ICON_ROWS.find(
+  (r): r is TerminalIconRow => r.kind === 'terminal',
+)!
+
+// ── DOM helpers ────────────────────────────────────────────────────────────────
+
+/** Create a desktop-icon glyph span using textContent (never innerHTML). */
+function makeIconGlyph(glyph: string): HTMLSpanElement {
+  const span = document.createElement('span')
+  span.className = 'desktop-icon-glyph'
+  span.setAttribute('aria-hidden', 'true')
+  span.textContent = glyph
+  return span
+}
+
+/** Create a desktop-icon label span using textContent (never innerHTML). */
+function makeIconLabel(label: string): HTMLSpanElement {
+  const span = document.createElement('span')
+  span.className = 'desktop-icon-label'
+  span.textContent = label
+  return span
+}
+
 export interface PsSnapshotRow {
   pid: number
   tty: string
@@ -66,6 +105,14 @@ export class Desktop {
   private static readonly WM_MOUNT_MS = 640
   /** Close / shrink animation fallback if `animationend` does not fire. */
   private static readonly WM_UNMOUNT_MS = 400
+  /**
+   * Keys intercepted by the WM before xterm/vim see them.
+   * Defined once at class level so it isn't rebuilt on every keydown.
+   */
+  private static readonly WM_KEYS = new Set([
+    't', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'h', 'l', 'j', 'k', 'q', 'm', 'd', 'f',
+  ])
 
   private desktop:    HTMLElement
   private panes:      HTMLElement
@@ -74,6 +121,11 @@ export class Desktop {
   private taskbarDock: HTMLElement
   private hSplitter:  HTMLElement
   private fitTerminal: () => void
+  /**
+   * Cached `prefers-reduced-motion` MediaQueryList — avoids reparsing the query
+   * string on every animation decision and lets us attach a change listener once.
+   */
+  private reducedMotionMQ: MediaQueryList
 
   private windows: TiledWin[] = [] // open (visible) windows, in tile order
   private minimized:  MinimizedEntry[] = []
@@ -91,13 +143,14 @@ export class Desktop {
     termWin:     HTMLElement,
     fitTerminal: () => void,
   ) {
-    this.desktop     = desktop
-    this.termWin     = termWin
-    this.fitTerminal = fitTerminal
-    this.panes       = document.getElementById('panes')!
-    this.rightPane   = document.getElementById('right-pane')!
-    this.taskbarDock = document.getElementById('wm-taskbar-dock')!
-    this.hSplitter   = document.getElementById('h-splitter')!
+    this.desktop          = desktop
+    this.termWin          = termWin
+    this.fitTerminal      = fitTerminal
+    this.panes            = document.getElementById('panes')!
+    this.rightPane        = document.getElementById('right-pane')!
+    this.taskbarDock      = document.getElementById('wm-taskbar-dock')!
+    this.hSplitter        = document.getElementById('h-splitter')!
+    this.reducedMotionMQ  = window.matchMedia('(prefers-reduced-motion: reduce)')
 
     // Terminal window clicks → focus terminal
     termWin.addEventListener('mousedown', () => this.focusTerminal())
@@ -170,11 +223,24 @@ export class Desktop {
     return rows
   }
 
+  /**
+   * Open, focus, or toggle a tiled window.
+   *
+   * Behaviour per command:
+   * - **`edit` / `explorer` / `browse`**: if the window is open and already showing the same
+   *   path/URL, close it (toggle). If it shows a different path, navigate to the new one.
+   *   If minimized, restore it (and navigate if needed).
+   * - **`paint` / `snake` / `pong`**: restore minimized copy, or close if already open.
+   * - **All other commands**: restore minimized, or toggle (close if open, open if closed).
+   *
+   * All heavy tile modules are loaded via dynamic `import()` on first open, keeping the initial
+   * bundle lean.
+   */
   async openWindow(spec: WindowSpec): Promise<void> {
     this.closeLauncherOverlay()
 
     if (spec.command === 'edit') {
-      const pathArg = spec.editorPath ?? 'welcome.txt'
+      const pathArg = spec.editorPath ?? 'notes.txt'
 
       const existingOpen = this.windows.find(w => w.command === 'edit')
       if (existingOpen) {
@@ -474,7 +540,7 @@ export class Desktop {
   }
 
   private prefersReducedMotion(): boolean {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    return this.reducedMotionMQ.matches
   }
 
   /** Fade/shrink tile, then invoke `done` — no-op cleanup if `el` disconnected. */
@@ -752,6 +818,13 @@ export class Desktop {
    * Launcher overlay: Ctrl+D (show-desktop), Applications button, or both.
    * Minimizing all windows does not auto-open the launcher.
    */
+  /**
+   * Show or hide the launcher overlay and update ARIA attributes.
+   *
+   * The overlay is shown when either `showingDesktop` (Ctrl+D) or `launcherOpen` (Applications
+   * button) is true. Both flags are checked together so a single sync call always leaves the
+   * DOM in a consistent state regardless of which path triggered it.
+   */
   private syncLauncherVisibility(): void {
     const show = this.showingDesktop || this.launcherOpen
     this.desktop.classList.toggle('launchers-visible', show)
@@ -848,7 +921,8 @@ export class Desktop {
       })
     }
     tick()
-    window.setInterval(tick, 30000)
+    // Clock shows HH:MM only — 60 s is sufficient resolution
+    window.setInterval(tick, 60_000)
   }
 
   // ── desktop icons (wallpaper layer launchers) ───────────────────────────────
@@ -862,14 +936,16 @@ export class Desktop {
       btn.type = 'button'
       btn.className = 'desktop-icon'
       if (item.kind === 'terminal') {
-        btn.innerHTML = `<span class="desktop-icon-glyph">${item.glyph}</span><span class="desktop-icon-label">${item.label}</span>`
+        btn.appendChild(makeIconGlyph(item.glyph))
+        btn.appendChild(makeIconLabel(item.label))
         btn.addEventListener('click', () => {
           this.focusTerminal()
         })
       } else {
         const cmd = commands[item.cmd]
         if (!cmd || !TILED_WINDOW_COMMANDS.has(item.cmd)) continue
-        btn.innerHTML = `<span class="desktop-icon-glyph">${item.glyph}</span><span class="desktop-icon-label">${item.label}</span>`
+        btn.appendChild(makeIconGlyph(item.glyph))
+        btn.appendChild(makeIconLabel(item.label))
         attachLazyPrefetchHandlers(btn, item.cmd)
         btn.addEventListener('click', () => {
           if (item.cmd === 'resume') {
@@ -893,7 +969,7 @@ export class Desktop {
             command: item.cmd,
             title: tileTitleForPortfolioCommand(item.cmd),
             content: cmd.run([]),
-            editorPath: item.cmd === 'edit' ? 'welcome.txt' : undefined,
+            editorPath: item.cmd === 'edit' ? 'notes.txt' : undefined,
             explorerPath: item.cmd === 'explorer' ? FS_HOME : undefined,
             browserUrl:
               item.cmd === 'browse' ? DEFAULT_BROWSER_URL : undefined,
@@ -906,6 +982,14 @@ export class Desktop {
 
   // ── private: vertical splitters between stacked content windows ───────────
 
+  /**
+   * Rebuild the vertical drag-to-resize handles between stacked content windows.
+   *
+   * Called after any change that modifies the set or order of tiled windows. Splitters are torn
+   * down and recreated from scratch because the `Splitter` instances hold element references and
+   * there is no cheap incremental diff — the list changes infrequently enough that a full rebuild
+   * is simpler and less error-prone than patching individual handles.
+   */
   private attachVerticalSplitters(): void {
     // Remove any existing v-splitters and rebuild — keep windows in order
     this.rightPane.querySelectorAll('.splitter-v').forEach(el => el.remove())
@@ -930,6 +1014,13 @@ export class Desktop {
 
   // ── private: layout sync ───────────────────────────────────────────────────
 
+  /**
+   * Flush all derived UI state after any change to windows, focus, or launcher visibility.
+   *
+   * Order matters: `syncLauncherVisibility` and `syncTaskbar` both read `this.windows` and
+   * `this.focusedId`, so they must run after those values are updated. `fitTerminal` is deferred
+   * to the next animation frame so the DOM has settled before xterm measures the container.
+   */
   private sync(): void {
     const count = this.windows.length
     this.desktop.dataset.contentCount = String(count)
@@ -1010,9 +1101,9 @@ export class Desktop {
       const heading = cmd === 'vim' ? 'vim' : cmd === 'editor' ? 'editor' : 'edit'
       void this.openWindow({
         command: 'edit',
-        title: `${heading} — welcome.txt`,
+        title: `${heading} — notes.txt`,
         content: [],
-        editorPath: 'welcome.txt',
+        editorPath: 'notes.txt',
       })
       return
     }
@@ -1082,11 +1173,7 @@ export class Desktop {
     if (!el) return
 
     if (this.focusedId !== null) {
-      const icon = LAUNCHER_ICON_ROWS.find(
-        (i): i is { kind: 'app'; cmd: string; label: string; glyph: string } =>
-          i.kind === 'app' && i.cmd === this.focusedId,
-      )
-      el.textContent = icon?.label ?? this.focusedId
+      el.textContent = ICON_META_BY_CMD.get(this.focusedId)?.label ?? this.focusedId
       return
     }
 
@@ -1120,13 +1207,10 @@ export class Desktop {
       btn.className = 'wm-task-btn'
       if (idx >= pinLen && extras.length > 0) btn.classList.add('wm-task-btn--running')
 
-      const meta =
+      const meta: AppIconRow | TerminalIconRow =
         slot.kind === 'terminal'
-          ? LAUNCHER_ICON_ROWS.find(i => i.kind === 'terminal')!
-          : LAUNCHER_ICON_ROWS.find(
-              (i): i is { kind: 'app'; cmd: string; label: string; glyph: string } =>
-                i.kind === 'app' && i.cmd === slot.cmd,
-            ) ?? {
+          ? TERMINAL_ICON_ROW
+          : ICON_META_BY_CMD.get(slot.cmd) ?? {
               kind: 'app' as const,
               cmd: slot.cmd,
               label: slot.cmd,
@@ -1180,17 +1264,26 @@ export class Desktop {
 
   // ── private: keyboard ──────────────────────────────────────────────────────
 
+  /**
+   * Global keyboard handler (registered on `document` in capture phase so WM shortcuts
+   * intercept before xterm.js or the vim input layer consume the event).
+   *
+   * All WM shortcuts require `Ctrl` and must not combine with `Alt` or `Meta` (avoids
+   * clobbering browser and OS accelerators). Intercepted keys are listed in `WM_KEYS`.
+   *
+   * vim-direction mapping (matches right-pane flex-column layout):
+   *   - `h` → left → focus terminal
+   *   - `l` → right → enter right pane (first window)
+   *   - `k` → up → previous window in column
+   *   - `j` → down → next window in column
+   */
   private handleGlobal(ev: KeyboardEvent): void {
     if (!ev.ctrlKey || ev.altKey || ev.metaKey) return
 
     const key = ev.key.toLowerCase()
 
     // Reserved keys for the WM — intercept before xterm/vim see them
-    const wmKeys = new Set([
-      't', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-      'h','l','j','k','q','m','d','f',
-    ])
-    if (!wmKeys.has(key)) return
+    if (!Desktop.WM_KEYS.has(key)) return
 
     ev.preventDefault()
     ev.stopImmediatePropagation()

@@ -13,7 +13,10 @@
     "moduleDetection": "force",
     "noEmit": true,
 
-    /* Linting */
+    /* Strict type-checking — catches null dereferences, implicit any, and unsafe assignments */
+    "strict": true,
+
+    /* Extra linting on top of strict */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

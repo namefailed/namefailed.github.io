@@ -20,6 +20,7 @@ function plainProjectsFromPortfolio(): PlainProject[] {
     blurb: p.lines.map((ln) => ln.replace(/\s+/g, ' ').trim()).join(' ').trim(),
     url: p.web,
     repo: p.repo,
+    thumb: p.thumb,
   }))
 }
 
@@ -201,11 +202,49 @@ function experienceCard(entry: ExperienceEntry, delay = 0): HTMLElement {
 
 function projectCard(project: PlainProject, delay = 0): HTMLElement {
   const card = anim(el('article', 'plain-project'), delay)
+  if (project.thumb) card.classList.add('plain-project--has-thumb')
+
+  // ── Thumbnail (image-on-top, flush to card edges) ──────────────────────
+  if (project.thumb) {
+    // Wrap in <a> when a live URL is available so the whole image is clickable
+    const wrap: HTMLElement = project.url
+      ? (() => {
+          const a = document.createElement('a')
+          a.href = project.url
+          a.target = '_blank'
+          a.rel = 'noopener noreferrer'
+          a.className = 'plain-project-thumb-link'
+          a.setAttribute('tabindex', '-1') // card links below are enough for keyboard nav
+          a.setAttribute('aria-hidden', 'true')
+          return a
+        })()
+      : el('div', 'plain-project-thumb-link')
+
+    const img = document.createElement('img')
+    img.className = 'plain-project-thumb'
+    img.src = project.thumb
+    img.alt = `${project.title} preview`
+    img.loading = 'lazy'
+    img.decoding = 'async'
+    // On error, hide the image wrapper so the card still looks clean
+    img.onerror = () => {
+      wrap.style.display = 'none'
+      card.classList.remove('plain-project--has-thumb')
+    }
+    wrap.appendChild(img)
+    card.appendChild(wrap)
+  }
+
+  // ── Text body ──────────────────────────────────────────────────────────
+  const body = el('div', 'plain-project-body')
+
   const h = document.createElement('h3')
   h.appendChild(el('span', 'plain-project-title', project.title))
   if (project.meta) h.appendChild(el('span', 'plain-project-meta', ` · ${project.meta}`))
-  card.appendChild(h)
-  if (project.blurb) card.appendChild(el('p', 'plain-project-blurb', project.blurb))
+  body.appendChild(h)
+
+  if (project.blurb) body.appendChild(el('p', 'plain-project-blurb', project.blurb))
+
   const actions = el('div', 'plain-project-actions')
   if (project.repo) {
     const a = document.createElement('a')
@@ -225,7 +264,9 @@ function projectCard(project: PlainProject, delay = 0): HTMLElement {
     a.textContent = 'Live site'
     actions.appendChild(a)
   }
-  if (actions.childElementCount) card.appendChild(actions)
+  if (actions.childElementCount) body.appendChild(actions)
+
+  card.appendChild(body)
   return card
 }
 

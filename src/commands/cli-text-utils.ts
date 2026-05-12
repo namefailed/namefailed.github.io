@@ -5,6 +5,9 @@
 
 import { c } from '../theme'
 
+/** Shared encoder — instantiated once per module rather than per `wcStats` call. */
+const encoder = new TextEncoder()
+
 export function fmtHumanBytes(n: number): string {
   if (n < 1024) return `${n} B`
   if (n < 1048576) return `${(n / 1024).toFixed(n % 1024 === 0 ? 0 : 1)} KiB`
@@ -14,7 +17,7 @@ export function fmtHumanBytes(n: number): string {
 export function wcStats(s: string): { lines: number; words: number; chars: number } {
   const lines = s === '' ? 0 : s.split('\n').length
   const words = s.trim() ? s.trim().split(/\s+/).length : 0
-  const chars = new TextEncoder().encode(s).length
+  const chars = encoder.encode(s).length
   return { lines, words, chars }
 }
 

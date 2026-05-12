@@ -1,6 +1,6 @@
 # Roadmap
 
-All planned phases are complete. Future work is tracked under [Future](#future).
+All original planned phases are complete. Recent polish work is tracked below. Future candidates are grouped by priority.
 
 ---
 
@@ -57,27 +57,52 @@ All planned phases are complete. Future work is tracked under [Future](#future).
 ### Phase 10 — Hover prefetch
 - Launcher grid items and dock pins fire the same `import()` paths on `pointerenter` and `focusin`, so the first open is usually already cached
 
+### Polish pass — Static site, resume, and shell
+
+- **Static site interactive polish:** scroll-progress bar, floating section-nav dots (scroll-spy via IntersectionObserver), typewriter headline, animated stat counters (9+/15+/3), scroll-triggered fade-ins, bouncing scroll cue
+- **Experience cards:** role-type inset colour strips (freelance/contract/fulltime/volunteer), "Featured" badge on Vertalo card
+- **Resume sync:** added Vertalo (Frontend Developer, 2021–2022) and SCA (Deputy Web Minister, 2025) to both terminal resume and static site; corrected all dates and descriptions; bullets rewritten for impact across all five roles
+- **VFS v3:** bumped `STORAGE_KEY` to `portfolio-vfs-v3-namefailed-home`; removed `welcome.txt` from default tree; default editor target changed to `notes.txt`
+- **hjkl keybinds:** corrected to true vim directions — `H`=terminal (left), `L`=enter pane (right), `K`=previous window (up), `J`=next window (down); YASB and help text updated to match
+- **Paint canvas:** switched from `overflow: auto` to `overflow: hidden` to eliminate phantom scroll containers on touch
+- **Resume hanging-indent:** long PROFILE paragraph no longer overhangs left on wrap; fixed with `padding-left: 2ch; text-indent: -2ch`
+- **Workstyle bullets:** rewritten for clarity and directness
+
 ---
 
-## Future
+## Next up
 
-Unscheduled candidates, roughly grouped by area.
+Priority order — highest value / most visible first.
+
+### 1. Rubik's cube fix *(top priority)*
+The cube tile exists and lazy-loads fine but is currently disabled in `launcher-catalog.ts` because the rotation math produces incorrect face orientations after arbitrary move sequences. Fix the quaternion/rotation accumulation, re-enable the tile, add it back to the dock.
+
+### 2. VFS tab-completion
+Complete filenames after `cat`, `cd`, `edit`, `rm`, etc. from the current directory. Huge UX improvement for anyone who tries to actually use the shell. Hook into the existing readline layer in `vim.ts` / `terminal.ts`.
+
+### 3. `history` command
+Print the session command log. Pairs naturally with existing up/down history navigation. Low effort, high payoff — every terminal user reaches for it within the first minute.
+
+### 4. Launcher keyboard navigation
+Arrow keys move focus through the icon grid; Enter launches. The launcher already has focus management — this fills in the expected keyboard contract.
+
+### 5. Per-tile persistent state
+Reopen browser to the last URL, editor to the last file, on restore. State goes in `localStorage` keyed by tile type. Makes the WM feel real rather than toy.
+
+---
+
+## Future candidates
+
+Unscheduled, roughly grouped by area.
 
 ### Shell commands
-- **`history`** — print the session command log; pairs naturally with the existing up/down history navigation
 - **`man`** — per-command manual pages: longer description, flag reference, examples; a step up from `help <cmd>`
 - **`alias` / `unalias`** — let visitors define shorthand commands, persisted to `localStorage`
 - **`wget` / `curl`** — fake download that writes a file into the VFS and prints transfer output
 - **`git log`** — fetch real commit history from the GitHub API and render it as a proper `git log` output
-
-### Terminal UX
-- **VFS path tab-completion** — complete filenames after `cat`, `cd`, `edit`, etc. from the current directory
-- **Ctrl+R reverse search** — incremental history search, fzf-style, overlaid on the input line
-- **`help` URL-bar caveat** — inline note in the `browse` command description about iframe sandboxing limits
+- **`Ctrl+R` reverse search** — incremental history search, fzf-style, overlaid on the input line
 
 ### Window manager
-- **Launcher keyboard navigation** — arrow keys move focus through the icon grid; Enter launches
-- **Per-tile persistent state** — reopen browser to the last URL, editor to the last file, on restore
 - **Screensaver mode** — matrix rain fills the screen after an idle timeout; any key restores the desktop
 - **`ssh` easter egg** — fake handshake, motd, and remote shell prompt; `exit` returns to the local shell
 

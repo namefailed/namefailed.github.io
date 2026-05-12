@@ -1,10 +1,27 @@
 /**
- * In-browser filesystem persisted in `localStorage`. Terminal builtins (`cat`, `cd`, …) and the
- * `edit` app read/write through here.
+ * In-browser virtual filesystem persisted to `localStorage`.
+ *
+ * The tree is a plain JSON object — directories are `{ t: 'd', c: Record<string, FsNode> }` and
+ * files are `{ t: 'f', body: string }`. All path operations go through `vfsNormalize` which
+ * resolves `.`/`..` and collapses duplicate slashes, so callers never need to canonicalize paths
+ * themselves.
+ *
+ * Persistence: every mutating operation calls `save()` which serialises the whole tree to
+ * `localStorage`. Reads call `load()` once at module init. `vfsReloadFromStorage()` is exposed
+ * for the `cookies` command to sync after an external change.
+ *
+ * Terminal builtins (`cat`, `cd`, `ls`, `mkdir`, `rm`, `touch`, `cp`, `mv`) and the `edit` tile
+ * all read/write through the exports below.
  */
 
 /** Bumped so `/home/namefailed` default tree replaces older `/home/mrgrey` saves. v3: removed welcome.txt. */
 const STORAGE_KEY = 'portfolio-vfs-v3-namefailed-home'
+
+/** Shared encoder — avoids per-call instantiation in `vfsLsLong` and `vfsPersistedFootprint`. */
+const encoder = new TextEncoder()
+
+/** Month abbreviations used by `vfsLsLong` — declared once at module scope. */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const
 
 export const FS_HOME = '/home/namefailed'
 
@@ -118,6 +135,15 @@ export function vfsPwd(): string {
   return state.cwd
 }
 
+/**
+ * Resolve `input` to an absolute path.
+ *
+ * - Absolute paths (starting with `/`) are used as-is.
+ * - Relative paths are resolved against the current working directory.
+ * - `.` and `..` segments are collapsed. Multiple consecutive slashes are treated as one.
+ *
+ * The result always starts with `/` and never has a trailing slash (except for `/` itself).
+ */
 export function vfsNormalize(input: string): string {
   const base = input.startsWith('/') ? input : `${state.cwd.replace(/\/$/, '')}/${input}`
   const parts: string[] = []
@@ -186,7 +212,6 @@ export function vfsLsLong(target?: string, opts?: VfsLsOptions): VfsLongEntry[] 
   if (!hit?.node) return [`ls: cannot access ${target ?? '.'}: No such file or directory`]
   if (hit.node.t !== 'd') return [`ls: ${path}: Not a directory`]
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const entries: Array<{ node: FsNode; name: string }> = []
   if (opts?.all) {
     const pAbs = parentAbsOf(path)
@@ -205,12 +230,12 @@ export function vfsLsLong(target?: string, opts?: VfsLsOptions): VfsLongEntry[] 
   for (const { node, name } of entries) {
     const isDir = node.t === 'd'
     const seed = [...name].reduce((a, ch) => a + ch.charCodeAt(0), i * 13)
-    const mon = months[seed % 12]
+    const mon = MONTHS[seed % 12]
     const day = String((seed % 27) + 1).padStart(2, '0')
     const hh = String((seed * 3) % 24).padStart(2, '0')
     const mm = String((seed * 7) % 60).padStart(2, '0')
 
-    const size = isDir ? 4096 : new TextEncoder().encode(node.body).length
+    const size = isDir ? 4096 : encoder.encode(node.body).length
     const mode = isDir ? 'drwxr-xr-x' : '-rw-r--r--'
 
     rows.push({
@@ -244,7 +269,7 @@ export function vfsPersistedFootprint(): { files: number; dirs: number; jsonByte
   const { dirs, files } = count(state.root)
   let jsonBytes = 0
   try {
-    jsonBytes = new TextEncoder().encode(JSON.stringify(state)).length
+    jsonBytes = encoder.encode(JSON.stringify(state)).length
   } catch {
     jsonBytes = 0
   }
@@ -311,6 +336,13 @@ export function vfsCd(rawPath: string): VfsCdResult {
   return { ok: true }
 }
 
+/**
+ * Read a file and return its content as a display string.
+ *
+ * Returns an error message string (not `null`) when the path does not exist or is a directory,
+ * matching the POSIX `cat` convention of printing to stdout. Returns `'(empty file)'` for a
+ * zero-byte file so the terminal always has something to render.
+ */
 export function vfsCat(path: string): string | null {
   const abs = vfsNormalize(path)
   const hit = walk(abs)
@@ -330,7 +362,12 @@ export function vfsReadRaw(
   return { ok: true, abs, body: hit.node.body }
 }
 
-/** Create or overwrite a regular file (parent path must exist) */
+/**
+ * Create or overwrite a regular file at `path`.
+ *
+ * The parent directory must already exist. Returns `null` on success or an error message string
+ * on failure (parent missing, `path` is a directory, or the path is invalid).
+ */
 export function vfsWrite(path: string, body: string): string | null {
   const abs = vfsNormalize(path)
   const parts = abs.split('/').filter(Boolean)

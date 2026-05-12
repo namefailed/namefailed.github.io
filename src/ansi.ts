@@ -1,4 +1,18 @@
-/** ANSI SGR sequences we emit → escaped HTML spans; nested styles use a depth counter. */
+/**
+ * ANSI SGR sequences → escaped HTML spans, with URL/email linkification.
+ *
+ * Security contract:
+ *   - HTML special characters (`<`, `>`, `&`) are always entity-escaped before writing to the DOM.
+ *   - URLs are validated through `safeUrlHref` — only `http:`, `https:`, and `mailto:` are emitted.
+ *   - The `javascript:`, `data:`, and `vbscript:` schemes are explicitly rejected.
+ *   - `linkifyAnsiRenderedHtml` processes only inter-tag text nodes so it cannot corrupt
+ *     attribute values or double-wrap existing `<a href="…">` elements.
+ *
+ * Theming note:
+ *   `COLORS` is hardcoded to the Catppuccin Mocha palette because `ansiToHtml` is used in the
+ *   portfolio `<AppWindow>` tile, which renders into a `<div>` outside xterm.js. xterm.js handles
+ *   its own colouring via its theme option; this map is intentionally independent of ThemePack.
+ */
 
 const COLORS: Record<string, string> = {
   '30': '#45475a',   // black   (Catppuccin Surface1)
@@ -11,6 +25,14 @@ const COLORS: Record<string, string> = {
   '37': '#bac2de',   // white
 }
 
+/**
+ * Convert a string containing ANSI SGR escape sequences to HTML.
+ *
+ * Supported codes: 0 (reset), 1 (bold → `a-bold`), 2 (dim → `a-dim`),
+ * and the standard 8 foreground colours (30–37). Other codes are silently skipped.
+ * HTML special characters are always entity-escaped so the output is safe to set
+ * as `innerHTML` of a container element.
+ */
 export function ansiToHtml(raw: string): string {
   let out   = ''
   let i     = 0
@@ -77,7 +99,7 @@ function safeUrlHref(raw: string): string | null {
 
 /** Portfolio copy often omits schemes; keep list tight to avoid random host false positives */
 const BARE_HOST =
-  /\b(github\.com\/[a-zA-Z0-9._/-]+|(?:www\.)?linkedin\.com\/[a-zA-Z0-9./-]+\/?|mrgrey\.dev(?:\/[a-zA-Z0-9._/-]*)?\/?)\b/gi
+  /\b(github\.com\/[a-zA-Z0-9._/-]+|(?:www\.)?linkedin\.com\/[a-zA-Z0-9./-]+\/?|mrgrey\.site(?:\/[a-zA-Z0-9._/-]*)?\/?)\b/gi
 
 const EMAIL = /\b[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g
 
