@@ -2339,6 +2339,26 @@ html.retro-fx .xterm-screen {
   align-self: center;
 }
 
+/* Portrait photo at the top of the resume skills panel */
+.resume-panel-photo-frame {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: none;
+  line-height: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.resume-panel-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 6px;
+}
+
 .resume-text-col {
   min-width: 0;
   max-width: min(74ch, 100%);
@@ -2821,11 +2841,32 @@ html.retro-fx .xterm-screen {
   margin-top: 0;
 }
 
+/* About me — win-body is flush so the banner can be edge-to-edge */
+.app-window.whoami-window .win-body {
+  padding: 0;
+}
+
+/* About me — full-width fencing banner */
+.about-banner {
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.about-banner-img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
 /* About me — plain text column, no portrait aside */
 .about-text-col {
   width: 100%;
   max-width: min(76ch, 100%);
   box-sizing: border-box;
+  padding: var(--ui-space-4) var(--ui-space-4) var(--ui-space-4) var(--ui-space-5);
 }
 
 .about-text-col .win-line {

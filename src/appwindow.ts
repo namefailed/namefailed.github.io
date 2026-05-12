@@ -20,17 +20,17 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** `/portrait.jpg` with MG fallback — shared by contact / about / résumé lead. */
+/** Portrait photo with MG initials fallback — shared by contact and résumé. */
 function mountPortfolioPortrait(
   holder: HTMLElement,
   imgClassName: string,
-  opts?: { framePlaceholderClass?: string },
+  opts?: { framePlaceholderClass?: string; src?: string },
 ): void {
   const phClass = opts?.framePlaceholderClass ?? 'contact-photo-frame--placeholder'
   const img = document.createElement('img')
   img.className = imgClassName
   img.alt = 'Portrait'
-  img.src = '/portrait.jpg'
+  img.src = opts?.src ?? '/portrait.jpg'
   img.loading = 'lazy'
   img.decoding = 'async'
   img.addEventListener(
@@ -265,6 +265,11 @@ export class AppWindow {
       aside.className = 'resume-skills-panel'
       aside.setAttribute('aria-label', 'Skills matrix')
 
+      const photoFrame = document.createElement('figure')
+      photoFrame.className = 'resume-panel-photo-frame'
+      mountPortfolioPortrait(photoFrame, 'resume-panel-photo')
+      aside.appendChild(photoFrame)
+
       const skillsInner = document.createElement('div')
       skillsInner.className = 'resume-skills-body'
 
@@ -300,12 +305,24 @@ export class AppWindow {
   /** Portrait / placeholder + animated rail beside contact lines */
   private renderContact(lines: string[]): void {
     this.renderPortraitColumnLayout(lines, {
-      asideHint: 'portrait.jpg · optional',
+      asideHint: '',
+      photoSrc: '/son.jpg',
     })
   }
 
-  /** About me — plain scrollable text column, no portrait aside. */
+  /** About me — fencing banner across the top, text column below. */
   private renderAboutMe(lines: string[]): void {
+    const banner = document.createElement('div')
+    banner.className = 'about-banner'
+    const bannerImg = document.createElement('img')
+    bannerImg.className = 'about-banner-img'
+    bannerImg.src = '/fencing.jpg'
+    bannerImg.alt = 'Fencing'
+    bannerImg.loading = 'eager'
+    bannerImg.decoding = 'async'
+    banner.appendChild(bannerImg)
+    this.bodyEl.appendChild(banner)
+
     const col = document.createElement('div')
     col.className = 'about-text-col'
     col.innerHTML = lines
@@ -317,7 +334,7 @@ export class AppWindow {
   /** Shared by Links (`renderContact`) and About me (`whoami`). */
   private renderPortraitColumnLayout(
     lines: string[],
-    options?: { asideHint?: string; variant?: 'contact' | 'about' },
+    options?: { asideHint?: string; variant?: 'contact' | 'about'; photoSrc?: string },
   ): void {
     const wrap = document.createElement('div')
     wrap.className =
@@ -335,14 +352,17 @@ export class AppWindow {
 
     const frame = document.createElement('figure')
     frame.className = 'contact-photo-frame'
-    mountPortfolioPortrait(frame, 'resume-photo contact-photo-slot')
+    mountPortfolioPortrait(frame, 'resume-photo contact-photo-slot', { src: options?.photoSrc })
 
     aside.appendChild(orbit)
     aside.appendChild(frame)
-    const hint = document.createElement('p')
-    hint.className = 'contact-aside-hint'
-    hint.textContent = options?.asideHint ?? 'portrait.jpg · optional'
-    aside.appendChild(hint)
+    const hintText = options?.asideHint ?? ''
+    if (hintText) {
+      const hint = document.createElement('p')
+      hint.className = 'contact-aside-hint'
+      hint.textContent = hintText
+      aside.appendChild(hint)
+    }
 
     const col = document.createElement('div')
     col.className = 'contact-text-col'
