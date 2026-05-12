@@ -126,16 +126,16 @@ export function animAxisAndAngle(face: CubeMoveFace, prime: boolean): [THREE.Vec
   const H = Math.PI / 2
   switch (face) {
     case 'U':
-      return [Y.clone(), sign * +H]
+      return [Y.clone(), sign * -H]   // was +H — R_y(-π/2) matches moveU sticker cycle R→F
     case 'D':
-      return [Y.clone(), sign * -H]
+      return [Y.clone(), sign * +H]   // was -H — R_y(+π/2) matches moveD sticker cycle F→R
     case 'R':
-      return [X.clone(), sign * -H]
+      return [X.clone(), sign * -H]   // correct — R_x(-π/2) → F→U matches moveR
     case 'L':
-      return [X.clone(), sign * +H]
+      return [X.clone(), sign * +H]   // correct — R_x(+π/2) → F→D matches moveL
     case 'F':
-      return [Z.clone(), sign * +H]
+      return [Z.clone(), sign * -H]   // was +H — R_z(-π/2) matches moveF sticker cycle U→R
     case 'B':
-      return [Z.clone(), sign * -H]
+      return [Z.clone(), sign * +H]   // was -H — R_z(+π/2) matches moveB sticker cycle U→L
   }
 }
