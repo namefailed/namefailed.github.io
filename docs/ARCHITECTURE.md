@@ -1,41 +1,56 @@
-# How this repo is laid out
+# Architecture
 
-Personal site dressed up as a toy desktop. The goal is: **one brain (TypeScript), split by job**, so grep and file names carry meaning and I’m not doom-scrolling one 3k-line god file when something breaks six months later.
+Personal portfolio site built as a fake desktop environment. TypeScript throughout, Vite for bundling, no framework.
 
 ## Entry points
 
-- **`index.html`** — Shell markup: CRT frame, workspace, YASB bar, launcher, docking bar, terminal host, placeholders for tiled panes.
-- **`src/main.ts`** — Dead-simple Vite hook: stylesheet imports + **`bootstrapShellUi()`** from `bootstrap-shell.ts` (everything else intentionally not here).
-- **`src/bootstrap-shell.ts`** — The real startup sequence: storages/theme/sound/systray, DOM lookups, **`Desktop`** before **`TerminalApp`**, idle-deferred Matrix init, skip-link. If something fires too early or too late, this is the place.
-- **`static/index.html`** + **`src/static/`** — Second Vite entry: same copy data, zero fake OS chrome (good for recruiters who just want prose, or small screens).
+**`index.html`** — The full desktop shell. Contains static markup for the CRT monitor frame, YASB status bar, launcher overlay, tiling pane area, and the floating dock. No dynamic content — everything is mounted by JS after load.
 
-Build is plain Vite; **`vite.config.ts`** names both HTML inputs so `dist/` gets `main` + `static`.
+**`static/index.html`** — A second Vite entry that compiles to `dist/static/`. Same portfolio copy, no fake OS chrome. Mobile browsers auto-redirect here. Good for anyone who just wants the resume.
 
-## Rough layers
+**`src/main.ts`** — Imports CSS and calls `bootstrapShellUi()`. That's it.
 
-Think “rings”, not clever hexagons:
+**`src/bootstrap-shell.ts`** — The actual startup sequence. Order matters: theme and sound state restore from `localStorage` first, then `Desktop` is constructed before `TerminalApp` (so `fit()` closes over the real tiles), then Matrix rain defers via `requestIdleCallback`. If something fires at the wrong time, look here first.
 
-1. **`content/`** — Barrel + themed copy. Long lists sit under **`content/copy/*.ts`** (`projects-catalog`, `resume-copy`, …); **`portfolio.ts`** re-exports so old import paths keep working. ANSI helpers that are copy-only share **`copy/ansi-widgets.ts`**.
-2. **`commands/`** — **`index.ts`** is the keyword registry; **`help-output.ts`**, **`cli-text-utils.ts`**, **`cli-fortunes.ts`**, **`types.ts`** carry the rest so this isn’t one megafile. **`terminal.ts`** only needs the map.
-3. **Window-manager side** — **`desktop.ts`** owns tiling, dock, launcher, Ctrl-chords. **`launcher-catalog.ts`** is just the grids + prefetch hints so `desktop.ts` reads less like JSON-in-TypeScript soup.
-4. **Tiles / apps** — `*-window.ts` files: self-contained DOM + behavior (editor, browser, games, etc.). They take callbacks for close/focus so `Desktop` doesn’t import their guts.
-5. **OS cosplay** — `os-*.ts`: fake VFS, apt joke, tray toasts, sound. Shared registry **`os-registry.ts`** bridges “shell command wants desktop” without cyclic imports blowing up.
+## Layers
 
-## Naming I try to stick to
+**`content/`**  
+Portfolio copy. Long text lives under `content/copy/` (`resume-copy.ts`, `about-copy.ts`, `contact-copy.ts`, `projects-catalog.ts`). `portfolio.ts` re-exports everything so older import paths keep working. ANSI helper functions that belong to copy — not to the shell — live in `copy/ansi-widgets.ts`.
 
-- **`initXFromStorage`** — reads localStorage/sessionStorage once at boot.
-- **`openWindow` / `WindowSpec`** — tile contract from terminal into desktop.
-- **`*-window.ts`** — full tile implementation.
-- **`runShellHelp`**, **`resumeWindow*`** — verb-first or noun+role so `rg` pulls the right file.
+**`commands/`**  
+`index.ts` is the keyword-to-handler map the terminal reads. Everything else is split out: `help-output.ts` for all help rendering, `cli-text-utils.ts` for the fake Unix commands, `cli-fortunes.ts` for the echo flavor text, `types.ts` for the `Command` interface.
 
-When that slips, refactor beats comments.
+**`desktop.ts` + `launcher-catalog.ts`**  
+`desktop.ts` owns the tiling layout, dock, launcher overlay, focus, minimize/maximize, and all Ctrl-chord keyboard handling. `launcher-catalog.ts` holds the grid definitions and dock membership so `desktop.ts` doesn't turn into a JSON dump.
 
-## If you clone this
+**`*-window.ts`**  
+One file per tile type: `appwindow.ts` (read-only portfolio content), `editor-window.ts`, `file-explorer-window.ts`, `browser-window.ts`, `paint-window.ts`, `rubik-window.ts`, `snake-window.ts`, `pong-window.ts`. Each takes close/minimize/maximize/focus callbacks so `desktop.ts` doesn't import their internals. All tile types except `appwindow.ts` are lazy-loaded on first open.
 
-Git history and releases use **`https://github.com/namefailed/namefailed.github.io`** (Pages host at **`https://namefailed.github.io/`**).
+**`os-*.ts`**  
+The fake OS layer. `os-fs.ts` is a virtual filesystem backed by `localStorage`. `os-apt.ts` is an `apt install` joke. `os-packages.ts` has cowsay. `os-sound.ts` wraps Web Audio API. `os-systray.ts` manages toasts and the settings panel. `os-registry.ts` is a small shared ref so shell commands can call into `Desktop` without creating a circular import.
 
-1. **`npm install`**, **`npm run dev`**.
-2. TypeScript ships as devDependency; **`npm run build`** runs `tsc` then `vite build`.
-3. No backend — static hosting friendly. Persisted state is **`localStorage`** (VFS, theme, CRT flag, matrix switch, sound preference).
+**`theme-control.ts` + `theme-packs.ts`**  
+Theme packs define CSS custom properties (`--th-*`), xterm palette, and matrix rain colors as a unit. `theme-control.ts` applies them to the document root and saves the selection. The YASB settings panel and the `theme` shell command both call into this.
 
-Tests aren’t wired yet; sanity check is `npm run build` after edits.
+**`matrix-bg.ts`** — Animated canvas behind the tiling area.  
+**`retro-fx.ts`** — CRT scanlines and vignette, toggled from the settings panel.  
+**`vim.ts`** — Full vim-style line editor: insert/normal/visual modes, operators, word motions. Used only by `terminal.ts`.  
+**`splitter.ts`** — Drag-to-resize handle. Used for the horizontal split between terminal and right pane, and for vertical splits between stacked content windows.
+
+## Naming conventions
+
+- `initXFromStorage` — reads and applies persisted state, called once at boot.
+- `openWindow` / `WindowSpec` — the contract between terminal commands and the desktop tile system.
+- `*-window.ts` — a self-contained tile. If it doesn't end in `-window.ts`, it isn't a tile.
+- Verb-first elsewhere: `runShellHelp`, `renderKeybindsLegend`, `playOsSound`, `pushToast`.
+
+## Getting started
+
+```
+npm install
+npm run dev
+```
+
+`npm run build` runs `tsc` then `vite build`. Both HTML entries compile to `dist/`. No backend — all persisted state is `localStorage` (VFS, theme, CRT, matrix, sound).
+
+Tests: `npm test` runs Vitest on `*.test.ts` files. Coverage is thin — `npm run build` passing is the main sanity check for now.

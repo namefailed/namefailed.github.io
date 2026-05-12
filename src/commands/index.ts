@@ -14,7 +14,7 @@ import {
   runUnixDate,
   wcStats,
 } from './cli-text-utils'
-import { runShellHelp } from './help-output'
+import { renderKeybindsLegend, runShellHelp } from './help-output'
 import {
   linksAndContactLines,
   projectsLines,
@@ -55,6 +55,11 @@ export const commands: Record<string, Command> = {
     description:
       'Summarises keywords; try help resume for one keyword, help -v for every keyword with notes',
     run: args => runShellHelp(commands, args),
+  },
+
+  keybinds: {
+    description: 'Full keyboard shortcut legend — WM, terminal, editor, explorer, games',
+    run: () => renderKeybindsLegend(),
   },
 
   static: {

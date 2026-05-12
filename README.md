@@ -1,35 +1,36 @@
-# mrgrey.dev
+# namefailed.github.io
 
-**Live site:** https://namefailed.github.io/  
-**Repository:** https://github.com/namefailed/namefailed.github.io  
+**Live:** https://namefailed.github.io/
 
-I built my portfolio as an in-browser **window manager**: tiling layout, **xterm.js** terminal, a toy filesystem, themes, and optional CRT/matrix effects—so visitors land in something that feels like a workspace, not a scrolling brochure.
+A personal portfolio built as an in-browser window manager — tiling layout, xterm.js terminal, a toy filesystem, seven colour themes, and optional CRT/matrix effects.
 
-There is also a **`/static/`** lightweight brochure page (second Vite HTML entry → `dist/static/index.html`): open it from the shell with **`static`** (aliases `plain`, `x`) — same outbound links as the SPA’s projects list, stripped-down layout for readers or phones (the SPA also redirects coarse-pointer narrow viewports here). Résumé-style copy is imported from the same **`content/`** modules as the main app; **project tiles** reuse **`PORTFOLIO_PROJECTS`** from **`src/content/portfolio.ts`**, so you only edit portfolio data once for both surfaces. Deploy **`dist/`** as a whole so **`/static/`** is served as real files—not rewritten to the SPA shell.
+A second entry (`/static/`) serves the same portfolio copy as a plain brochure page. Mobile visitors land there automatically.
 
-## Documentation
+## Stack
 
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — how I wired the modules, bootstrap order, WM vs terminal vs fake OS layers, mobile quirks, and build.
+- TypeScript, Vite 8 (two HTML entry points)
+- [@xterm/xterm](https://github.com/xtermjs/xterm.js) + fit + web-links addons
+- Three.js (Rubik's cube tile)
+- Web Audio API (sound effects)
+- No framework — vanilla DOM throughout
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Vite dev server (SPA at `/`, static brochure at `/static/`) |
-| `npm run build` | `tsc` + production bundle → **`dist/`** + **`dist/static/`** |
+| `npm run dev` | Vite dev server — desktop at `/`, brochure at `/static/` |
+| `npm run build` | `tsc` then Vite build → `dist/` and `dist/static/` |
 | `npm run preview` | Preview `dist/` locally |
+| `npm test` | Vitest — `*.test.ts` files |
 
 ## GitHub Pages
 
-The live site must publish **`dist/`** after `npm run build`, not the repo-root `index.html` (that file still points at `/src/main.ts`, which only exists under `vite dev`). This repo uses **`.github/workflows/deploy-pages.yml`**.
+The deploy publishes `dist/`, not the repo root. `index.html` at the root still points at `/src/main.ts` and only works under `vite dev`.
 
-**One-time (repo → Settings → Pages):** set **Build and deployment → Source** to **GitHub Actions** (not “Deploy from a branch” on `main` / root). Then pushes to `main` build and deploy automatically.
+**One-time setup:** repo → Settings → Pages → Build and deployment → Source → **GitHub Actions**. Pushes to `main` then build and deploy via `.github/workflows/deploy-pages.yml`.
 
-## Stack
+## Docs
 
-- TypeScript, Vite 8
-- [@xterm/xterm](https://github.com/xtermjs/xterm.js) + fit + web-links addons
-
-## License
-
-Private project (`package.json`).
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module layout, bootstrap order, naming conventions
+- [docs/THEMING.md](docs/THEMING.md) — ThemePack interface, custom property reference, how to add a pack
+- [docs/ROADMAP.md](docs/ROADMAP.md) — completed phases and planned polish work

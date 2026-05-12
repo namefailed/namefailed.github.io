@@ -93,7 +93,7 @@ const HELP_GROUPS: ReadonlyArray<{ title: string; keys: readonly string[] }> = [
     keys: ['explorer', 'browse', 'edit', 'editor', 'vim', 'whoami', 'paint', 'cube', 'snake', 'pong'],
   },
   { title: 'Filesystem', keys: ['pwd', 'ls', 'cd', 'cat', 'touch', 'mkdir', 'rm', 'wc', 'head', 'tail'] },
-  { title: 'Shell & misc', keys: ['help', 'cookies', 'clear', 'echo', 'reboot', 'ps', 'date', 'uptime', 'cal'] },
+  { title: 'Shell & misc', keys: ['help', 'keybinds', 'cookies', 'clear', 'echo', 'reboot', 'ps', 'date', 'uptime', 'cal'] },
   { title: 'Look · sound · effects', keys: ['theme', 'retro', 'matrix', 'sound'] },
   { title: 'Fun & fakery', keys: ['notify', 'apt', 'cowsay'] },
 ]
@@ -252,4 +252,63 @@ export function runShellHelp(registry: CommandRegistry, args: string[] = []): st
   if (topics.length > 0) return renderHelpTopicDetails(registry, topics)
   if (rosterVerbose) return renderHelpVerboseRoster(registry)
   return renderHelpCompactRoster(registry)
+}
+
+
+// keybinds legend
+
+function kbRow(key: string, action: string, key2?: string, action2?: string): string {
+  const kw = 16
+  const aw = 28
+  const left = `  ${c.blue}${key.padEnd(kw)}${c.reset}${c.dim}${action.padEnd(aw)}${c.reset}`
+  if (!key2) return left
+  return left + `  ${c.blue}${key2.padEnd(kw)}${c.reset}${c.dim}${action2 ?? ""}${c.reset}`
+}
+
+export function renderKeybindsLegend(): string[] {
+  const sec = (t: string) => helpSectionLine(t)
+  return [
+    "",
+    `  ${c.pink}${c.bold}keybinds${c.reset}  ${c.dim}Window manager  terminal  games${c.reset}`,
+    "",
+    sec("Window manager  (global, always active)"),
+    "",
+    kbRow("Ctrl+T",    "focus / restore terminal",   "Ctrl+D",    "toggle app launcher"),
+    kbRow("Ctrl+1-9",  "activate dock slot N",        "Ctrl+H/K",  "focus previous panel"),
+    kbRow("Ctrl+Q",    "close focused window",        "Ctrl+L/J",  "focus next panel"),
+    kbRow("Ctrl+M",    "minimize focused window",     "Ctrl+F",    "maximize / restore"),
+    kbRow("Escape",    "close launcher overlay"),
+    "",
+    sec("Terminal  (vim-style input layer)"),
+    "",
+    kbRow("i",          "enter insert mode",          "Esc",       "enter normal mode"),
+    kbRow("h / l",      "move cursor left / right",   "w / b",     "word forward / back"),
+    kbRow("0 / $",      "start / end of line",        "x",         "delete under cursor"),
+    kbRow("d d / D",    "delete line / to end",       "y y / p",   "yank line / paste"),
+    kbRow("Tab",        "autocomplete command",        "up / down", "command history"),
+    kbRow("Ctrl+C",     "interrupt / cancel",          "Ctrl+U",    "clear to line start"),
+    "",
+    sec("Editor  (edit / vim / editor tiles)"),
+    "",
+    kbRow("h j k l",    "move cursor",                ":w",        "save file"),
+    kbRow("i / a",      "insert / append",            ":q / :wq",  "quit / save-quit"),
+    kbRow("w / b",      "word forward / back",        ":e [path]", "open path"),
+    kbRow("dd / yy",    "delete / yank line",         "p",         "paste below"),
+    "",
+    sec("File explorer  (explorer tile)"),
+    "",
+    kbRow("up / down",  "navigate list",              "Enter",     "open file or folder"),
+    kbRow("F2",         "rename selected",            "Del",       "delete selected"),
+    kbRow("Ctrl+C/V",   "copy / paste",               "Ctrl+X",    "cut"),
+    "",
+    sec("Games"),
+    "",
+    kbRow("Snake",      "WASD / arrows  Space to restart after game over"),
+    kbRow("Pong",       "W/S player 1  up/down player 2  vs AI by default"),
+    kbRow("Paint",      "[ / ] adjust brush size  click and drag to draw"),
+    kbRow("Cube",       "U D L R F B + Shift prime  Space scramble  drag orbit"),
+    "",
+    `  ${c.dim}Tip: ${c.reset}${c.blue}help -v${c.reset}${c.dim} for the full command glossary.${c.reset}`,
+    "",
+  ]
 }
