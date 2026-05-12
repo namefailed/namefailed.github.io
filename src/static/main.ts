@@ -21,7 +21,13 @@ function plainProjectsFromPortfolio(): PlainProject[] {
     url: p.web,
     repo: p.repo,
     thumb: p.thumb,
+    skipLiveScreenshot: p.skipLiveScreenshot,
   }))
+}
+
+/** WordPress mShots — same source used by the main SPA's portfolio window */
+function liveShotUrl(web: string): string {
+  return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
 }
 
 function spaHomeHref(): string {
@@ -205,7 +211,18 @@ function projectCard(project: PlainProject, delay = 0): HTMLElement {
   if (project.thumb) card.classList.add('plain-project--has-thumb')
 
   // ── Thumbnail (image-on-top, flush to card edges) ──────────────────────
-  if (project.thumb) {
+  // Strategy mirrors the main SPA (appwindow.ts):
+  //   1. Try a live WordPress mShots screenshot for projects with a URL
+  //   2. On error fall back to the local SVG placeholder (thumb)
+  //   3. If both fail, hide the image pane so the card still looks clean
+  const thumbPath = project.thumb
+    ? project.thumb.startsWith('/')
+      ? project.thumb
+      : `/${project.thumb}`
+    : null
+  const liveShot = project.url && !project.skipLiveScreenshot ? liveShotUrl(project.url) : null
+
+  if (thumbPath || liveShot) {
     // Wrap in <a> when a live URL is available so the whole image is clickable
     const wrap: HTMLElement = project.url
       ? (() => {
@@ -222,17 +239,39 @@ function projectCard(project: PlainProject, delay = 0): HTMLElement {
 
     const img = document.createElement('img')
     img.className = 'plain-project-thumb'
-    // Ensure the path is root-relative — thumb values like `img/legacy/foo.svg`
-    // are relative to the site root, not to `/static/`, so we always prefix `/`.
-    img.src = project.thumb.startsWith('/') ? project.thumb : `/${project.thumb}`
     img.alt = `${project.title} preview`
     img.loading = 'lazy'
     img.decoding = 'async'
-    // On error, hide the image wrapper so the card still looks clean
-    img.onerror = () => {
-      wrap.style.display = 'none'
-      card.classList.remove('plain-project--has-thumb')
+    img.referrerPolicy = 'no-referrer'
+
+    if (liveShot) {
+      img.src = liveShot
+      // mShots failure → try local SVG placeholder → hide pane
+      img.addEventListener(
+        'error',
+        () => {
+          if (thumbPath) {
+            img.src = thumbPath
+            img.addEventListener('error', () => {
+              wrap.style.display = 'none'
+              card.classList.remove('plain-project--has-thumb')
+            }, { once: true })
+          } else {
+            wrap.style.display = 'none'
+            card.classList.remove('plain-project--has-thumb')
+          }
+        },
+        { once: true },
+      )
+    } else {
+      // No live shot — go straight to the placeholder
+      img.src = thumbPath!
+      img.addEventListener('error', () => {
+        wrap.style.display = 'none'
+        card.classList.remove('plain-project--has-thumb')
+      }, { once: true })
     }
+
     wrap.appendChild(img)
     card.appendChild(wrap)
   }
