@@ -2419,6 +2419,36 @@ html.retro-fx .xterm-screen {
   }
 }
 
+/* With skills · intermediate: skills panel switches to photo-left + content-right grid
+   so the portrait doesn't fill the full panel width when the window is mid-sized. */
+@container resume (min-width: 680px) and (max-width: 900px) {
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    grid-template-rows: auto;
+    column-gap: var(--ui-space-3);
+    align-items: start;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame {
+    grid-column: 1;
+    grid-row: 1;
+    width: 80px;
+    margin: 0;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame > .resume-panel-photo {
+    width: 80px;
+    height: 80px;
+    aspect-ratio: 1;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-skills-body {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
 /* With skills · narrow: photo | narrative column (lead + body stacked); skills full-width row below.
    Do NOT use display:contents on main-col — that put body on row 2 while row 1 height followed the
    photo, leaving a huge gap between contact lines and PROFILE. */
