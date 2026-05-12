@@ -222,7 +222,9 @@ function projectCard(project: PlainProject, delay = 0): HTMLElement {
 
     const img = document.createElement('img')
     img.className = 'plain-project-thumb'
-    img.src = project.thumb
+    // Ensure the path is root-relative — thumb values like `img/legacy/foo.svg`
+    // are relative to the site root, not to `/static/`, so we always prefix `/`.
+    img.src = project.thumb.startsWith('/') ? project.thumb : `/${project.thumb}`
     img.alt = `${project.title} preview`
     img.loading = 'lazy'
     img.decoding = 'async'
