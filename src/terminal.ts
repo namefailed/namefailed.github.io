@@ -39,7 +39,7 @@ import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 const BOOT_LINES: Array<{ text: string; delay: number }> = [
-  { text: `${c.dim}[    0.000000] Booting mrgrey.dev kernel v1.0.0-portfolio ...${c.reset}`, delay: 55 },
+  { text: `${c.dim}[    0.000000] Booting mrgrey.site kernel v1.0.0-portfolio ...${c.reset}`, delay: 55 },
   { text: `${c.dim}[    0.011204] Command line: BOOT_IMAGE=/portfolio root=/dev/reality net.ifnames=0${c.reset}`, delay: 75 },
   { text: `${c.dim}[    0.052891] x86/fake: Booting SMP kernel ...${c.reset}`, delay: 70 },
   { text: `${c.dim}[    0.089234] Initializing cgroup subsys cpu ...${c.green}OK${c.reset}`, delay: 85 },
@@ -537,7 +537,7 @@ export class TerminalApp {
         const ack = (): void => this.writeLines(windowSpawnEcho(name, args))
 
         if (EDITOR_LAUNCH_ALIASES.has(name)) {
-          const path = args[0] ?? 'welcome.txt'
+          const path = args[0] ?? 'notes.txt'
           const heading = name === 'vim' ? 'vim' : name === 'editor' ? 'editor' : 'edit'
           this.onOpenWindow({
             command: 'edit',

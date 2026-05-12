@@ -140,7 +140,7 @@ export function runApt(args: string[]): string[] {
 
   if (sub === 'update' || sub === 'upgrade') {
     return [
-      `  ${c.dim}Hit:${c.reset} https://repo.mrgrey.dev/rolling InRelease`,
+      `  ${c.dim}Hit:${c.reset} https://repo.mrgrey.site/rolling InRelease`,
 
       `  ${c.dim}Reading package lists … Done${c.reset}`,
 
@@ -196,7 +196,7 @@ export function runApt(args: string[]): string[] {
 
     const lines: string[] = [
       '',
-      `  ${c.dim}browsing repo.mrgrey.dev/imaginary …${c.reset}`,
+      `  ${c.dim}browsing repo.mrgrey.site/imaginary …${c.reset}`,
       '',
       ...hits.map(
         (r) => `  ${c.green}${r.id.padEnd(22)}${c.reset}  ${formatBlurb(r)}`,

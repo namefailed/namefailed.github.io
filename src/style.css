@@ -2063,6 +2063,12 @@ html.retro-fx .xterm-screen {
   word-break: normal;
 }
 
+/* Prevent long PROFILE paragraph lines from wrapping past the left gutter */
+.resume-layout.resume-layout--with-skills > .resume-main-col .resume-body-block .win-line {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
 .resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-body .win-line:not(.resume-skill-meter-row) {
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -4563,9 +4569,9 @@ html.retro-fx .xterm-screen {
 
 .paint-app .paint-canvas-wrap {
   flex: 1;
-  min-height: min(52vh, 420px);
+  min-height: 0;
   border-radius: 0 0 var(--ui-radius-sm) var(--ui-radius-sm);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .paint-app .paint-canvas:focus-visible {

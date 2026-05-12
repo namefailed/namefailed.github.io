@@ -1091,7 +1091,7 @@ export class Desktop {
     }
 
     if (this.termWin.classList.contains('terminal-closed')) {
-      el.textContent = this.windows.length === 0 ? 'mrgrey.dev' : '\u2014'
+      el.textContent = this.windows.length === 0 ? 'mrgrey.site' : '\u2014'
       return
     }
     // Minimized vs visible: same prompt line — dock shows wm-task-btn--minimized
@@ -1205,9 +1205,15 @@ export class Desktop {
       return
     }
 
-    // Ctrl+H / Ctrl+L and Ctrl+K / Ctrl+J → same pane-cycle (HJ/KL pairs)
-    if (key === 'h' || key === 'k') { this.focusLeft(); return }
-    if (key === 'l' || key === 'j') { this.focusRight(); return }
+    // Ctrl+H → terminal (vim h = left), Ctrl+L → enter pane (vim l = right),
+    // Ctrl+K → previous window up in column (vim k = up), Ctrl+J → next window down (vim j = down)
+    if (key === 'h') { this.focusTerminal(); return }
+    if (key === 'l') {
+      if (!this.focusedId && this.windows[0]) this.focusWindow(this.windows[0])
+      return
+    }
+    if (key === 'k') { this.focusLeft(); return }
+    if (key === 'j') { this.focusRight(); return }
 
     // Ctrl+Q → close focused content window, or terminal when it holds focus
     if (key === 'q') {

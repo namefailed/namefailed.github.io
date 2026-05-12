@@ -1,7 +1,7 @@
 import { c } from './theme'
 
 // ── BANNER ────────────────────────────────────────────────────────────────────
-// "mrgrey" (site shorthand for mrgrey.dev — not GH; code + links use github.com/namefailed).
+// "mrgrey" (site shorthand for mrgrey.site — not GH; code + links use github.com/namefailed).
 // Figlet-ish Big / Shadow, blue → pink gradient.
 
 export const BANNER: string[] = [

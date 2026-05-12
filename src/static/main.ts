@@ -253,7 +253,7 @@ function mount(): void {
   const footer = el('footer', 'plain-footer')
   const fLink = document.createElement('a')
   fLink.href = homeHref
-  fLink.textContent = 'Back to interactive mrgrey.dev'
+  fLink.textContent = 'Back to interactive mrgrey.site'
   footer.appendChild(fLink)
 
   const main = el('main', 'plain-main')

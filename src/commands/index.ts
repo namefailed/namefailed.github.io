@@ -105,13 +105,13 @@ export const commands: Record<string, Command> = {
 
   edit: {
     description:
-      'Mini-vim buffer on the virtual FS — edit [path] (default welcome.txt); :wq · hjkl · wb',
+      'Mini-vim buffer on the virtual FS — edit [path] (default notes.txt); :wq · hjkl · wb',
     run: () => [],
   },
 
   editor: {
     description:
-      'Editor tile — editor [path] opens the same mini-vim buffer as edit (default welcome.txt)',
+      'Editor tile — editor [path] opens the same mini-vim buffer as edit (default notes.txt)',
     run: () => [],
   },
 
@@ -182,7 +182,7 @@ export const commands: Record<string, Command> = {
         `  ${c.dim}The home directory is a fake VFS; files live in ${c.blue}localStorage${c.reset}${c.dim}.${c.reset}`,
         `  ${c.blue}cookies stats${c.reset}  ${c.dim}— file/dir counts + approx JSON footprint${c.reset}`,
         `  ${c.blue}cookies reload${c.reset} ${c.dim}— re-read disk from storage (drops unsaved drift)${c.reset}`,
-        `  ${c.blue}cookies clear${c.reset}  ${c.dim}— wipe FS + restore welcome notes (themes untouched)${c.reset}`,
+        `  ${c.blue}cookies clear${c.reset}  ${c.dim}— wipe FS + restore default notes (themes untouched)${c.reset}`,
       ]
     },
   },
@@ -196,7 +196,7 @@ export const commands: Record<string, Command> = {
 
   vim: {
     description:
-      'Editor tile — vim [path] opens same mini-vim buffer as edit (default welcome.txt)',
+      'Editor tile — vim [path] opens same mini-vim buffer as edit (default notes.txt)',
     run: () => [],
   },
 
@@ -588,7 +588,7 @@ export const commands: Record<string, Command> = {
         return [
           '',
           `  ${c.red}easy there — this is still the shell.${c.reset}`,
-          `  ${c.dim}open ${c.blue}vim welcome.txt${c.dim} then flex :wq.${c.reset}`,
+          `  ${c.dim}open ${c.blue}vim notes.txt${c.dim} then flex :wq.${c.reset}`,
           '',
         ]
       }

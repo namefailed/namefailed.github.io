@@ -65,7 +65,7 @@ export function windowSpawnEcho(cmd: string, args: readonly string[]): string[] 
     case 'edit':
     case 'editor':
     case 'vim': {
-      const f = args[0]?.trim() || 'welcome.txt'
+      const f = args[0]?.trim() || 'notes.txt'
       return ['', `  ${c.green}►${c.reset} ${c.dim}mini‑vim ⇢ ${c.blue}${f}${c.reset}${c.dim} · ${randomPick([
         ':wq writes to fake disk',
         'hjkl diplomacy',

@@ -30,7 +30,7 @@ export const PROFILE = {
 } as const
 
 export const CONTACT = [
-  { label: 'Site', href: 'https://mrgrey.dev', text: 'mrgrey.dev' },
+  { label: 'Site', href: 'https://mrgrey.site', text: 'mrgrey.site' },
   {
     label: 'GitHub',
     href: 'https://github.com/namefailed',

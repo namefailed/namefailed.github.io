@@ -61,10 +61,10 @@ export const RESUME_SKILL_MATRIX_SECTIONS: readonly ResumeSkillMatrixSection[] =
 ] as const
 
 export const RESUME_WORKSTYLE_BULLETS: readonly string[] = [
-  'Small commits, descriptive messages, reviews when pairing.',
-  'Prefer boring stacks that teammates can grep six months later.',
-  'Tests where they save regressions; docs where onboarding hurts.',
-  'Ship thin slices: measurable checkpoints instead of big-bang reveals.',
+  'Small commits with clear messages; review my own diff before asking others to.',
+  'Simpler stacks age better — prefer tools the next person can pick up without a guide.',
+  'Write tests where they catch real bugs; add docs where a new dev would otherwise be stuck.',
+  'Ship one reviewable slice at a time rather than queuing up a big reveal.',
 ]
 
 function skillsDetailLines(): string[] {
@@ -91,7 +91,7 @@ function resumeEducationEndLines(): string[] {
     '',
     `  ${c.pink}${c.bold}MATT GREY${c.reset}  ${c.dim}·${c.reset}  Developer / Engineer`,
     `  ${c.dim}Killeen–Temple, TX  ·  namefailedx@gmail.com  ·  +1 254-534-9544${c.reset}`,
-    `  ${c.dim}github.com/namefailed  ·  mrgrey.dev  ·  linkedin.com/in/matthew-grey-215615179${c.reset}`,
+    `  ${c.dim}github.com/namefailed  ·  mrgrey.site  ·  linkedin.com/in/matthew-grey-215615179${c.reset}`,
     '',
     hr,
     `  ${c.pink}PROFILE${c.reset}`,

@@ -3,8 +3,8 @@
  * `edit` app read/write through here.
  */
 
-/** Bumped so `/home/namefailed` default tree replaces older `/home/mrgrey` saves. */
-const STORAGE_KEY = 'portfolio-vfs-v2-namefailed-home'
+/** Bumped so `/home/namefailed` default tree replaces older `/home/mrgrey` saves. v3: removed welcome.txt. */
+const STORAGE_KEY = 'portfolio-vfs-v3-namefailed-home'
 
 export const FS_HOME = '/home/namefailed'
 
@@ -24,7 +24,7 @@ function emptyDir(): FsDir {
 function defaultRoot(): FsDir {
   const root = emptyDir()
   const etc = emptyDir()
-  etc.c['hostname'] = { t: 'f', body: 'mrgrey.dev\n' }
+  etc.c['hostname'] = { t: 'f', body: 'mrgrey.site\n' }
   etc.c['os-release'] = {
     t: 'f',
     body:
@@ -34,11 +34,6 @@ function defaultRoot(): FsDir {
 
   const home = emptyDir()
   const user = emptyDir()
-  user.c['welcome.txt'] = {
-    t: 'f',
-    body:
-      'Welcome to your home directory.\nTry: cat welcome.txt\n       ls ../etc\n',
-  }
   user.c['notes.txt'] = {
     t: 'f',
     body: 'Nothing here yet — touch notes.txt is already taken.\n',

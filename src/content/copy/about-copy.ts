@@ -36,8 +36,9 @@ export function aboutInfoLines(): string[] {
 export function whoamiAboutLines(): string[] {
   return [
     '',
-    `  ${c.pink}${c.bold}Matt Grey${c.reset}  ${c.dim}software engineer · Killeen, TX ·${c.reset} ${c.cyan}mrgrey.dev${c.reset}`,
+    `  ${c.pink}${c.bold}Matt Grey${c.reset}  ${c.dim}software engineer · Killeen, TX ·${c.reset} ${c.cyan}mrgrey.site${c.reset}`,
     `  ${c.dim}I build interfaces people can navigate without reading the manual.${c.reset}`,
+    `  ${c.dim}(Except this one — type ${c.reset}${c.blue}help${c.reset}${c.dim} if you get lost.)${c.reset}`,
     '',
     `  ${c.pink}${c.bold}Work${c.reset}`,
     `  ${c.dim}Freelance web since 2017 — ${c.bold}scoping → building → shipping${c.reset}${c.dim} for small businesses,${c.reset}`,

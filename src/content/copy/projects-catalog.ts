@@ -22,15 +22,25 @@ export type PortfolioProjectEntry = {
 
 export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
   {
-    title: 'mrgrey.dev',
+    title: 'Vertalo',
+    period: 'vertalo.com · 2024–present',
+    lines: [
+      `Tokenization & cap-table infrastructure for regulated digital assets.`,
+      `Modern web app surface: TypeScript, React, secure REST flows.`,
+    ],
+    web: 'https://vertalo.com',
+    skipLiveScreenshot: true,
+  },
+  {
+    title: 'mrgrey.site',
     period: 'portfolio · 2026',
     lines: [
       `This site: tiling WM metaphor, real xterm.js shell, vim-style editing,`,
       `matrix backdrop, CRT retro mode, theme packs for UI + terminal.`,
       `Stack: TypeScript, Vite, vanilla DOM.`,
     ],
-    repo: 'https://github.com/namefailed/mrgrey.dev',
-    web: 'https://mrgrey.dev',
+    repo: 'https://github.com/namefailed/namefailed.github.io',
+    web: 'https://mrgrey.site',
     thumb: 'img/legacy/portfolio-mrgrey.svg',
     /* mShots often 403 / non-image for personal domains — card art is the bundled SVG */
     skipLiveScreenshot: true,
@@ -80,14 +90,6 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
       `End-to-end for small businesses: discovery, design handoff, build,`,
       `deploy, iterate. HTML/CSS/JS/React + WordPress where it fits.`,
     ],
-  },
-  {
-    title: 'Future entries',
-    lines: [
-      'Drop repos or live URLs here as you ship — same tile, clearer story.',
-      'Suggested fields: title · outcome · repo URL · live demo URL.',
-    ],
-    repo: 'https://github.com/namefailed',
   },
 ]
 
