@@ -30,7 +30,7 @@ export const PROFILE = {
   location: 'Killeen–Temple, TX · US Central',
   statusOpen: true,
   summary:
-    'I build web interfaces from discovery to delivery — scoping requirements, implementing UI, wiring integrations, and handing off something maintainable. 8+ years freelance, backed by a B.S. in Software Engineering (SNHU / Kenzie Academy). TypeScript-first, with a bias toward layouts that survive real conditions: narrow viewports, zoom, reduced-motion, and the next developer who reads the code.',
+    'Web developer with 9 years delivering end-to-end — scoping, design, implementation, and handoff. Shipped the full public-facing site for Vertalo (fintech / digital-asset infrastructure) and built across nonprofits, military-adjacent agencies, and independent clients. TypeScript-first; bias toward layouts that survive real conditions: narrow viewports, zoom, reduced-motion, and the next developer who reads the code.',
 } as const
 
 export const CONTACT = [
@@ -75,9 +75,10 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     location: 'Remote / hybrid',
     type: 'freelance',
     bullets: [
-      'Delivered end-to-end web projects for small businesses and nonprofits: scoping, design, development, deployment, and client training.',
-      'Stack varies by project — TypeScript, React, Vite, vanilla JS/CSS, Node.js, CMS platforms.',
-      'Sole point of contact across all phases; long-term repeat client relationships built on direct communication and full ownership.',
+      'Owned the full project lifecycle for 15+ client engagements — discovery, design, development, deployment, and training — no hand-offs, full accountability at every stage.',
+      'Shipped responsive, accessible web experiences across TypeScript, React, Vite, Node.js, and CMS platforms; stack chosen per project, not habit.',
+      'Managed hosting environments and long-term feature cadence for retainer clients, keeping production healthy well past launch day.',
+      'Built lasting client relationships through direct ownership and transparent communication — primary contact from first conversation through post-launch iterations.',
     ],
   },
   {
@@ -87,9 +88,10 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     location: 'Killeen–Temple Area · hybrid',
     type: 'volunteer',
     bullets: [
-      'Maintained and updated the official SCA website for a large volunteer-driven historical recreation organization.',
-      'Kept officer rosters, event listings, and announcements accurate and compliant with SCA digital policies.',
-      'Coordinated with the Web Minister and regional officers to publish timely, consistent updates across multiple branches.',
+      'Maintained and improved the official website for one of the world\'s largest volunteer-driven historical organizations, ensuring compliance with SCA digital governance policies.',
+      'Restructured site content, officer rosters, and event listings to improve clarity and usability for members and organizers across multiple regional branches.',
+      'Coordinated cross-branch publishing with the Web Minister and regional officers; maintained consistency and timeliness during a high-volume event season.',
+      'Handled technical troubleshooting and CMS administration in a fully volunteer, distributed environment — reliable delivery without a conventional support chain.',
     ],
   },
   {
@@ -100,10 +102,11 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     type: 'contract',
     featured: true,
     bullets: [
-      'Designed and built the entire public-facing Vertalo.com website from the ground up — responsive, performant, and accessible.',
-      'Implemented on Craft CMS, integrated with Vertalo\'s React / PostgreSQL / AWS stack.',
-      'Translated complex blockchain and digital-asset concepts into clear, institutional-grade web copy and layout.',
-      'Collaborated directly with leadership on messaging, UX structure, SEO, and content throughout the contract.',
+      'Sole front-end developer: designed and built the entire Vertalo.com public site from scratch — responsive, high-performance, and accessible for an institutional audience.',
+      'Implemented on Craft CMS, fully integrated with Vertalo\'s React / PostgreSQL / AWS stack; engineered scalable front-end architecture for ongoing content management.',
+      'Applied SEO best practices and performance optimisation across all pages; met full accessibility standards for an enterprise client base.',
+      'Translated complex blockchain and digital-asset concepts into clear, institutional-grade copy and layout for fund managers and investors.',
+      'Collaborated directly with company leadership on messaging, UX, and content — from first commit through post-launch refinement and handoff.',
     ],
   },
   {
@@ -113,9 +116,10 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     location: 'Killeen, TX · on-site',
     type: 'fulltime',
     bullets: [
-      'Built and maintained marketing sites for military-adjacent clients using HTML, CSS, JavaScript, and React.',
-      'WordPress theming, CMS customization, hosting management, and cross-browser QA under tight deadlines.',
-      'Represented the company at conventions; coordinated with designers, editors, and stakeholders across campaigns.',
+      'Built and maintained responsive, accessible marketing sites for military-adjacent clients using HTML, CSS, JavaScript, and React — cross-browser QA and accessible UI under agency deadlines.',
+      'Customised CMS platforms to streamline client content workflows and reduce editorial overhead across multiple concurrent accounts.',
+      'Managed hosting, deployments, and support queues; delivered iterative features and bug fixes with minimal downtime across a live production portfolio.',
+      'Represented the agency at regional conventions — live demos, booth setup, and direct prospect engagement.',
     ],
   },
   {
@@ -125,8 +129,9 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     location: 'Remote',
     type: 'fulltime',
     bullets: [
-      'Tier-2 technical support: diagnosed hardware, OS, and application-layer issues for customers.',
-      'Documented resolutions and escalated edge cases; maintained strong satisfaction scores throughout.',
+      'Tier-2 technical support: diagnosed complex hardware, OS, and application-layer issues under high call-volume conditions.',
+      'Communicated technical resolutions clearly and patiently to non-technical customers; maintained consistently strong CSAT scores.',
+      'Documented edge cases and escalated to appropriate teams; contributed resolved patterns to the team knowledge base.',
     ],
   },
 ]
