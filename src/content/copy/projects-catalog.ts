@@ -25,10 +25,11 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     title: 'Vertalo',
     period: 'vertalo.com · 2021–2022',
     lines: [
-      `Tokenization & cap-table infrastructure for regulated digital assets.`,
-      `Modern web app surface: TypeScript, React, secure REST flows.`,
+      `API-first transfer agent — tokenization infrastructure for issuers, fund managers, and institutions.`,
+      `Built the full public-facing site: Craft CMS, React, GraphQL, AWS. Design through launch.`,
     ],
     web: 'https://vertalo.com',
+    thumb: 'img/portfolio-vertalo.png',
     skipLiveScreenshot: true,
   },
   {
