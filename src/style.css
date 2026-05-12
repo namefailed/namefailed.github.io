@@ -2856,7 +2856,7 @@ html.retro-fx .xterm-screen {
 .about-banner-img {
   display: block;
   width: 100%;
-  max-height: 220px;
+  max-height: 320px;
   object-fit: cover;
   object-position: center 30%;
 }
