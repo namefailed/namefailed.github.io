@@ -30,7 +30,6 @@ import {
 } from './launcher-catalog'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
-import { pushToast } from './os-systray'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
 //
@@ -378,7 +377,8 @@ export class Desktop {
     const miniGameOpen = (
       spec.command === 'paint' ||
       spec.command === 'snake' ||
-      spec.command === 'pong'
+      spec.command === 'pong' ||
+      spec.command === 'cube'
     )
     if (miniGameOpen) {
       const cmd = spec.command
@@ -408,11 +408,6 @@ export class Desktop {
         this.focusWindow(pw)
         return
       }
-      if (cmd === 'cube') {
-        // Temporarily disabled — sticker rotation math needs revisiting.
-        pushToast('Cube is temporarily unavailable while we fix the rotation math.', 4800, 'toast--warn')
-        return
-      }
       if (cmd === 'snake') {
         const { SnakeWindow: SnakeWindowCtor } = await import('./snake-window')
         let sw!: SnakeWindow
@@ -426,6 +421,21 @@ export class Desktop {
         this.windows.push(sw)
         this.attachVerticalSplitters()
         this.focusWindow(sw)
+        return
+      }
+      if (cmd === 'cube') {
+        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
+        let rw!: RubikWindow
+        rw = new RubikWindowCtor({
+          onClose: () => this.closeWindow(rw),
+          onMinimize: () => this.minimizeWindow(rw),
+          onMaximize: () => this.toggleMaximizeContent(rw),
+          onFocus: () => this.focusWindow(rw),
+        })
+        this.appendToRightPane(rw.el)
+        this.windows.push(rw)
+        this.attachVerticalSplitters()
+        this.focusWindow(rw)
         return
       }
       const { PongWindow: PongWindowCtor } = await import('./pong-window')
@@ -1125,12 +1135,8 @@ export class Desktop {
       })
       return
     }
-    if (cmd === 'paint' || cmd === 'snake' || cmd === 'pong') {
+    if (cmd === 'paint' || cmd === 'snake' || cmd === 'pong' || cmd === 'cube') {
       void this.openWindow({ command: cmd, title: cmd, content: [] })
-      return
-    }
-    if (cmd === 'cube') {
-      pushToast('Cube is temporarily unavailable while we fix the rotation math.', 4800, 'toast--warn')
       return
     }
     if (cmd === 'resume') {
