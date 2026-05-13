@@ -61,7 +61,7 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
 ]
 
 /** Commands omitted from dock pills — still in Applications grid */
-export const DOCK_HIDDEN_COMMANDS = new Set(['paint', 'snake', 'pong'])
+export const DOCK_HIDDEN_COMMANDS = new Set(['paint', 'snake', 'pong', 'cube'])
 
 export function dockPinnedCommandSet(): Set<string> {
   const s = new Set<string>()

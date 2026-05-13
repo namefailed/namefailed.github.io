@@ -424,19 +424,28 @@ export class Desktop {
         return
       }
       if (cmd === 'cube') {
-        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
-        let rw!: RubikWindow
-        rw = new RubikWindowCtor({
-          onClose: () => this.closeWindow(rw),
-          onMinimize: () => this.minimizeWindow(rw),
-          onMaximize: () => this.toggleMaximizeContent(rw),
-          onFocus: () => this.focusWindow(rw),
-        })
-        this.appendToRightPane(rw.el)
-        this.windows.push(rw)
-        this.attachVerticalSplitters()
-        this.focusWindow(rw)
-        return
+        try {
+          console.log('[desktop] Loading cube module...')
+          const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
+          console.log('[desktop] Cube module loaded, creating window...')
+          let rw!: RubikWindow
+          rw = new RubikWindowCtor({
+            onClose: () => this.closeWindow(rw),
+            onMinimize: () => this.minimizeWindow(rw),
+            onMaximize: () => this.toggleMaximizeContent(rw),
+            onFocus: () => this.focusWindow(rw),
+          })
+          console.log('[desktop] Cube window created, appending to pane...')
+          this.appendToRightPane(rw.el)
+          this.windows.push(rw)
+          this.attachVerticalSplitters()
+          this.focusWindow(rw)
+          console.log('[desktop] Cube window fully initialized')
+          return
+        } catch (err) {
+          console.error('[desktop] Cube launch failed:', err)
+          throw err
+        }
       }
       const { PongWindow: PongWindowCtor } = await import('./pong-window')
       let pong!: PongWindow
