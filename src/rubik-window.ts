@@ -485,39 +485,40 @@ export class RubikWindow {
   }
 
   /**
-   * After a turn, update sticker face assignments to match new cube state.
-   * This remaps userData.cubeFace and userData.faceIndex for all stickers
-   * based on where they ended up after the move.
+   * After a turn, update sticker face assignments based on physical world position.
+   * This ensures stickers are correctly identified by which voxel they occupy.
    */
   private remapStickersAfterTurn(): void {
-    // Build arrays of current sticker data before any changes
-    const oldData = this.stickerMeshes.map(m => ({
-      mesh: m,
-      face: m.userData.cubeFace as CubeFaceKey,
-      idx: m.userData.faceIndex as number,
-      color: (m.material as THREE.MeshBasicMaterial).color.getHex()
-    }))
+    // Get world positions for all stickers after animation
+    const worldPositions = this.stickerMeshes.map(m => {
+      const pos = new THREE.Vector3()
+      m.getWorldPosition(pos)
+      return { mesh: m, pos }
+    })
 
-    // For each position in the new state, find which sticker should be there
-    // by matching colors from the old positions
+    // For each face position, find which sticker is physically there
     let s = 0
     for (const face of FACET_FACE_ORDER) {
       for (let i = 0; i < 9; i++) {
-        const newColorIdx = this.state[face][i]!
-        const newColor = new THREE.Color(COLOR_HEX[newColorIdx]).getHex()
+        // Calculate the world position this sticker slot should be at
+        const expectedCenter = latticeStickerCenter(face, i)
 
-        // Find the sticker that has this color from the previous state
-        // This sticker needs to be assigned to this face/position
-        const matching = oldData.find(d => d.color === newColor && (d.face !== face || d.idx !== i))
-        if (matching) {
-          // Update this sticker's userData to its new position
-          this.stickerMeshes[s]!.userData.cubeFace = face
-          this.stickerMeshes[s]!.userData.faceIndex = i
-          // Update grid coordinates too
+        // Find the sticker closest to this position (within tolerance)
+        const EPS = 0.15 // tolerance for floating point errors
+        const match = worldPositions.find(({ pos }) =>
+          Math.abs(pos.x - expectedCenter.x) < EPS &&
+          Math.abs(pos.y - expectedCenter.y) < EPS &&
+          Math.abs(pos.z - expectedCenter.z) < EPS
+        )
+
+        if (match) {
+          // Update userData to reflect this sticker's new position
+          match.mesh.userData.cubeFace = face
+          match.mesh.userData.faceIndex = i
           const g = gridTripleFromSticker(face, i)
-          this.stickerMeshes[s]!.userData.gx = g.gx
-          this.stickerMeshes[s]!.userData.gy = g.gy
-          this.stickerMeshes[s]!.userData.gz = g.gz
+          match.mesh.userData.gx = g.gx
+          match.mesh.userData.gy = g.gy
+          match.mesh.userData.gz = g.gz
         }
         s++
       }
