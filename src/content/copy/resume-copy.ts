@@ -134,7 +134,7 @@ function resumeEducationEndLines(): string[] {
     `  ${c.pink}EDUCATION${c.reset}`,
     hr,
     `  ${c.blue}Southern New Hampshire University / Kenzie Academy${c.reset}`,
-    `  ${c.dim}B.S. Software Engineering  ·  2021 – 2025${c.reset}`,
+    `  ${c.dim}A.S. Software Engineering  ·  2021 – 2023${c.reset}`,
     `  ${dimInterpunct} Java & OOP, data structures, REST, collaborative workflow, UML. Unit testing discipline; Git; integrating third-party APIs.`,
     '',
     `  ${c.blue}Temple College${c.reset}  ${c.dim}GED with Honors  ·  2016${c.reset}`,

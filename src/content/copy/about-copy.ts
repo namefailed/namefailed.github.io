@@ -44,7 +44,7 @@ export function whoamiAboutLines(): string[] {
     `  ${c.dim}Freelance web since 2017 — ${c.bold}scoping → building → shipping${c.reset}${c.dim} for small businesses,${c.reset}`,
     `  ${c.dim}nonprofits, and product teams. TypeScript-first, with a bias toward${c.reset}`,
     `  ${c.dim}layouts that survive edge cases: narrow viewports, zoom, reduced-motion.${c.reset}`,
-    `  ${c.dim}Finishing a B.S. in Software Engineering at SNHU / Kenzie Academy.${c.reset}`,
+    `  ${c.dim}A.S. Software Engineering at SNHU / Kenzie Academy.${c.reset}`,
     '',
     `  ${c.pink}${c.bold}This site${c.reset}`,
     `  ${c.dim}An in-browser window manager — tiling layout, xterm.js terminal,${c.reset}`,

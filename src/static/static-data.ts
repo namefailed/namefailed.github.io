@@ -141,7 +141,7 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
 ]
 
 export const EDUCATION: readonly string[] = [
-  'B.S. Software Engineering · Southern New Hampshire University / Kenzie Academy · 2021–2025',
+  'A.S. Software Engineering · Southern New Hampshire University / Kenzie Academy · 2021–2023',
   'Temple College · GED with Honors · 2016',
 ]
 
