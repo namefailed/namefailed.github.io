@@ -477,10 +477,48 @@ export class RubikWindow {
   }
 
   private resetAllStickerPoses(): void {
+    for (const mesh of this.stickerMeshes) {
+      const face = mesh.userData.cubeFace as CubeFaceKey
+      const idx = mesh.userData.faceIndex as number
+      this.poseSticker(mesh, face, idx)
+    }
+  }
+
+  /**
+   * After a turn, update sticker face assignments to match new cube state.
+   * This remaps userData.cubeFace and userData.faceIndex for all stickers
+   * based on where they ended up after the move.
+   */
+  private remapStickersAfterTurn(): void {
+    // Build arrays of current sticker data before any changes
+    const oldData = this.stickerMeshes.map(m => ({
+      mesh: m,
+      face: m.userData.cubeFace as CubeFaceKey,
+      idx: m.userData.faceIndex as number,
+      color: (m.material as THREE.MeshBasicMaterial).color.getHex()
+    }))
+
+    // For each position in the new state, find which sticker should be there
+    // by matching colors from the old positions
     let s = 0
     for (const face of FACET_FACE_ORDER) {
       for (let i = 0; i < 9; i++) {
-        this.poseSticker(this.stickerMeshes[s]!, face, i)
+        const newColorIdx = this.state[face][i]!
+        const newColor = new THREE.Color(COLOR_HEX[newColorIdx]).getHex()
+
+        // Find the sticker that has this color from the previous state
+        // This sticker needs to be assigned to this face/position
+        const matching = oldData.find(d => d.color === newColor && (d.face !== face || d.idx !== i))
+        if (matching) {
+          // Update this sticker's userData to its new position
+          this.stickerMeshes[s]!.userData.cubeFace = face
+          this.stickerMeshes[s]!.userData.faceIndex = i
+          // Update grid coordinates too
+          const g = gridTripleFromSticker(face, i)
+          this.stickerMeshes[s]!.userData.gx = g.gx
+          this.stickerMeshes[s]!.userData.gy = g.gy
+          this.stickerMeshes[s]!.userData.gz = g.gz
+        }
         s++
       }
     }
@@ -567,6 +605,7 @@ export class RubikWindow {
     pivot.removeFromParent()
 
     fn(this.state)
+    this.remapStickersAfterTurn()
     this.animating = false
     this.resetAllStickerPoses()
     this.syncStickerMaterials()
