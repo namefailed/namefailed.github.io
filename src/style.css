@@ -2535,6 +2535,16 @@ html.retro-fx .xterm-screen {
     overflow-wrap: break-word;
     word-break: normal;
   }
+
+  /* Skills notes in narrow layout: no card styling */
+  .resume-layout.resume-layout--with-skills .resume-skills-notes {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
 }
 
 /*
@@ -2670,6 +2680,16 @@ html.retro-fx .xterm-screen {
     white-space: pre-wrap;
     overflow-wrap: break-word;
     word-break: normal;
+  }
+
+  /* Skills notes in narrow layout: no card styling */
+  .resume-layout.resume-layout--with-skills .resume-skills-notes {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
   }
 }
 
