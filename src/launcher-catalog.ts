@@ -31,7 +31,7 @@ export const TILED_WINDOW_COMMANDS = new Set([
   'explorer',
   'browse',
   'paint',
-  // 'cube',  // temporarily disabled — rotation math needs revisiting
+  'cube',
   'snake',
   'pong',
 ])
