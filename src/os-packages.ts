@@ -1,5 +1,7 @@
 /** Optional apt install cowsay — persists for apt list; cowsay CLI does not depend on this. */
 
+import { storageGetJson, storageSetJson } from './storage'
+
 const STORAGE_KEY = 'mrgrey-pkgs-v1'
 
 const KNOWN = new Set(['cowsay'])
@@ -7,27 +9,16 @@ const KNOWN = new Set(['cowsay'])
 let installed = new Set<string>()
 
 function load(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-
-    if (!raw) return
-
-    const arr = JSON.parse(raw) as unknown
-
-    if (!Array.isArray(arr)) return
-
-    installed = new Set(arr.filter((x): x is string => typeof x === 'string'))
-  } catch {
+  const arr = storageGetJson<unknown>(STORAGE_KEY, null)
+  if (!Array.isArray(arr)) {
     installed = new Set()
+    return
   }
+  installed = new Set(arr.filter((x): x is string => typeof x === 'string'))
 }
 
 function save(): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...installed]))
-  } catch {
-    /* ignore */
-  }
+  storageSetJson(STORAGE_KEY, [...installed])
 }
 
 load()

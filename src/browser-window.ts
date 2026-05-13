@@ -4,6 +4,7 @@
  */
 
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
+import { storageGet, storageSet } from './storage'
 
 export { DEFAULT_BROWSER_URL, normalizeBrowserUrl }
 
@@ -395,8 +396,8 @@ export class BrowserWindow {
   }
 
   private skipIframeTip(): boolean {
+    if (storageGet(LS_IFRAME_TIP_DISMISS) === '1') return true
     try {
-      if (localStorage.getItem(LS_IFRAME_TIP_DISMISS) === '1') return true
       if (sessionStorage.getItem(SS_IFRAME_TIP_SESSION) === '1') return true
     } catch {
       /* private mode */
@@ -416,10 +417,10 @@ export class BrowserWindow {
     if (recordDismissal) {
       try {
         sessionStorage.setItem(SS_IFRAME_TIP_SESSION, '1')
-        if (permanent) localStorage.setItem(LS_IFRAME_TIP_DISMISS, '1')
       } catch {
         /* ignore */
       }
+      if (permanent) storageSet(LS_IFRAME_TIP_DISMISS, '1')
     }
     this.iframeTipBackdrop?.remove()
     this.iframeTipBackdrop = null

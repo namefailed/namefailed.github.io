@@ -1,4 +1,5 @@
 import type { ITheme } from '@xterm/xterm'
+import { storageGet, storageSet } from './storage'
 import { THEME_PACKS, type ThemePack } from './theme-packs'
 
 const STORAGE_KEY = 'mrgrey-theme'
@@ -30,24 +31,16 @@ export function applyTheme(id: string): boolean {
   for (const [key, val] of Object.entries(pack.css)) {
     document.documentElement.style.setProperty(key, val)
   }
-  try {
-    localStorage.setItem(STORAGE_KEY, id)
-  } catch {
-    /* localStorage unavailable */
-  }
+  storageSet(STORAGE_KEY, id)
   window.dispatchEvent(new CustomEvent('mrgrey-theme-change'))
   return true
 }
 
 export function initThemeFromStorage(): void {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    const id =
-      stored && THEME_PACKS.some(p => p.id === stored) ? stored : 'mocha'
-    applyTheme(id)
-  } catch {
-    applyTheme('mocha')
-  }
+  const stored = storageGet(STORAGE_KEY)
+  const id =
+    stored && THEME_PACKS.some(p => p.id === stored) ? stored : 'mocha'
+  applyTheme(id)
 }
 
 export function listThemeSummaries(): ReadonlyArray<{ id: string; label: string }> {

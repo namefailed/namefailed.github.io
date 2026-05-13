@@ -6,7 +6,7 @@
  * resolves `.`/`..` and collapses duplicate slashes, so callers never need to canonicalize paths
  * themselves.
  *
- * Persistence: every mutating operation calls `save()` which serialises the whole tree to
+ * Persistence: mutating operations trigger a debounced `save()` which serialises the whole tree to
  * `localStorage`. Reads call `load()` once at module init. `vfsReloadFromStorage()` is exposed
  * for the `cookies` command to sync after an external change.
  *
@@ -14,8 +14,13 @@
  * all read/write through the exports below.
  */
 
+import { storageGet, storageSet } from './storage'
+
 /** Bumped so `/home/namefailed` default tree replaces older `/home/mrgrey` saves. v3: removed welcome.txt. */
 const STORAGE_KEY = 'portfolio-vfs-v3-namefailed-home'
+
+/** Debounce delay for VFS saves to reduce localStorage writes during rapid operations. */
+const SAVE_DEBOUNCE_MS = 150
 
 /** Shared encoder — avoids per-call instantiation in `vfsLsLong` and `vfsPersistedFootprint`. */
 const encoder = new TextEncoder()
@@ -95,10 +100,13 @@ let state: FsState = {
 /** Last cwd before each successful `cd` (POSIX OLDPWD — used by `cd -` and printed from `pwd`). */
 let vfsOldPwd: string | null = null
 
+/** Pending save timeout handle for debouncing. */
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
+
 function load(): void {
+  const raw = storageGet(STORAGE_KEY)
+  if (!raw) return
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
     const parsed = JSON.parse(raw) as FsState
     if (parsed && parsed.root && parsed.root.t === 'd' && typeof parsed.cwd === 'string') {
       state = parsed
@@ -108,12 +116,22 @@ function load(): void {
   }
 }
 
+/** Trigger a debounced save. Accumulates rapid changes into a single localStorage write. */
 function save(): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {
-    /* private mode */
+  if (saveTimeout) clearTimeout(saveTimeout)
+  saveTimeout = setTimeout(() => {
+    saveTimeout = null
+    storageSet(STORAGE_KEY, JSON.stringify(state))
+  }, SAVE_DEBOUNCE_MS)
+}
+
+/** Synchronous save for operations that need immediate persistence (e.g., vfsReloadFromStorage). */
+function saveSync(): void {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout)
+    saveTimeout = null
   }
+  storageSet(STORAGE_KEY, JSON.stringify(state))
 }
 
 load()
@@ -125,7 +143,7 @@ export function vfsReloadFromStorage(): string | null {
   const hit = walk(state.cwd)
   if (!hit?.node || hit.node.t !== 'd') {
     state.cwd = FS_HOME
-    save()
+    saveSync()
     return 'working directory reset to ~ (saved cwd no longer exists)'
   }
   return null

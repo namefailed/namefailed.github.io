@@ -1,26 +1,19 @@
 /** Full-viewport canvas rain behind `#desktop`; glyph colors follow the active theme pack. */
 
 import { getMatrixRainPalette } from './theme-control'
+import { storageGet, storageSet } from './storage'
 
 const STORAGE_KEY = 'mrgrey-matrix-bg'
 
 function readStoredMatrix(): boolean | null {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY)
-    if (v === 'on') return true
-    if (v === 'off') return false
-  } catch {
-    /* private mode etc. */
-  }
+  const v = storageGet(STORAGE_KEY)
+  if (v === 'on') return true
+  if (v === 'off') return false
   return null
 }
 
 function writeStoredMatrix(on: boolean): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, on ? 'on' : 'off')
-  } catch {
-    /* quota / private browsing */
-  }
+  storageSet(STORAGE_KEY, on ? 'on' : 'off')
 }
 
 function prefersReducedMotion(): boolean {
@@ -114,6 +107,9 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   }
   const ctx: CanvasRenderingContext2D = ctxMaybe
 
+  const stored = readStoredMatrix()
+  let enabled = stored !== null ? stored : !prefersReducedMotion()
+
   const bgImg = new Image()
   bgImg.src = WALLPAPER_SRC
   bgImg.decoding = 'async'
@@ -129,9 +125,14 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const speeds: number[] = []
   let frame = 0
   let raf = 0
+  /** Track whether the document is visible to pause animation when tab is backgrounded. */
+  let docVisible = !document.hidden
+  /** Track whether the canvas is actually displayed to skip rendering when hidden. */
+  let canvasVisible = enabled
 
-  const stored = readStoredMatrix()
-  let enabled = stored !== null ? stored : !prefersReducedMotion()
+  function shouldRun(): boolean {
+    return enabled && docVisible && canvasVisible
+  }
 
   function layout(): void {
     const rect = root.getBoundingClientRect()
@@ -161,7 +162,10 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   }
 
   function loop(): void {
-    if (!enabled) return
+    if (!shouldRun()) {
+      raf = 0
+      return
+    }
 
     if (width < 2 || height < 2) {
       raf = requestAnimationFrame(loop)
@@ -212,8 +216,18 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
 
   function startLoop(): void {
     stopLoop()
-    if (!enabled) return
+    if (!shouldRun()) return
     raf = requestAnimationFrame(loop)
+  }
+
+  function onVisibilityChange(): void {
+    const wasVisible = docVisible
+    docVisible = !document.hidden
+    if (docVisible && !wasVisible) {
+      // Resumed visibility - restart loop
+      startLoop()
+    }
+    // When hidden, the loop will exit on next frame (shouldRun() check in loop)
   }
 
   function syncDom(): void {
@@ -234,6 +248,8 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   }
   window.addEventListener('mrgrey-theme-change', onThemeChange)
 
+  document.addEventListener('visibilitychange', onVisibilityChange)
+
   layout()
   syncDom()
   startLoop()
@@ -241,6 +257,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const handle: MatrixBgHandle = {
     setEnabled: (on: boolean) => {
       enabled = on
+      canvasVisible = on
       writeStoredMatrix(on)
       syncDom()
       if (enabled) {
@@ -256,6 +273,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
       ro.disconnect()
       window.removeEventListener('resize', onWinResize)
       window.removeEventListener('mrgrey-theme-change', onThemeChange)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       if (registeredHandle === handle) registeredHandle = null
     },
   }

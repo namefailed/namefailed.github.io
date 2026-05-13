@@ -1,5 +1,7 @@
 /** Short UI sounds via Web Audio; mute state persisted under `mrgrey-os-sound` / volume under `mrgrey-os-volume`. */
 
+import { storageGetBool, storageGetNumber, storageSetBool, storageSet } from './storage'
+
 const STORAGE_KEY = 'mrgrey-os-sound'
 const VOLUME_KEY = 'mrgrey-os-volume'
 
@@ -9,20 +11,8 @@ let volume = 0.72
 let audioCtx: AudioContext | null = null
 
 export function initOsSound(): void {
-  try {
-    enabled = localStorage.getItem(STORAGE_KEY) !== '0'
-  } catch {
-    enabled = true
-  }
-  try {
-    const raw = localStorage.getItem(VOLUME_KEY)
-    if (raw != null) {
-      const v = parseFloat(raw)
-      if (Number.isFinite(v)) volume = Math.min(1, Math.max(0, v))
-    }
-  } catch {
-    /* ignore */
-  }
+  enabled = storageGetBool(STORAGE_KEY, true)
+  volume = storageGetNumber(VOLUME_KEY, 0.72, 0, 1)
 }
 
 export function getSoundVolume(): number {
@@ -31,11 +21,7 @@ export function getSoundVolume(): number {
 
 export function setSoundVolume(v: number): void {
   volume = Math.min(1, Math.max(0, v))
-  try {
-    localStorage.setItem(VOLUME_KEY, String(volume))
-  } catch {
-    /* ignore */
-  }
+  storageSet(VOLUME_KEY, String(volume))
 }
 
 export function isSoundEnabled(): boolean {
@@ -44,11 +30,7 @@ export function isSoundEnabled(): boolean {
 
 export function setSoundEnabled(on: boolean): void {
   enabled = on
-  try {
-    localStorage.setItem(STORAGE_KEY, on ? '1' : '0')
-  } catch {
-    /* ignore */
-  }
+  storageSetBool(STORAGE_KEY, on)
 }
 
 export function toggleSound(): boolean {

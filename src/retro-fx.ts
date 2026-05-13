@@ -1,5 +1,7 @@
 /** Optional CRT-style filter; toggled with `retro` / `retro on|off`. */
 
+import { storageGetBool, storageSetBool } from './storage'
+
 const CLASS = 'retro-fx'
 const STORAGE_KEY = 'mrgrey-retro-fx'
 
@@ -9,21 +11,12 @@ export function getRetroFx(): boolean {
 
 export function setRetroFx(on: boolean): void {
   document.documentElement.classList.toggle(CLASS, on)
-  try {
-    localStorage.setItem(STORAGE_KEY, on ? '1' : '0')
-  } catch {
-    /* private mode / quota */
-  }
+  storageSetBool(STORAGE_KEY, on)
 }
 
 /** Restore preference from localStorage (default: off). Call once at startup. */
 export function initRetroFxFromStorage(): void {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY)
-    setRetroFx(v === '1')
-  } catch {
-    setRetroFx(false)
-  }
+  setRetroFx(storageGetBool(STORAGE_KEY, false))
 }
 
 export function toggleRetroFx(): boolean {

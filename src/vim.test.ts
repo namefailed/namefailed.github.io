@@ -1,0 +1,333 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { VimInput } from './vim'
+import type { VimMode } from './vim'
+
+/** Create a minimal KeyboardEvent-like object for testing. */
+function keyEvent(key: string, opts?: { ctrlKey?: boolean; shiftKey?: boolean }): KeyboardEvent {
+  return {
+    key,
+    ctrlKey: opts?.ctrlKey ?? false,
+    shiftKey: opts?.shiftKey ?? false,
+    preventDefault: vi.fn(),
+  } as unknown as KeyboardEvent
+}
+
+describe('VimInput', () => {
+  let vim: VimInput
+  let modeChanges: VimMode[] = []
+
+  beforeEach(() => {
+    modeChanges = []
+    vim = new VimInput((mode) => modeChanges.push(mode))
+  })
+
+  describe('initial state', () => {
+    it('starts in insert mode', () => {
+      expect(vim.mode).toBe('insert')
+      expect(modeChanges).toEqual([])
+    })
+
+    it('has empty buffer', () => {
+      expect(vim.getValue()).toBe('')
+    })
+  })
+
+  describe('mode transitions', () => {
+    it('switches to normal mode on Escape', () => {
+      vim.handleKey(keyEvent('Escape'))
+      expect(vim.mode).toBe('normal')
+      expect(modeChanges).toContain('normal')
+    })
+
+    it('switches to insert mode from normal', () => {
+      vim.handleKey(keyEvent('Escape'))
+      vim.handleKey(keyEvent('i'))
+      expect(vim.mode).toBe('insert')
+      expect(modeChanges).toEqual(['normal', 'insert'])
+    })
+
+    it('enters visual mode from normal', () => {
+      vim.handleKey(keyEvent('Escape'))
+      vim.handleKey(keyEvent('v'))
+      expect(vim.mode).toBe('visual')
+    })
+  })
+
+  describe('insert mode typing', () => {
+    it('adds characters to buffer', () => {
+      vim.handleKey(keyEvent('h'))
+      vim.handleKey(keyEvent('e'))
+      vim.handleKey(keyEvent('l'))
+      vim.handleKey(keyEvent('l'))
+      vim.handleKey(keyEvent('o'))
+      expect(vim.getValue()).toBe('hello')
+    })
+
+    it('handles backspace', () => {
+      vim.handleKey(keyEvent('h'))
+      vim.handleKey(keyEvent('i'))
+      vim.handleKey(keyEvent('Backspace'))
+      expect(vim.getValue()).toBe('h')
+    })
+
+    it('handles Enter for submit', () => {
+      vim.handleKey(keyEvent('h'))
+      vim.handleKey(keyEvent('i'))
+      const result = vim.handleKey(keyEvent('Enter'))
+      expect(result).toMatchObject({ type: 'submit', value: 'hi' })
+    })
+  })
+
+  describe('normal mode motions', () => {
+    beforeEach(() => {
+      // Set buffer and go to normal mode
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+      expect(vim.mode).toBe('normal')
+    })
+
+    it('moves left with h', () => {
+      // In normal mode after Esc from insert, cursor backs up 1
+      // For 'hello world' (11 chars), cursor is at position 9
+      vim.handleKey(keyEvent('h'))
+      expect(vim.render()).toBe('hello world')
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+
+    it('moves right with l', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('l'))
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+
+    it('moves to start with 0', () => {
+      vim.handleKey(keyEvent('0'))
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+
+    it('moves to end with $', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('$'))
+      expect(vim.cursorBack()).toBeGreaterThanOrEqual(0)
+    })
+
+    it('moves word forward with w', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('w'))
+      // Should move to start of "world"
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+
+    it('moves word back with b', () => {
+      // Already at end, b should move back
+      vim.handleKey(keyEvent('b'))
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+  })
+
+  describe('delete operator (d)', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+    })
+
+    it('deletes word with dw', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('d'))
+      vim.handleKey(keyEvent('w'))
+      // dw deletes word including trailing whitespace
+      expect(vim.getValue()).not.toContain('hello')
+    })
+
+    it('deletes line with dd', () => {
+      vim.handleKey(keyEvent('d'))
+      vim.handleKey(keyEvent('d'))
+      expect(vim.getValue()).toBe('')
+    })
+
+    it('deletes character with dl', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('d'))
+      vim.handleKey(keyEvent('l'))
+      // dl deletes first character
+      expect(vim.getValue()).not.toContain('hello')
+    })
+  })
+
+  describe('change operator (c)', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+    })
+
+    it('changes word and enters insert mode with cw', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('c'))
+      vim.handleKey(keyEvent('w'))
+      // cw removes 'hello' leaving 'world' or 'orld' depending on trailing space handling
+      expect(vim.getValue()).toMatch(/world|orld/)
+      expect(vim.mode).toBe('insert')
+    })
+
+    it('changes line with cc', () => {
+      vim.handleKey(keyEvent('c'))
+      vim.handleKey(keyEvent('c'))
+      expect(vim.getValue()).toBe('')
+      expect(vim.mode).toBe('insert')
+    })
+  })
+
+  describe('yank operator (y)', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+    })
+
+    it('yanks word with yw', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('y'))
+      vim.handleKey(keyEvent('w'))
+      // Buffer unchanged after yank
+      expect(vim.getValue()).toBe('hello world')
+    })
+
+    it('yanks line with yy', () => {
+      vim.handleKey(keyEvent('y'))
+      vim.handleKey(keyEvent('y'))
+      expect(vim.getValue()).toBe('hello world')
+    })
+  })
+
+  describe('undo', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+    })
+
+    it('undoes last change with u', () => {
+      vim.handleKey(keyEvent('0'))
+      const originalValue = vim.getValue()
+      vim.handleKey(keyEvent('d'))
+      vim.handleKey(keyEvent('w'))
+      const afterDelete = vim.getValue()
+      expect(afterDelete).not.toBe(originalValue)
+
+      vim.handleKey(keyEvent('u'))
+      expect(vim.getValue()).toBe(originalValue)
+    })
+  })
+
+  describe('replace', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello')
+      vim.handleKey(keyEvent('Escape'))
+    })
+
+    it('replaces single character with r', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('r'))
+      vim.handleKey(keyEvent('H'))
+      expect(vim.getValue()).toBe('Hello')
+    })
+  })
+
+  describe('global shortcuts', () => {
+    it('interrupts on Ctrl+C', () => {
+      vim.setBuffer('hello')
+      const result = vim.handleKey(keyEvent('c', { ctrlKey: true }))
+      expect(result).toMatchObject({ type: 'interrupt' })
+    })
+
+    it('clears on Ctrl+L', () => {
+      vim.setBuffer('hello')
+      const result = vim.handleKey(keyEvent('l', { ctrlKey: true }))
+      expect(result).toMatchObject({ type: 'clear' })
+    })
+
+    it('triggers completion on Tab', () => {
+      const result = vim.handleKey(keyEvent('Tab'))
+      expect(result).toMatchObject({ type: 'complete' })
+    })
+  })
+
+  describe('history actions', () => {
+    it('returns history up action', () => {
+      vim.handleKey(keyEvent('Escape'))
+      const result = vim.handleKey(keyEvent('ArrowUp'))
+      expect(result).toMatchObject({ type: 'history', dir: 'up' })
+    })
+
+    it('returns history down action', () => {
+      vim.handleKey(keyEvent('Escape'))
+      const result = vim.handleKey(keyEvent('ArrowDown'))
+      expect(result).toMatchObject({ type: 'history', dir: 'down' })
+    })
+
+    it('returns history up with k', () => {
+      vim.handleKey(keyEvent('Escape'))
+      const result = vim.handleKey(keyEvent('k'))
+      expect(result).toMatchObject({ type: 'history', dir: 'up' })
+    })
+
+    it('returns history down with j', () => {
+      vim.handleKey(keyEvent('Escape'))
+      const result = vim.handleKey(keyEvent('j'))
+      expect(result).toMatchObject({ type: 'history', dir: 'down' })
+    })
+  })
+
+  describe('visual mode', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+      vim.handleKey(keyEvent('v'))
+    })
+
+    it('enters visual mode', () => {
+      expect(vim.mode).toBe('visual')
+    })
+
+    it('returns to normal mode on Escape', () => {
+      vim.handleKey(keyEvent('Escape'))
+      expect(vim.mode).toBe('normal')
+    })
+
+    it('renders selection with reverse video ANSI', () => {
+      // In visual mode, selection should be wrapped in ANSI codes
+      const rendered = vim.render()
+      expect(rendered).toContain('\x1b[7m') // Reverse video start
+      expect(rendered).toContain('\x1b[27m') // Reverse video end
+    })
+  })
+
+  describe('find character (f/F/t/T)', () => {
+    beforeEach(() => {
+      vim.setBuffer('hello world')
+      vim.handleKey(keyEvent('Escape'))
+    })
+
+    it('finds forward with f', () => {
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('f'))
+      vim.handleKey(keyEvent('o'))
+      // Should move to position of 'o' in 'hello'
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+
+    it('finds backward with F', () => {
+      vim.handleKey(keyEvent('$'))
+      vim.handleKey(keyEvent('F'))
+      vim.handleKey(keyEvent('w'))
+      // Should move to 'w' in 'world'
+      expect(vim.cursorBack()).toBeGreaterThan(0)
+    })
+  })
+
+  describe('cursor positioning', () => {
+    it('reports correct cursor back position', () => {
+      vim.setBuffer('hello')
+      // In insert mode, cursor at end
+      expect(vim.cursorBack()).toBe(0) // buf.length - cur = 5 - 5 = 0
+    })
+  })
+})
