@@ -132,9 +132,10 @@ export const commands: Record<string, Command> = {
     run: () => [],
   },
 
-  // cube: temporarily disabled while we revisit the rotation math.
-  // Keeping the entry out of the registry hides it from help/autocomplete;
-  // desktop.ts intercepts any 'cube' invocation and shows a toast.
+  cube: {
+    description: 'Rubik\'s cube — click stickers to turn, or use U D L R F B keys',
+    run: () => [],
+  },
 
   snake: {
     description: 'Snake — WASD / arrows; rounded cells; Space restarts after game over',
