@@ -2456,7 +2456,10 @@ html.retro-fx .xterm-screen {
   }
 
   /* Photo: full-width on top (row 1) - reset sticky positioning from wide layout */
+  /* Use both direct child (for when panel has display: contents) and nested selectors */
+  .resume-layout.resume-layout--with-skills > .resume-panel-photo-frame,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame,
+  .resume-layout.resume-layout--with-skills > .resume-photo,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-photo {
     grid-column: 1;
     grid-row: 1;
@@ -2496,7 +2499,9 @@ html.retro-fx .xterm-screen {
   }
 
   /* Skills: full-width at bottom (row 3) */
-  .resume-layout.resume-layout--with-skills:has(.resume-body-block) .resume-skills-body {
+  /* Use both direct child and nested selectors for display: contents compatibility */
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-panel > .resume-skills-body {
     grid-column: 1;
     grid-row: 3;
   }
@@ -2509,7 +2514,8 @@ html.retro-fx .xterm-screen {
     overflow-x: hidden;
   }
 
-  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) .resume-skills-body {
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-panel > .resume-skills-body {
     grid-column: 1;
     grid-row: 3;
   }
@@ -2607,7 +2613,10 @@ html.retro-fx .xterm-screen {
   }
 
   /* Photo: full-width on top (row 1) */
+  /* Use both direct child (for when panel has display: contents) and nested selectors */
+  .resume-layout.resume-layout--with-skills > .resume-panel-photo-frame,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame,
+  .resume-layout.resume-layout--with-skills > .resume-photo,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-photo {
     grid-column: 1;
     grid-row: 1;
@@ -2655,8 +2664,11 @@ html.retro-fx .xterm-screen {
   }
 
   /* Skills: full-width at bottom (row 3) */
-  .resume-layout.resume-layout--with-skills:has(.resume-body-block) .resume-skills-body,
-  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) .resume-skills-body {
+  /* Use both direct child and nested selectors for display: contents compatibility */
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-panel > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-panel > .resume-skills-body {
     grid-column: 1;
     grid-row: 3;
   }
