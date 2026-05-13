@@ -1,16 +1,165 @@
 # Architecture
 
-Personal portfolio site built as a fake desktop environment. TypeScript throughout, Vite for bundling, no framework.
+Personal portfolio site built as an in-browser fake desktop environment. TypeScript throughout, Vite for bundling, no framework. All state persists to `localStorage`.
 
-## Entry points
+## Entry Points
 
-**`index.html`** — The full desktop shell. Contains static markup for the CRT monitor frame, YASB status bar, launcher overlay, tiling pane area, and the floating dock. No dynamic content — everything is mounted by JS after load.
+| File | Purpose |
+|------|---------|
+| `index.html` | Desktop shell — CRT monitor frame, YASB status bar, launcher overlay, tiling panes, floating dock |
+| `static/index.html` | Brochure page — same portfolio content, no OS chrome. Mobile auto-redirects here (viewport ≤ 768px) |
+| `src/main.ts` | Vite entry: imports CSS, calls `bootstrapShellUi()` |
+| `src/bootstrap-shell.ts` | Startup sequence: theme → sound → Desktop → TerminalApp → Matrix rain. Order matters |
+| `src/static/main.ts` | Brochure entry: mounts banner, hero, sections, scroll-spy, animations |
 
-**`static/index.html`** — A second Vite entry that compiles to `dist/static/`. Same portfolio copy, no fake OS chrome. Mobile browsers auto-redirect here (viewport ≤ 768px). Good for anyone who just wants the resume.
+## Module Layers
 
-**`src/main.ts`** — Imports CSS and calls `bootstrapShellUi()`. That's it.
+### Core Shell
+| Module | Responsibility |
+|--------|----------------|
+| `desktop.ts` | Tiling window manager, dock, launcher overlay, focus management, Ctrl+chord keyboard handling |
+| `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
+| `bootstrap-shell.ts` | Boot sequence orchestration |
 
-**`src/bootstrap-shell.ts`** — The actual startup sequence. Order matters: theme and sound state restore from `localStorage` first, then `Desktop` is constructed before `TerminalApp` (so `fit()` closes over the real tiles), then Matrix rain defers via `requestIdleCallback`. If something fires at the wrong time, look here first.
+### Window Tiles (`*-window.ts`)
+Each tile is self-contained with close/minimize/maximize/focus callbacks. All lazy-loaded except `appwindow.ts`.
+
+| Module | Type | Notes |
+|--------|------|-------|
+| `appwindow.ts` | Content | Read-only portfolio tiles (resume, projects, contact, about) |
+| `editor-window.ts` | Editor | Vim-mode text editor over VFS |
+| `file-explorer-window.ts` | Explorer | File browser with cut/copy/paste/delete |
+| `browser-window.ts` | Browser | Iframe embed with URL bar, bookmarks |
+| `paint-window.ts` | Canvas | Pixel canvas with brush, eraser, fill |
+| `pong-window.ts` | Game | Pong vs CPU or P2 |
+| `snake-window.ts` | Game | Snake with powerups |
+| `rubik-window.ts` | Game | **Disabled** — rotation math needs fixing |
+
+### Shared Utilities
+| Module | Purpose |
+|--------|---------|
+| `storage.ts` | **NEW** — Safe localStorage wrapper with JSON helpers, error handling for private mode |
+| `window-chrome.ts` | **NEW** — Shared window titlebar factory eliminates duplication across tiles |
+| `splitter.ts` | Drag-to-resize handle for horizontal/vertical splits |
+| `theme.ts` / `theme-control.ts` / `theme-packs.ts` | Theme system — CSS custom properties, xterm palettes, matrix rain colors |
+| `ansi.ts` | ANSI-to-HTML conversion for rendering terminal output |
+| `matrix-bg.ts` | Canvas matrix rain animation with visibility pause optimization |
+| `retro-fx.ts` | CRT scanlines and vignette toggle |
+| `vim.ts` | Vim-style line editor — insert/normal/visual modes, operators, motions |
+
+### Fake OS Layer (`os-*.ts`)
+| Module | Purpose |
+|--------|---------|
+| `os-fs.ts` | Virtual filesystem backed by `localStorage`. Debounced saves (150ms) |
+| `os-sound.ts` | Web Audio API for UI sound effects |
+| `os-systray.ts` | Toast notifications, settings panel |
+| `os-registry.ts` | Shared ref for shell commands → Desktop (prevents circular imports) |
+| `os-apt.ts` | `apt install` joke command |
+| `os-packages.ts` | `cowsay` package simulation |
+
+### Commands (`commands/`)
+| File | Purpose |
+|------|---------|
+| `index.ts` | Keyword-to-handler registry |
+| `help-output.ts` | Help screen rendering |
+| `cli-text-utils.ts` | Fake Unix commands (`cal`, `uptime`, `wc`, etc.) |
+| `cli-fortunes.ts` | Echo flavor text |
+| `types.ts` | `Command` interface |
+
+### Content (`content/`)
+| File | Purpose |
+|------|---------|
+| `copy/resume-copy.ts` | Resume text, skill matrix data |
+| `copy/about-copy.ts` | `whoami` output, neofetch column |
+| `copy/contact-copy.ts` | Contact tile content |
+| `copy/projects-catalog.ts` | Project listings |
+| `portfolio.ts` | Re-exports for backward compatibility |
+
+### Static Site (`src/static/`)
+| File | Purpose |
+|------|---------|
+| `main.ts` | Brochure page mount — progress bar, scroll-spy, typewriter, animated counters |
+| `static-data.ts` | Single source of truth for profile, contact, skills, experience |
+| `static.css` | Standalone stylesheet using `--plain-*` tokens (not `--th-*`) |
+
+## Testing
+
+Tests are in `*.test.ts` files alongside the modules they test.
+
+| Test File | Coverage |
+|-----------|----------|
+| `os-fs.test.ts` | 57 tests — virtual filesystem operations |
+| `storage.test.ts` | 20 tests — localStorage wrapper, JSON serialization |
+| `vim.test.ts` | 36 tests — vim input: modes, motions, operators, undo |
+| `window-chrome.test.ts` | 8 tests — window chrome factory |
+| `browser-url.test.ts` | 5 tests — URL normalization |
+| `cli-text-utils.test.ts` | 21 tests — `cal`, `wc`, human-readable bytes |
+| `ansi.test.ts` | 24 tests — ANSI-to-HTML conversion |
+
+Run tests: `npm test`
+
+## Naming Conventions
+
+- **Storage/Init**: `initXFromStorage` — reads and applies persisted state once at boot
+- **Window Contract**: `openWindow` / `WindowSpec` — contract between terminal and desktop tiles
+- **Tile Suffix**: `*-window.ts` — self-contained tile. If it doesn't end in `-window.ts`, it isn't a tile.
+- **OS Prefix**: `os-*.ts` — fake OS layer modules
+- **Verb-First**: `runShellHelp`, `renderKeybindsLegend`, `playOsSound`, `pushToast`
+- **Private Methods**: `handleKey()`, `syncDom()` — private methods don't use `_` prefix (class-based privacy)
+
+## Key Patterns
+
+### Storage Utility (storage.ts)
+Replace all direct `localStorage` access with:
+```typescript
+import { storageGet, storageSet, storageGetJson, storageSetJson, storageGetBool } from './storage'
+
+storageSet('key', 'value')           // Returns boolean success
+storageGetJson<Config>('key', {})    // Returns fallback on error
+storageGetBool('key', true)          // Parses '1'/'0' strings
+```
+
+### Window Chrome (window-chrome.ts)
+Replace duplicated titlebar HTML with:
+```typescript
+import { createWindowChrome } from './window-chrome'
+
+const { el, titlebar, titleEl, btnClose, btnMin, btnMax } = createWindowChrome({
+  title: 'Window Title',
+  onClose: () => {},
+  onMinimize: () => {},
+  onMaximize: () => {},
+  onFocus: () => {},
+})
+```
+
+### Theme System
+Themes are self-contained `ThemePack` objects in `theme-packs.ts`. Adding a theme requires no other file changes — the picker and `theme` command auto-detect.
+
+## Build & Deploy
+
+```bash
+npm install
+npm run dev        # Vite dev server — desktop at /, brochure at /static/
+npm run build      # tsc && vite build → dist/ and dist/static/
+npm test           # Vitest
+npm run preview    # Preview dist/ locally
+```
+
+Deploy publishes `dist/` to GitHub Pages via Actions (`.github/workflows/deploy-pages.yml`).
+
+## State Persistence
+
+All state stored in `localStorage`:
+- `portfolio-vfs-v3-namefailed-home` — VFS tree and cwd
+- `mrgrey-theme` — selected theme id
+- `mrgrey-os-sound` / `mrgrey-os-volume` — sound settings
+- `mrgrey-retro-fx` — CRT toggle
+- `mrgrey-matrix-bg` — matrix rain toggle
+- `mrgrey-browser-iframe-tip-dismiss` — browser tip dismissal
+- `portfolio-fe-prefs-v1` — file explorer preferences
+
+No backend required.
 
 ## Layers
 
