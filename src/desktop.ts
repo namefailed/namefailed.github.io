@@ -1146,8 +1146,12 @@ export class Desktop {
 
   private focusTaskbarIndex(index: number): void {
     const slots = this.allDockSlots()
+    console.log('[dock] focusTaskbarIndex:', index, 'slots:', slots.map(s => s.kind === 'terminal' ? 'terminal' : s.cmd))
     const slot = slots[index]
-    if (!slot) return
+    if (!slot) {
+      console.log('[dock] no slot at index', index)
+      return
+    }
     if (slot.kind === 'terminal') {
       this.dockActivateTerminal()
       return
@@ -1281,6 +1285,7 @@ export class Desktop {
     // Ctrl+1..9 → taskbar slot (launcher order, left → right)
     const n = parseInt(key, 10)
     if (n >= 1 && n <= 9) {
+      console.log('[dock] Ctrl+' + n + ' pressed, focusing index', n - 1)
       this.focusTaskbarIndex(n - 1)
       return
     }
