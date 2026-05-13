@@ -22,6 +22,8 @@
   --plain-avatar:        96px;
   --plain-radius-card:   16px;
   --plain-ease:          cubic-bezier(0.22, 1, 0.36, 1);
+  --plain-ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --plain-ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ── Reset ───────────────────────────────────────────────────────────────── */
@@ -151,12 +153,23 @@ a:hover { color: var(--plain-accent); }
   letter-spacing: 0.05em;
   text-decoration: none;
   color: var(--plain-accent-strong);
-  transition: color 0.15s ease, letter-spacing 0.2s var(--plain-ease);
+  transition:
+    color 0.2s var(--plain-ease),
+    letter-spacing 0.25s var(--plain-ease),
+    transform 0.15s var(--plain-ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .plain-back:hover {
   color: var(--plain-accent);
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
+  transform: translateX(-2px);
+}
+
+.plain-back:active {
+  transform: translateX(-1px) scale(0.98);
 }
 
 .plain-banner-meta {
@@ -206,7 +219,8 @@ a:hover { color: var(--plain-accent); }
     var(--plain-teal)        65%,
     var(--plain-accent)     100%
   );
-  animation: plain-spin 7s linear infinite;
+  animation: plain-spin 12s linear infinite;
+  will-change: transform;
   opacity: 0.8;
 }
 
@@ -257,7 +271,8 @@ a:hover { color: var(--plain-accent); }
 }
 
 @keyframes plain-spin {
-  to { transform: rotate(360deg); }
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ── Name ────────────────────────────────────────────────────────────────── */
@@ -278,12 +293,14 @@ a:hover { color: var(--plain-accent); }
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: plain-shimmer 6s linear infinite;
+  animation: plain-shimmer 8s ease-in-out infinite;
+  will-change: background-position;
 }
 
 @keyframes plain-shimmer {
-  from { background-position: 0% center; }
-  to   { background-position: 200% center; }
+  0%   { background-position: 0% center; }
+  50%  { background-position: 200% center; }
+  100% { background-position: 0% center; }
 }
 
 /* ── Headline ────────────────────────────────────────────────────────────── */
@@ -325,8 +342,8 @@ a:hover { color: var(--plain-accent); }
 }
 
 @keyframes plain-pulse-dot {
-  0%, 100% { opacity: 0.75; transform: scale(1); }
-  50%       { opacity: 1;    transform: scale(1.4); }
+  0%, 100% { opacity: 0.6; transform: scale(1); box-shadow: 0 0 0 0 rgba(166, 227, 161, 0.4); }
+  50%       { opacity: 1; transform: scale(1.35); box-shadow: 0 0 8px 2px rgba(166, 227, 161, 0.2); }
 }
 
 .plain-status--muted {
@@ -406,9 +423,15 @@ a:hover { color: var(--plain-accent); }
 
 .plain-skill-chip:hover {
   color: var(--plain-accent);
-  background: rgba(245, 194, 231, 0.08);
-  border-color: rgba(245, 194, 231, 0.38);
-  transform: translateY(-2px);
+  background: rgba(245, 194, 231, 0.1);
+  border-color: rgba(245, 194, 231, 0.45);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(245, 194, 231, 0.12);
+}
+
+.plain-skill-chip:active {
+  transform: translateY(-1px) scale(0.98);
+  transition-duration: 0.08s;
 }
 
 /* ── Experience cards ────────────────────────────────────────────────────── */
@@ -436,13 +459,19 @@ a:hover { color: var(--plain-accent); }
 }
 
 .plain-exp-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px) scale(1.005);
   background: var(--plain-surface-hover);
   border-color: var(--plain-edge-hover);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 0 0 1px rgba(245, 194, 231, 0.1),
-    0 28px 56px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(245, 194, 231, 0.12),
+    0 0 24px rgba(245, 194, 231, 0.08),
+    0 32px 64px rgba(0, 0, 0, 0.35);
+}
+
+.plain-exp-card:active {
+  transform: translateY(-2px) scale(0.998);
+  transition-duration: 0.1s;
 }
 
 .plain-exp-header {
@@ -541,13 +570,19 @@ a:hover { color: var(--plain-accent); }
 }
 
 .plain-project:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px) scale(1.005);
   background: var(--plain-surface-hover);
-  border-color: rgba(137, 180, 250, 0.28);
+  border-color: rgba(137, 180, 250, 0.35);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 0 0 1px rgba(137, 180, 250, 0.1),
-    0 28px 56px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(137, 180, 250, 0.12),
+    0 0 24px rgba(137, 180, 250, 0.08),
+    0 32px 64px rgba(0, 0, 0, 0.35);
+}
+
+.plain-project:active {
+  transform: translateY(-2px) scale(0.998);
+  transition-duration: 0.1s;
 }
 
 /* ── Project thumbnail ───────────────────────────────────────────────────── */
@@ -567,13 +602,22 @@ a:hover { color: var(--plain-accent); }
   aspect-ratio: 16 / 9;
   object-fit: cover;
   object-position: center top;
-  transition: transform 0.32s var(--plain-ease), filter 0.32s ease;
+  transition: transform 0.35s var(--plain-ease), filter 0.35s ease;
   will-change: transform;
 }
 
+/* Subtle zoom on the thumbnail link itself */
+.plain-project-thumb-link {
+  transition: transform 0.3s var(--plain-ease);
+}
+
+.plain-project:hover .plain-project-thumb-link {
+  transform: scale(1.01);
+}
+
 .plain-project:hover .plain-project-thumb {
-  transform: scale(1.025);
-  filter: brightness(1.08);
+  transform: scale(1.03);
+  filter: brightness(1.1) saturate(1.05);
 }
 
 /* Body padding when a thumbnail sits above */
@@ -626,14 +670,26 @@ a:hover { color: var(--plain-accent); }
 }
 
 .plain-chip:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
+  filter: brightness(1.2);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(137, 180, 250, 0.2);
+}
+
+.plain-chip:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.08s;
 }
 
 .plain-chip--ghost {
   border-color: var(--plain-edge);
   color: var(--plain-muted);
   background: transparent;
+}
+
+.plain-chip--ghost:hover {
+  border-color: rgba(245, 194, 231, 0.45);
+  color: var(--plain-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Contact block ───────────────────────────────────────────────────────── */
@@ -688,16 +744,18 @@ a:hover { color: var(--plain-accent); }
 
 [data-anim] {
   opacity: 0;
-  transform: translateY(22px);
+  transform: translateY(24px) scale(0.98);
   transition:
-    opacity 0.55s var(--plain-ease),
-    transform 0.55s var(--plain-ease);
+    opacity 0.6s var(--plain-ease-out),
+    transform 0.6s var(--plain-ease-out);
+  will-change: transform, opacity;
 }
 
 [data-anim].is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
+
 
 /* ── Reduced-motion overrides ────────────────────────────────────────────── */
 
@@ -762,19 +820,20 @@ a:hover { color: var(--plain-accent); }
   position: fixed;
   top: 0;
   left: 0;
-  height: 2.5px;
+  height: 3px;
   width: 0%;
   background: linear-gradient(
     90deg,
     var(--plain-accent)        0%,
-    var(--plain-accent-strong) 35%,
-    var(--plain-link)          65%,
+    var(--plain-accent-strong) 30%,
+    var(--plain-link)          60%,
     var(--plain-teal)          100%
   );
   z-index: 200;
   border-radius: 0 2px 2px 0;
-  transition: width 0.12s linear;
+  transition: width 0.08s linear;
   pointer-events: none;
+  box-shadow: 0 0 10px rgba(245, 194, 231, 0.3);
 }
 
 /* ── Stats strip ─────────────────────────────────────────────────────────── */
@@ -824,6 +883,11 @@ a:hover { color: var(--plain-accent); }
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  transition: transform 0.2s var(--plain-ease);
+}
+
+.plain-stat:hover .plain-stat-num {
+  transform: scale(1.05);
 }
 
 .plain-stat-label {
@@ -865,9 +929,17 @@ a:hover { color: var(--plain-accent); }
   margin-top: 1.75rem;
   font-size: 1.1rem;
   color: var(--plain-dim);
-  animation: plain-bounce 2.4s ease-in-out infinite;
-  transition: opacity 0.45s ease;
+  animation: plain-bounce 2s var(--plain-ease) infinite;
+  transition:
+    opacity 0.45s var(--plain-ease),
+    transform 0.3s var(--plain-ease);
   user-select: none;
+  cursor: pointer;
+}
+
+.plain-scroll-cue:hover {
+  color: var(--plain-accent);
+  transform: scale(1.1);
 }
 
 .plain-scroll-cue--gone {
@@ -896,9 +968,10 @@ a:hover { color: var(--plain-accent); }
 .plain-exp-card[data-type='freelance']:hover {
   box-shadow:
     inset 3px 0 0 var(--plain-accent),
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 0 0 1px rgba(245, 194, 231, 0.12),
-    0 28px 56px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(245, 194, 231, 0.15),
+    0 0 24px rgba(245, 194, 231, 0.1),
+    0 32px 64px rgba(0, 0, 0, 0.35);
 }
 
 .plain-exp-card[data-type='contract'] {
@@ -910,9 +983,10 @@ a:hover { color: var(--plain-accent); }
 .plain-exp-card[data-type='contract']:hover {
   box-shadow:
     inset 3px 0 0 var(--plain-teal),
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 0 0 1px rgba(148, 226, 213, 0.12),
-    0 28px 56px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(148, 226, 213, 0.15),
+    0 0 24px rgba(148, 226, 213, 0.1),
+    0 32px 64px rgba(0, 0, 0, 0.35);
 }
 
 .plain-exp-card[data-type='volunteer'] {
@@ -924,9 +998,10 @@ a:hover { color: var(--plain-accent); }
 .plain-exp-card[data-type='volunteer']:hover {
   box-shadow:
     inset 3px 0 0 var(--plain-yellow),
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 0 0 1px rgba(249, 226, 175, 0.12),
-    0 28px 56px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(249, 226, 175, 0.15),
+    0 0 24px rgba(249, 226, 175, 0.1),
+    0 32px 64px rgba(0, 0, 0, 0.35);
 }
 
 .plain-exp-card[data-type='fulltime'] {
@@ -938,9 +1013,10 @@ a:hover { color: var(--plain-accent); }
 .plain-exp-card[data-type='fulltime']:hover {
   box-shadow:
     inset 3px 0 0 var(--plain-link),
-    0 1px 0 rgba(255, 255, 255, 0.07) inset,
-    0 0 0 1px rgba(137, 180, 250, 0.12),
-    0 28px 56px rgba(0, 0, 0, 0.28);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(137, 180, 250, 0.15),
+    0 0 24px rgba(137, 180, 250, 0.1),
+    0 32px 64px rgba(0, 0, 0, 0.35);
 }
 
 /* Featured badge (Vertalo) */
@@ -982,9 +1058,9 @@ a:hover { color: var(--plain-accent); }
   background: rgba(255, 255, 255, 0.12);
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   transition:
-    background 0.2s ease,
-    transform  0.2s var(--plain-ease),
-    box-shadow 0.2s ease;
+    background 0.25s var(--plain-ease),
+    transform  0.25s var(--plain-ease-spring),
+    box-shadow 0.25s var(--plain-ease);
   text-decoration: none;
   outline-offset: 4px;
 }
@@ -1018,16 +1094,28 @@ a:hover { color: var(--plain-accent); }
 }
 
 .plain-nav-dot:hover {
-  background: rgba(245, 194, 231, 0.5);
+  background: rgba(245, 194, 231, 0.6);
   border-color: var(--plain-accent);
-  transform: scale(1.4);
+  transform: scale(1.5);
+  box-shadow: 0 0 12px rgba(245, 194, 231, 0.3);
+}
+
+.plain-nav-dot:focus-visible {
+  outline: 2px solid var(--plain-accent);
+  outline-offset: 4px;
+  background: rgba(245, 194, 231, 0.4);
 }
 
 .plain-nav-dot--active {
   background: var(--plain-accent);
   border-color: var(--plain-accent);
-  transform: scale(1.3);
-  box-shadow: 0 0 10px rgba(245, 194, 231, 0.55);
+  transform: scale(1.35);
+  box-shadow: 0 0 14px rgba(245, 194, 231, 0.65);
+}
+
+.plain-nav-dot--active:hover {
+  transform: scale(1.5);
+  box-shadow: 0 0 18px rgba(245, 194, 231, 0.75);
 }
 
 /* Hide on very narrow screens — this page is already phone-first */
@@ -1038,13 +1126,20 @@ a:hover { color: var(--plain-accent); }
 /* ── Reduced-motion additions ─────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .plain-progress-bar { transition: none; }
+  .plain-progress-bar { transition: none; box-shadow: none; }
   .plain-cursor        { animation: none; opacity: 1; }
   .plain-scroll-cue    { animation: none; }
-  .plain-stat-num      { transition: none; }
+  .plain-stat-num      { transition: none; transform: none !important; }
   .plain-nav-dot,
-  .plain-nav-dot--active { transform: none !important; }
+  .plain-nav-dot--active { transform: none !important; box-shadow: none !important; }
   /* Suppress thumbnail scale + brightness on hover */
   .plain-project-thumb { transition: none; will-change: auto; }
   .plain-project:hover .plain-project-thumb { transform: none; filter: none; }
+  /* Remove entrance animations */
+  [data-anim] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
 }
