@@ -2419,20 +2419,19 @@ html.retro-fx .xterm-screen {
   }
 }
 
-/* With skills · narrow: photo | narrative column (lead + body stacked); skills full-width row below.
-   Do NOT use display:contents on main-col — that put body on row 2 while row 1 height followed the
-   photo, leaving a huge gap between contact lines and PROFILE. */
+/* With skills · narrow: photo on top (full-width), narrative below, skills at bottom (full-width).
+   This prevents the gap that appeared when photo was in a side column with skills below. */
 @container resume (max-width: 679px) {
   .resume-layout.resume-layout--with-skills {
-    grid-template-columns: clamp(72px, 24%, 112px) minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    column-gap: var(--ui-space-3);
-    row-gap: var(--ui-space-2);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    column-gap: 0;
+    row-gap: var(--ui-space-3);
     align-items: start;
     justify-items: stretch;
   }
 
-  /* No `.resume-photo` in the tree — full-width narrative + skills below (no empty photo gutter) */
+  /* No `.resume-photo` in the tree — full-width narrative + skills below */
   .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2456,22 +2455,24 @@ html.retro-fx .xterm-screen {
     box-shadow: none;
   }
 
+  /* Photo: full-width on top (row 1) */
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-photo {
     grid-column: 1;
     grid-row: 1;
-    justify-self: start;
+    justify-self: center;
     align-self: start;
-    max-width: 112px;
+    max-width: 160px;
     width: 100%;
     box-shadow:
       0 var(--ui-space-1) var(--ui-space-3) rgba(0, 0, 0, 0.32),
       0 0 0 1px rgba(0, 0, 0, 0.2);
   }
 
-  /* Lead + body share one grid cell beside the photo — PROFILE follows contact immediately */
+  /* Narrative: full-width below photo (row 2) */
   .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1;
+    grid-row: 2;
     min-width: 0;
     max-width: 100%;
     display: flex;
@@ -2492,22 +2493,23 @@ html.retro-fx .xterm-screen {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
+  /* Skills: full-width at bottom (row 3) */
   .resume-layout.resume-layout--with-skills:has(.resume-body-block) .resume-skills-body {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: 1;
+    grid-row: 3;
   }
 
-  /* Legacy flat narrative (no lead/body): entire column beside photo */
+  /* Legacy flat narrative (no lead/body): full-width below photo */
   .resume-layout.resume-layout--with-skills > .resume-main-col:not(:has(.resume-body-block)) {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1;
+    grid-row: 2;
     display: block;
     overflow-x: hidden;
   }
 
   .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) .resume-skills-body {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: 1;
+    grid-row: 3;
   }
 
   .resume-layout.resume-layout--with-skills > .resume-main-col .win-line {
