@@ -2455,7 +2455,7 @@ html.retro-fx .xterm-screen {
     box-shadow: none;
   }
 
-  /* Photo: full-width on top (row 1) */
+  /* Photo: full-width on top (row 1) - reset sticky positioning from wide layout */
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-photo {
     grid-column: 1;
@@ -2464,6 +2464,8 @@ html.retro-fx .xterm-screen {
     align-self: start;
     max-width: 160px;
     width: 100%;
+    position: static; /* Reset sticky from wide layout */
+    margin: 0 0 var(--ui-space-2) 0;
     box-shadow:
       0 var(--ui-space-1) var(--ui-space-3) rgba(0, 0, 0, 0.32),
       0 0 0 1px rgba(0, 0, 0, 0.2);
@@ -2569,15 +2571,14 @@ html.retro-fx .xterm-screen {
 
 /*
  * Fallback when container queries unavailable — mirror @container resume rules above.
- * Also treat a *short viewport* like narrow width: side-by-side narrative + skills collapses
- * to stacked rows so PROFILE uses full width and the skills rail sits below (no “half-width” story).
+ * Photo on top, narrative below, skills at bottom (single column stack).
  */
 @media (max-width: 679px), (max-height: 720px) {
   .resume-layout.resume-layout--with-skills {
-    grid-template-columns: clamp(72px, 24vw, 112px) minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    column-gap: var(--ui-space-3);
-    row-gap: var(--ui-space-2);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    column-gap: 0;
+    row-gap: var(--ui-space-3);
     align-items: start;
     justify-items: stretch;
   }
@@ -2605,21 +2606,26 @@ html.retro-fx .xterm-screen {
     box-shadow: none;
   }
 
+  /* Photo: full-width on top (row 1) */
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-panel-photo-frame,
   .resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-photo {
     grid-column: 1;
     grid-row: 1;
-    justify-self: start;
+    justify-self: center;
     align-self: start;
-    max-width: 112px;
+    max-width: 160px;
     width: 100%;
+    position: static;
+    margin: 0 0 var(--ui-space-2) 0;
     box-shadow:
       0 var(--ui-space-1) var(--ui-space-3) rgba(0, 0, 0, 0.32),
       0 0 0 1px rgba(0, 0, 0, 0.2);
   }
 
+  /* Narrative: full-width below photo (row 2) */
   .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1;
+    grid-row: 2;
     min-width: 0;
     max-width: 100%;
     display: flex;
@@ -2640,21 +2646,19 @@ html.retro-fx .xterm-screen {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .resume-layout.resume-layout--with-skills:has(.resume-body-block) .resume-skills-body {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
+  /* Legacy flat narrative (no lead/body): full-width below photo */
   .resume-layout.resume-layout--with-skills > .resume-main-col:not(:has(.resume-body-block)) {
-    grid-column: 2;
-    grid-row: 1;
+    grid-column: 1;
+    grid-row: 2;
     display: block;
     overflow-x: hidden;
   }
 
+  /* Skills: full-width at bottom (row 3) */
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) .resume-skills-body,
   .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) .resume-skills-body {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: 1;
+    grid-row: 3;
   }
 
   .resume-layout.resume-layout--with-skills > .resume-main-col .win-line {
