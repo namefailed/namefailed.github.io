@@ -2338,30 +2338,6 @@ html.retro-fx .xterm-screen {
   flex-direction: column;
 }
 
-.resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-photo {
-  align-self: center;
-}
-
-/* Portrait photo at the top of the resume skills panel */
-.resume-panel-photo-frame {
-  margin: 0 0 0.75rem;
-  padding: 0;
-  border: none;
-  line-height: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.resume-panel-photo {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  object-position: center top;
-  border-radius: 6px;
-}
-
 .resume-text-col {
   min-width: 0;
   max-width: min(74ch, 100%);

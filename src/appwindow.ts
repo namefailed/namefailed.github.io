@@ -265,12 +265,6 @@ export class AppWindow {
       aside.className = 'resume-skills-panel'
       aside.setAttribute('aria-label', 'Skills matrix')
 
-      // Photo temporarily removed due to layout issues
-      // const photoFrame = document.createElement('figure')
-      // photoFrame.className = 'resume-panel-photo-frame'
-      // mountPortfolioPortrait(photoFrame, 'resume-panel-photo')
-      // aside.appendChild(photoFrame)
-
       const skillsInner = document.createElement('div')
       skillsInner.className = 'resume-skills-body'
 
