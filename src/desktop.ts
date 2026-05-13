@@ -11,7 +11,6 @@ import type { EditorWindow } from './editor-window'
 import type { FileExplorerWindow } from './file-explorer-window'
 import type { PaintWindow } from './paint-window'
 import type { PongWindow } from './pong-window'
-import type { RubikWindow } from './rubik-window'
 import type { SnakeWindow } from './snake-window'
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { FS_HOME, vfsNormalize } from './os-fs'
@@ -86,7 +85,6 @@ type TiledWin =
   | FileExplorerWindow
   | BrowserWindow
   | PaintWindow
-  | RubikWindow
   | SnakeWindow
   | PongWindow
 
@@ -377,8 +375,7 @@ export class Desktop {
     const miniGameOpen = (
       spec.command === 'paint' ||
       spec.command === 'snake' ||
-      spec.command === 'pong' ||
-      spec.command === 'cube'
+      spec.command === 'pong'
     )
     if (miniGameOpen) {
       const cmd = spec.command
@@ -422,30 +419,6 @@ export class Desktop {
         this.attachVerticalSplitters()
         this.focusWindow(sw)
         return
-      }
-      if (cmd === 'cube') {
-        try {
-          console.log('[desktop] Loading cube module...')
-          const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
-          console.log('[desktop] Cube module loaded, creating window...')
-          let rw!: RubikWindow
-          rw = new RubikWindowCtor({
-            onClose: () => this.closeWindow(rw),
-            onMinimize: () => this.minimizeWindow(rw),
-            onMaximize: () => this.toggleMaximizeContent(rw),
-            onFocus: () => this.focusWindow(rw),
-          })
-          console.log('[desktop] Cube window created, appending to pane...')
-          this.appendToRightPane(rw.el)
-          this.windows.push(rw)
-          this.attachVerticalSplitters()
-          this.focusWindow(rw)
-          console.log('[desktop] Cube window fully initialized')
-          return
-        } catch (err) {
-          console.error('[desktop] Cube launch failed:', err)
-          throw err
-        }
       }
       const { PongWindow: PongWindowCtor } = await import('./pong-window')
       let pong!: PongWindow
@@ -625,8 +598,7 @@ export class Desktop {
       case 'paint':
       case 'snake':
       case 'pong':
-      case 'cube':
-        ;(win as PaintWindow | SnakeWindow | PongWindow | RubikWindow).focusCanvas()
+        ;(win as PaintWindow | SnakeWindow | PongWindow).focusCanvas()
         break
       default:
         break
@@ -1144,7 +1116,7 @@ export class Desktop {
       })
       return
     }
-    if (cmd === 'paint' || cmd === 'snake' || cmd === 'pong' || cmd === 'cube') {
+    if (cmd === 'paint' || cmd === 'snake' || cmd === 'pong') {
       void this.openWindow({ command: cmd, title: cmd, content: [] })
       return
     }

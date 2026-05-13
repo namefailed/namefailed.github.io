@@ -132,10 +132,10 @@ export const commands: Record<string, Command> = {
     run: () => [],
   },
 
-  cube: {
-    description: 'Rubik\'s cube — click stickers to turn, or use U D L R F B keys',
-    run: () => [],
-  },
+  // cube: {
+  //   description: 'Rubik\'s cube — click stickers to turn, or use U D L R F B keys',
+  //   run: () => [],
+  // },
 
   snake: {
     description: 'Snake — WASD / arrows; rounded cells; Space restarts after game over',

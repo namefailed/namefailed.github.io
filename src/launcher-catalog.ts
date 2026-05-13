@@ -31,7 +31,7 @@ export const TILED_WINDOW_COMMANDS = new Set([
   'explorer',
   'browse',
   'paint',
-  'cube',
+  // 'cube',  // temporarily disabled — sticker rotation still broken
   'snake',
   'pong',
 ])
@@ -55,7 +55,7 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   { kind: 'app', cmd: 'whoami', label: 'About me', glyph: '☺' },
   { kind: 'app', cmd: 'links', label: 'Contact', glyph: '✉' },
   { kind: 'app', cmd: 'paint', label: 'Paint', glyph: '◐' },
-  { kind: 'app', cmd: 'cube', label: 'Cube', glyph: '▦' },
+  // { kind: 'app', cmd: 'cube', label: 'Cube', glyph: '▦' },
   { kind: 'app', cmd: 'snake', label: 'Snake', glyph: '≈' },
   { kind: 'app', cmd: 'pong', label: 'Pong', glyph: '◎' },
 ]
