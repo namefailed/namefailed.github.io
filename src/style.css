@@ -2369,6 +2369,13 @@ html.retro-fx .xterm-screen {
   padding-bottom: var(--ui-space-3);
 }
 
+/* Narrow resume: reduce side padding to prevent blank space */
+@container resume (max-width: 679px) {
+  .app-window[data-app='resume'] .win-body {
+    padding: var(--ui-space-3) var(--ui-space-3);
+  }
+}
+
 /* Collapse stray empty win-lines in résumé tiles (ANSI blank lines still render a min-height row) */
 .app-window[data-app='resume'] .resume-lead-text .win-line:empty,
 .app-window[data-app='resume'] .resume-body-block .win-line:empty {
@@ -2690,6 +2697,11 @@ html.retro-fx .xterm-screen {
     border: none;
     background: none;
     box-shadow: none;
+  }
+
+  /* Narrow resume: reduce side padding to prevent blank space */
+  .app-window[data-app='resume'] .win-body {
+    padding: var(--ui-space-3) var(--ui-space-3);
   }
 }
 
