@@ -2554,6 +2554,9 @@ html.retro-fx .xterm-screen {
     container-name: skmx;
     overflow-x: auto;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 
   .resume-layout.resume-layout--with-skills .resume-skills-notes-heading {
@@ -2707,6 +2710,9 @@ html.retro-fx .xterm-screen {
     container-name: skmx;
     overflow-x: auto;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 
   .resume-layout.resume-layout--with-skills .resume-skills-notes-heading {
