@@ -565,6 +565,15 @@ export class TerminalApp {
             browserUrl,
           })
           ack()
+        } else if (name === 'p5') {
+          const pathArg = args[0] ?? undefined
+          this.onOpenWindow({
+            command: 'p5',
+            title: pathArg ? (pathArg.split('/').pop() ?? 'p5.js') : 'p5.js',
+            content: [],
+            p5SketchPath: pathArg,
+          })
+          ack()
         } else {
           const title =
             name === 'resume'

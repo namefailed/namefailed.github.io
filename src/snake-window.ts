@@ -49,6 +49,8 @@ export class SnakeWindow {
   /** Extra growth segments to apply on next non-food moves */
   private growDebt = 0
 
+  private ro: ResizeObserver | null = null
+
   private onClose: () => void
   private onMinimize: () => void
   private onMaximize: () => void
@@ -163,8 +165,8 @@ export class SnakeWindow {
     this.el.appendChild(bar)
     this.el.appendChild(stack)
 
-    const ro = new ResizeObserver(() => this.onWrapResize())
-    ro.observe(this.wrap)
+    this.ro = new ResizeObserver(() => this.onWrapResize())
+    this.ro.observe(this.wrap)
 
     this.el.addEventListener('keydown', e => this.onKey(e), true)
     this.el.addEventListener('mousedown', () => opts.onFocus())
@@ -737,5 +739,7 @@ export class SnakeWindow {
 
   dispose(): void {
     this.stopLoop()
+    this.ro?.disconnect()
+    this.ro = null
   }
 }

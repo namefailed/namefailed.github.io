@@ -12,6 +12,7 @@ import type { FileExplorerWindow } from './file-explorer-window'
 import type { PaintWindow } from './paint-window'
 import type { PongWindow } from './pong-window'
 import type { SnakeWindow } from './snake-window'
+import type { P5Window } from './p5-window'
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { FS_HOME, vfsNormalize } from './os-fs'
 import { Splitter } from './splitter'
@@ -87,6 +88,7 @@ type TiledWin =
   | PaintWindow
   | SnakeWindow
   | PongWindow
+  | P5Window
 
 interface MinimizedEntry {
   win: TiledWin
@@ -369,6 +371,24 @@ export class Desktop {
       this.windows.push(br)
       this.attachVerticalSplitters()
       this.focusWindow(br)
+      return
+    }
+
+    if (spec.command === 'p5') {
+      const { P5Window: P5WindowCtor } = await import('./p5-window')
+      let pw!: P5Window
+      pw = new P5WindowCtor({
+        initialVfsPath: spec.p5SketchPath ?? null,
+        onOpenWindow: s => void this.openWindow(s),
+        onClose:    () => this.closeWindow(pw),
+        onMinimize: () => this.minimizeWindow(pw),
+        onMaximize: () => this.toggleMaximizeContent(pw),
+        onFocus:    () => this.focusWindow(pw),
+      })
+      this.appendToRightPane(pw.el)
+      this.windows.push(pw)
+      this.attachVerticalSplitters()
+      this.focusWindow(pw)
       return
     }
 

@@ -136,6 +136,12 @@ function saveSync(): void {
 
 load()
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (saveTimeout) saveSync()
+  })
+}
+
 /** Re-read tree + cwd from `localStorage` (drops any in-memory-only drift since last `save`). */
 export function vfsReloadFromStorage(): string | null {
   vfsOldPwd = null

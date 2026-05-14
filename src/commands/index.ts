@@ -132,10 +132,10 @@ export const commands: Record<string, Command> = {
     run: () => [],
   },
 
-  // cube: {
-  //   description: 'Rubik\'s cube — click stickers to turn, or use U D L R F B keys',
-  //   run: () => [],
-  // },
+  cube: {
+    description: "Rubik's cube — click stickers to turn, or use U D L R F B keys",
+    run: () => [],
+  },
 
   snake: {
     description: 'Snake — WASD / arrows; rounded cells; Space restarts after game over',
@@ -144,6 +144,11 @@ export const commands: Record<string, Command> = {
 
   pong: {
     description: 'Pong — W/S vs AI or two-player W/S vs ↑↓; goals reset the ball',
+    run: () => [],
+  },
+
+  p5: {
+    description: 'p5.js sketch viewer — p5 [/vfs/path.js]; Examples dropdown, drag-and-drop, Edit opens in editor',
     run: () => [],
   },
 

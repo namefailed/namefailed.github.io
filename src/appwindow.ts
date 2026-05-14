@@ -101,6 +101,8 @@ export interface WindowSpec {
   resumeBody?: string[]
   /** Thumbnail/metadata list for `projects` tile layout. */
   projectCards?: readonly PortfolioProjectEntry[]
+  /** Initial VFS path for the p5 viewer. */
+  p5SketchPath?: string
 }
 
 export interface AppWindowOptions extends WindowSpec {

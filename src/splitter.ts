@@ -48,9 +48,8 @@ export class Splitter {
       /* capture unsupported — fall through; move/up still work on desktop */
     }
 
-    const rect = container.getBoundingClientRect()
-
     const onMove = (ev: PointerEvent): void => {
+      const rect = container.getBoundingClientRect()
       let size: number
       if (orientation === 'h') {
         size = ev.clientX - rect.left - target.offsetLeft

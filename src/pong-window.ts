@@ -210,9 +210,6 @@ export class PongWindow {
     this.el.addEventListener('keydown', kd, true)
     this.el.addEventListener('keyup', ku, true)
 
-    this.canvas.addEventListener('keydown', kd, true)
-    this.canvas.addEventListener('keyup', ku, true)
-
     this.el.addEventListener('mousedown', () => opts.onFocus())
     bar.addEventListener('mousedown', () => opts.onFocus())
     this.wrap.addEventListener('mousedown', () => {

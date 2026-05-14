@@ -11,7 +11,7 @@ import {
   vfsTouch,
   FS_HOME,
 } from './os-fs'
-import { storageGetJson, storageSetJson } from './storage'
+import { storageGet, storageSetJson } from './storage'
 
 /** Persisted explorer UI — safe to orphan on parse failure. */
 const FE_PREFS_KEY = 'portfolio-fe-prefs-v1'
@@ -277,7 +277,7 @@ export class FileExplorerWindow {
   }
 
   private loadFePrefs(): void {
-    const p = parseFePrefs(JSON.stringify(storageGetJson<ExplorerPrefs | null>(FE_PREFS_KEY, null)))
+    const p = parseFePrefs(storageGet(FE_PREFS_KEY))
     const sorts: ExplorerSortMode[] = ['folders-asc', 'folders-desc', 'mixed-asc', 'mixed-desc']
     if (p.sort && sorts.includes(p.sort)) this.sortMode = p.sort
     if (p.view === 'list' || p.view === 'grid') this.viewMode = p.view

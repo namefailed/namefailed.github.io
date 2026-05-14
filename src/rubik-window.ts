@@ -484,47 +484,6 @@ export class RubikWindow {
     }
   }
 
-  /**
-   * After a turn, update sticker face assignments based on physical world position.
-   * This ensures stickers are correctly identified by which voxel they occupy.
-   */
-  private remapStickersAfterTurn(): void {
-    // Get world positions for all stickers after animation
-    const worldPositions = this.stickerMeshes.map(m => {
-      const pos = new THREE.Vector3()
-      m.getWorldPosition(pos)
-      return { mesh: m, pos }
-    })
-
-    // For each face position, find which sticker is physically there
-    let s = 0
-    for (const face of FACET_FACE_ORDER) {
-      for (let i = 0; i < 9; i++) {
-        // Calculate the world position this sticker slot should be at
-        const expectedCenter = latticeStickerCenter(face, i)
-
-        // Find the sticker closest to this position (within tolerance)
-        const EPS = 0.15 // tolerance for floating point errors
-        const match = worldPositions.find(({ pos }) =>
-          Math.abs(pos.x - expectedCenter.x) < EPS &&
-          Math.abs(pos.y - expectedCenter.y) < EPS &&
-          Math.abs(pos.z - expectedCenter.z) < EPS
-        )
-
-        if (match) {
-          // Update userData to reflect this sticker's new position
-          match.mesh.userData.cubeFace = face
-          match.mesh.userData.faceIndex = i
-          const g = gridTripleFromSticker(face, i)
-          match.mesh.userData.gx = g.gx
-          match.mesh.userData.gy = g.gy
-          match.mesh.userData.gz = g.gz
-        }
-        s++
-      }
-    }
-  }
-
   private syncStickerMaterials(): void {
     let s = 0
     for (const face of FACET_FACE_ORDER) {
@@ -606,7 +565,6 @@ export class RubikWindow {
     pivot.removeFromParent()
 
     fn(this.state)
-    this.remapStickersAfterTurn()
     this.animating = false
     this.resetAllStickerPoses()
     this.syncStickerMaterials()
