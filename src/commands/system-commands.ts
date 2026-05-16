@@ -144,8 +144,8 @@ export const systemCommands: Record<string, Command> = {
       while (i < args.length) {
         const a = args[i]
         if ((a === '-t' || a === '--time') && args[i + 1]) {
-          const n = Number.parseInt(args[i + 1], 10)
-          if (!Number.isNaN(n)) duration = Math.min(22000, Math.max(900, n))
+          const ms = Number.parseInt(args[i + 1], 10)
+          if (!Number.isNaN(ms)) duration = Math.min(22000, Math.max(900, ms))
           i += 2
           continue
         }
@@ -204,8 +204,8 @@ export const systemCommands: Record<string, Command> = {
       }
 
       if (a0 === '--d20' || a0 === '--roll') {
-        const v = Math.floor(Math.random() * 20) + 1
-        return ['', `  ${c.green}d20 ⇒${c.reset} ${c.bold}${v}${c.reset}`, '']
+        const roll = Math.floor(Math.random() * 20) + 1
+        return ['', `  ${c.green}d20 ⇒${c.reset} ${c.bold}${roll}${c.reset}`, '']
       }
 
       if (a0 === '--fortune' || a0 === '-f')

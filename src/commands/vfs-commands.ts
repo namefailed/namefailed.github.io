@@ -42,15 +42,15 @@ export const vfsCommands: Record<string, Command> = {
       ]
       const oldp = vfsOldPwdFormatted()
       if (oldp) lines.push(`  ${c.dim}OLDPWD ${c.reset}${c.yellow}${oldp}${c.reset}`)
-      const o = args[0]
-      if (o === '-P') {
+      const flag = args[0]
+      if (flag === '-P') {
         lines.push(
           `  ${c.dim}-P:${c.reset} physical path identical — ${c.yellow}no symlinks in this FS${c.reset}${c.dim}.${c.reset}`,
         )
-      } else if (o === '-L') {
+      } else if (flag === '-L') {
         lines.push(`  ${c.dim}-L:${c.reset} logical path (${c.bold}same string${c.reset}${c.dim} here — default).${c.reset}`)
-      } else if (o && !o.startsWith('-')) {
-        lines.push(`  ${c.dim}(ignoring stray ${JSON.stringify(o)} — try ${c.blue}-P${c.dim} · ${c.blue}-L${c.dim})${c.reset}`)
+      } else if (flag && !flag.startsWith('-')) {
+        lines.push(`  ${c.dim}(ignoring stray ${JSON.stringify(flag)} — try ${c.blue}-P${c.dim} · ${c.blue}-L${c.dim})${c.reset}`)
       }
       lines.push(`  ${c.dim}Paths persist via localStorage in this browser profile.${c.reset}`, '')
       return lines
@@ -134,8 +134,8 @@ export const vfsCommands: Record<string, Command> = {
       const rows = out.split('\n')
       if (rows.length === 0) return [`  ${c.dim}(empty file)${c.reset}`]
       if (!numbering) return rows.map(line => `  ${line}`)
-      const w = String(rows.length).length
-      return rows.map((line, i) => `  ${c.dim}${String(i + 1).padStart(w)}${c.reset} │ ${line}`)
+      const digitWidth = String(rows.length).length
+      return rows.map((line, i) => `  ${c.dim}${String(i + 1).padStart(digitWidth)}${c.reset} │ ${line}`)
     },
   },
 
@@ -180,10 +180,10 @@ export const vfsCommands: Record<string, Command> = {
       if (out == null || out.startsWith('cat:')) return [`  ${out ?? 'cat: I/O error'}`]
       const body = out === '(empty file)' ? '' : out
       const { lines, words, chars } = wcStats(body)
-      const p = vfsNormalize(args[0])
+      const path = vfsNormalize(args[0])
       return [
         '',
-        `  ${`${lines}`.padStart(6)} ${`${words}`.padStart(6)} ${`${chars}`.padStart(8)} ${p}`,
+        `  ${`${lines}`.padStart(6)} ${`${words}`.padStart(6)} ${`${chars}`.padStart(8)} ${path}`,
         `  ${c.dim}lines · words · UTF-8-ish bytes${c.reset}`,
         '',
       ]
