@@ -87,8 +87,7 @@ export const appCommands: Record<string, Command> = {
   },
 
   cube: {
-    description: "Rubik's cube — click stickers to turn, or use U D L R F B keys",
-    hidden: true, // Temporarily hidden — remove flag to restore
+    description: "Rubik's cube — left-drag to spin · click stickers or U/D/L/R/F/B to turn · Scramble / Solve / algorithm picker",
     run: () => [],
   },
 

@@ -4699,12 +4699,61 @@ html.retro-fx .xterm-screen {
   letter-spacing: 0.04em;
 }
 
+.rubik-app .rubik-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding: 0 var(--ui-space-4);
+}
+
+.rubik-app .rubik-status-row .rubik-movecount,
+.rubik-app .rubik-status-row .rubik-status {
+  padding: 0;
+}
+
+.rubik-app .rubik-speed-label {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--th-subtext);
+}
+
+.rubik-app .rubik-speed-slider {
+  width: 110px;
+  accent-color: var(--th-pink, #f5c2e7);
+  cursor: pointer;
+}
+
 .rubik-app .rubik-alg-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ui-space-2);
   padding: 0 var(--ui-space-4);
+}
+
+.rubik-app .rubik-alg-select {
+  flex: 1 1 220px;
+  min-width: 160px;
+  padding: 0.38em 0.55em;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--th-titlebar-border);
+  background: var(--th-mantle);
+  color: var(--th-text);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  cursor: pointer;
+}
+
+.rubik-app .rubik-alg-select:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
 }
 
 .rubik-app .rubik-alg-label {
@@ -4743,13 +4792,32 @@ html.retro-fx .xterm-screen {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.rubik-app .rubik-help-title {
+.rubik-app .rubik-help-title,
+.rubik-app .rubik-help-summary {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--th-subtext);
   margin-bottom: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rubik-app details.rubik-help[open] .rubik-help-summary {
+  margin-bottom: 8px;
+}
+
+.rubik-app .rubik-help-summary::-webkit-details-marker { display: none; }
+.rubik-app .rubik-help-summary::marker { content: ''; }
+
+.rubik-app .rubik-help-summary::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 120ms ease;
+}
+.rubik-app details.rubik-help[open] .rubik-help-summary::before {
+  content: '▾ ';
 }
 
 .rubik-app .rubik-help-list {
