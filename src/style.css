@@ -257,7 +257,11 @@ html.retro-fx::before {
   padding: 0 0 var(--desktop-bottom-gutter);
   display: flex;
   flex-direction: column;
-  background: var(--th-desktop-bg) url('/wallpaper.svg') center / cover no-repeat;
+  background-color: var(--th-desktop-bg);
+  background-image: url('/wallpaper.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 0 80px rgba(0, 0, 0, 0.35);
