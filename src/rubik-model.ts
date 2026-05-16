@@ -165,9 +165,9 @@ export function moveF(cube: CubeFaces): void {
   cube.D[0] = cube.R[6]
   cube.D[1] = cube.R[3]
   cube.D[2] = cube.R[0]
-  cube.R[0] = saved[2]
+  cube.R[0] = saved[0]
   cube.R[3] = saved[1]
-  cube.R[6] = saved[0]
+  cube.R[6] = saved[2]
 }
 
 /** F counter-clockwise */
@@ -188,9 +188,9 @@ export function moveB(cube: CubeFaces): void {
   cube.D[8] = cube.L[0]
   cube.D[7] = cube.L[3]
   cube.D[6] = cube.L[6]
-  cube.L[6] = saved[2]
+  cube.L[6] = saved[0]
   cube.L[3] = saved[1]
-  cube.L[0] = saved[0]
+  cube.L[0] = saved[2]
 }
 
 /** B counter-clockwise */
@@ -283,4 +283,87 @@ export function scrambleCube(cube: CubeFaces, moves = 25): void {
     const key = moveKeys[Math.floor(Math.random() * moveKeys.length)]!
     MOVE_MAP[key]!(cube)
   }
+}
+
+/** Inverse of a single WCA move token: `U` ↔ `U'`; `U2` is its own inverse. */
+export function invertMove(token: string): string {
+  if (!MOVE_MAP[token]) {
+    throw new Error(`invertMove: unknown move token ${JSON.stringify(token)}`)
+  }
+  if (token.endsWith('2')) return token
+  if (token.endsWith("'")) return token.slice(0, -1)
+  return `${token}'`
+}
+
+/** Inverse of a whitespace-separated WCA sequence — reversed order, each move inverted. */
+export function invertSequence(seq: string): string {
+  const tokens = seq.trim().split(/\s+/).filter(Boolean)
+  return tokens.reverse().map(invertMove).join(' ')
+}
+
+/**
+ * Generate a scramble sequence that avoids repeating the same face twice in a row.
+ * (Repeated turns on one face are degenerate — e.g. `U U` is just `U2`.)
+ */
+export function generateScrambleSequence(length = 25): string[] {
+  const moveKeys = ['U', "U'", 'D', "D'", 'R', "R'", 'L', "L'", 'F', "F'", 'B', "B'"]
+  const out: string[] = []
+  let lastFace = ''
+  for (let i = 0; i < length; i++) {
+    const candidates = moveKeys.filter(m => m[0] !== lastFace)
+    const pick = candidates[Math.floor(Math.random() * candidates.length)]!
+    out.push(pick)
+    lastFace = pick[0]!
+  }
+  return out
+}
+
+/**
+ * Canonical Rubik's cube algorithms (CFOP-flavored).
+ * Each one returns the cube to solved when applied to a solved cube some
+ * number of times (cycle length varies — most repeat after 4–6 applications).
+ * Used as a demo: apply once, then watch the inverse "solve" it back.
+ */
+export interface NamedAlgorithm {
+  label: string
+  moves: string
+  description: string
+}
+
+export const CANONICAL_ALGORITHMS: Record<string, NamedAlgorithm> = {
+  sune: {
+    label: 'Sune (OLL)',
+    moves: "R U R' U R U2 R'",
+    description: 'OLL — orients last layer corners (twists 3 corners CW)',
+  },
+  antisune: {
+    label: 'Anti-Sune (OLL)',
+    moves: "R U2 R' U' R U' R'",
+    description: 'OLL mirror of Sune (twists 3 corners CCW)',
+  },
+  tperm: {
+    label: 'T-perm (PLL)',
+    moves: "R U R' U' R' F R2 U' R' U' R U R' F'",
+    description: 'PLL — swaps two adjacent corners and two edges',
+  },
+  yperm: {
+    label: 'Y-perm (PLL)',
+    moves: "F R U' R' U' R U R' F' R U R' U' R' F R F'",
+    description: 'PLL — swaps two diagonal corners and two edges',
+  },
+  uperm: {
+    label: 'U-perm (PLL)',
+    moves: "R U' R U R U R U' R' U' R2",
+    description: 'PLL — 3-cycle of edges (clockwise)',
+  },
+  sexymove: {
+    label: 'Sexy Move',
+    moves: "R U R' U'",
+    description: 'Beginner trigger — 6 reps return to solved',
+  },
+  superflip: {
+    label: 'Superflip',
+    moves: "U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2",
+    description: "All edges flipped — 20-move \"god's number\" pattern",
+  },
 }

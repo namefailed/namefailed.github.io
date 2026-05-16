@@ -20,6 +20,10 @@ import {
   applyNotationStrict,
   applyNotation,
   scrambleCube,
+  invertMove,
+  invertSequence,
+  generateScrambleSequence,
+  CANONICAL_ALGORITHMS,
 } from './rubik-model'
 
 // ── solvedCube ─────────────────────────────────────────────────────────────────
@@ -226,6 +230,132 @@ describe('applyNotation', () => {
 })
 
 // ── scrambleCube ──────────────────────────────────────────────────────────────
+
+// ── invertMove ────────────────────────────────────────────────────────────────
+
+describe('invertMove', () => {
+  it('U → U\'', () => {
+    expect(invertMove('U')).toBe("U'")
+  })
+
+  it("U' → U", () => {
+    expect(invertMove("U'")).toBe('U')
+  })
+
+  it('U2 is its own inverse', () => {
+    expect(invertMove('U2')).toBe('U2')
+  })
+
+  it('inverts all six faces', () => {
+    for (const f of ['U', 'D', 'L', 'R', 'F', 'B']) {
+      expect(invertMove(f)).toBe(`${f}'`)
+      expect(invertMove(`${f}'`)).toBe(f)
+      expect(invertMove(`${f}2`)).toBe(`${f}2`)
+    }
+  })
+
+  it('throws on unknown token', () => {
+    expect(() => invertMove('X')).toThrow()
+    expect(() => invertMove('U3')).toThrow()
+  })
+})
+
+// ── invertSequence ────────────────────────────────────────────────────────────
+
+describe('invertSequence', () => {
+  it('empty sequence inverts to empty', () => {
+    expect(invertSequence('')).toBe('')
+  })
+
+  it('single move inverts correctly', () => {
+    expect(invertSequence('U')).toBe("U'")
+  })
+
+  it('reverses order and inverts each move', () => {
+    expect(invertSequence("U R")).toBe("R' U'")
+  })
+
+  it('R U R\' U\' inverts to U R U\' R\'', () => {
+    expect(invertSequence("R U R' U'")).toBe("U R U' R'")
+  })
+
+  it('applying a sequence then its inverse solves the cube', () => {
+    const cube = solvedCube()
+    const alg = "R U R' U' R' F R2 U' R' U' R U R' F'"
+    applyNotationStrict(cube, alg)
+    expect(isSolved(cube)).toBe(false)
+    applyNotationStrict(cube, invertSequence(alg))
+    expect(isSolved(cube)).toBe(true)
+  })
+
+  it('preserves U2 as U2 in inverse position', () => {
+    expect(invertSequence("U2 R")).toBe("R' U2")
+  })
+
+  it('throws on unknown token', () => {
+    expect(() => invertSequence('X Y Z')).toThrow()
+  })
+})
+
+// ── generateScrambleSequence ──────────────────────────────────────────────────
+
+describe('generateScrambleSequence', () => {
+  it('returns the requested number of tokens', () => {
+    expect(generateScrambleSequence(0).length).toBe(0)
+    expect(generateScrambleSequence(1).length).toBe(1)
+    expect(generateScrambleSequence(20).length).toBe(20)
+  })
+
+  it('every token is a quarter-turn move', () => {
+    const valid = new Set(['U', "U'", 'D', "D'", 'R', "R'", 'L', "L'", 'F', "F'", 'B', "B'"])
+    for (const token of generateScrambleSequence(50)) {
+      expect(valid.has(token)).toBe(true)
+    }
+  })
+
+  it('does not generate the same face twice in a row (smarter scramble)', () => {
+    for (let trial = 0; trial < 20; trial++) {
+      const seq = generateScrambleSequence(40)
+      for (let i = 1; i < seq.length; i++) {
+        // Compare face letters: U and U' are same face
+        expect(seq[i]![0]).not.toBe(seq[i - 1]![0])
+      }
+    }
+  })
+
+  it('applying then inverting solves the cube', () => {
+    const cube = solvedCube()
+    const seq = generateScrambleSequence(25)
+    applyNotationStrict(cube, seq.join(' '))
+    expect(isSolved(cube)).toBe(false)
+    applyNotationStrict(cube, invertSequence(seq.join(' ')))
+    expect(isSolved(cube)).toBe(true)
+  })
+})
+
+// ── CANONICAL_ALGORITHMS ──────────────────────────────────────────────────────
+
+describe('CANONICAL_ALGORITHMS', () => {
+  it('exports at least 4 named algorithms', () => {
+    expect(Object.keys(CANONICAL_ALGORITHMS).length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('every algorithm parses to valid notation', () => {
+    for (const [name, alg] of Object.entries(CANONICAL_ALGORITHMS)) {
+      expect(typeof name).toBe('string')
+      expect(typeof alg.moves).toBe('string')
+      expect(typeof alg.label).toBe('string')
+      expect(alg.label.length).toBeGreaterThan(0)
+      const cube = solvedCube()
+      // Test it applies cleanly
+      expect(applyNotationStrict(cube, alg.moves)).toBe(true)
+    }
+  })
+
+  it('includes "sune" (canonical OLL)', () => {
+    expect(CANONICAL_ALGORITHMS).toHaveProperty('sune')
+  })
+})
 
 describe('scrambleCube', () => {
   it('leaves cube not solved after 25 moves (overwhelmingly likely)', () => {
