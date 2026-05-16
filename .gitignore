@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Superpowers brainstorming session artifacts
+.superpowers/
+
+# Internal design specs + implementation plans (not shipped with the repo)
+docs/superpowers/

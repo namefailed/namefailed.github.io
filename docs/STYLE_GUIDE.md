@@ -419,7 +419,6 @@ Keep docs in `docs/` updated when making architectural changes:
 
 - `ARCHITECTURE.md` — module structure, entry points, patterns
 - `THEMING.md` — custom properties, adding themes
-- `ROADMAP.md` — completed phases, next priorities
 - `STYLE_GUIDE.md` — this file (coding standards)
 
 When adding new modules, update the relevant tables in ARCHITECTURE.md.

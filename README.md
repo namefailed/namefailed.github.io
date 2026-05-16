@@ -74,7 +74,6 @@ The deploy publishes `dist/`, not the repo root. `index.html` at the root only w
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module layout, bootstrap order, naming conventions, testing
 - [docs/THEMING.md](docs/THEMING.md) — ThemePack interface, custom property reference, how to add a pack
-- [docs/ROADMAP.md](docs/ROADMAP.md) — completed phases and planned next work
 - [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — TypeScript standards, CSS conventions, testing guidelines
 - [docs/API.md](docs/API.md) — Window system, VFS, storage utilities, theming API
 
