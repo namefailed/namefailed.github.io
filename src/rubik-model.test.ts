@@ -22,12 +22,6 @@ import {
   scrambleCube,
 } from './rubik-model'
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function faceRow(face: number[]): string {
-  return JSON.stringify(face)
-}
-
 // ── solvedCube ─────────────────────────────────────────────────────────────────
 
 describe('solvedCube', () => {
