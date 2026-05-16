@@ -53,7 +53,7 @@ function readCssVar(name: string, fallback: string): string {
 }
 
 /** Same asset as `#desktop` in CSS — redrawn each frame under the rain */
-const WALLPAPER_SRC = '/wallpaper.svg'
+const WALLPAPER_SRC = '/wallpaper.jpg'
 
 function drawBackdrop(
   ctx: CanvasRenderingContext2D,
@@ -108,7 +108,8 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const ctx: CanvasRenderingContext2D = ctxMaybe
 
   const stored = readStoredMatrix()
-  let enabled = stored !== null ? stored : !prefersReducedMotion()
+  // Default OFF — wallpaper provides the backdrop; user opts in via settings
+  let enabled = stored !== null ? stored : false
 
   const bgImg = new Image()
   bgImg.src = WALLPAPER_SRC
