@@ -8,6 +8,11 @@ export interface EditorWindowOptions {
   onMinimize: () => void
   onMaximize: () => void
   onFocus: () => void
+  /**
+   * Invoked when the user runs `:run`, `:p5`, or presses F5 — opens the
+   * current buffer's path in the p5 viewer. The editor saves before calling.
+   */
+  onRunInP5?: (absPath: string) => void
 }
 
 type EditMode = 'normal' | 'insert' | 'cmd'
@@ -60,12 +65,14 @@ export class EditorWindow {
   private onClose: () => void
   private onMinimize: () => void
   private onMaximize: () => void
+  private onRunInP5: ((absPath: string) => void) | undefined
 
   constructor(opts: EditorWindowOptions) {
     this.onClose = opts.onClose
     this.onMinimize = opts.onMinimize
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
+    this.onRunInP5 = opts.onRunInP5
 
     this.absPath = vfsNormalize(opts.initialPath)
     const initial = vfsReadRaw(this.absPath)
@@ -489,6 +496,11 @@ export class EditorWindow {
       }
       return
     }
+    if (lower === 'run' || lower === 'p5') {
+      this.runInP5()
+      this.leaveCmd()
+      return
+    }
     const em = /^e(?:dit)?\s+(.+)$/.exec(line)
     if (em) {
       this.loadFile(em[1].trim())
@@ -497,7 +509,7 @@ export class EditorWindow {
     }
     if (line === '' || lower === 'help') {
       this.flashStatus(
-        ':w :wq :q :q! :e path — NORMAL: hjkl ^ 0 $ · G gg · f F t T ; , · >> << · ~ s C Y · r J D · x X · dd yy p · u · ^R · Ctrl-f/b page · i I a A o O · w b e · counts · Esc',
+        ':w :wq :q :q! :e path :run (F5 → play in p5) — NORMAL: hjkl ^ 0 $ · G gg · f F t T ; , · >> << · ~ s C Y · r J D · x X · dd yy p · u · ^R · Ctrl-f/b page · i I a A o O · w b e · counts · Esc',
         false,
       )
       this.leaveCmd()
@@ -540,6 +552,20 @@ export class EditorWindow {
     this.flashStatus(`Written ${vfsFormatPath(this.absPath)}`, false)
     this.syncTitle()
     return true
+  }
+
+  /**
+   * Save the current buffer and open it in the p5 viewer. Falls through with a
+   * status message if the host didn't wire `onRunInP5` (e.g., embedded preview).
+   */
+  private runInP5(): void {
+    if (!this.onRunInP5) {
+      this.flashStatus('Run-in-p5 not available in this context', true)
+      return
+    }
+    if (this.dirty && !this.saveFile()) return
+    this.onRunInP5(this.absPath)
+    this.flashStatus(`Running in p5 — ${vfsFormatPath(this.absPath)}`, false)
   }
 
   private flashStatus(msg: string, isErr: boolean): void {
