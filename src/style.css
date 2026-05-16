@@ -4163,13 +4163,30 @@ html.retro-fx .xterm-screen {
   pointer-events: none;
   padding: 0 var(--ui-gap-wm);
   box-sizing: border-box;
-  opacity: 1;
-  transform: translateY(0) scale(1);
+  /* Auto-hide: slide below viewport by default */
+  opacity: 0;
+  transform: translateY(calc(100% + 8px)) scale(0.96);
   transform-origin: 50% 100%;
   transition:
     opacity var(--ui-duration-slower) var(--ui-easing-emph),
     transform var(--ui-duration-slower) var(--ui-easing-out-back),
     filter var(--ui-duration-slow) var(--ui-easing-smooth);
+}
+/* Reveal on hover-zone activation */
+#wm-taskbar.wm-taskbar.dock--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+/* Thin hover trigger strip at viewport bottom */
+.dock-hover-zone {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  z-index: var(--ui-z-chrome-popover);
+  pointer-events: auto;
 }
 
 /*
