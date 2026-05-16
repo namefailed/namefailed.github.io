@@ -249,7 +249,7 @@ export class RubikWindow {
         this.syncStickerMaterials()
         this.updateStatus()
       } catch (err) {
-        console.error('[rubik-window] WebGL boot failed', err)
+        // WebGL boot failed — show fallback message in tile
         this.host.innerHTML =
           '<p class="rubik-gl-fallback">WebGL did not start in this tile — try closing other GPU tabs, resizing the window, or another browser.</p>'
       }
@@ -315,14 +315,9 @@ export class RubikWindow {
   }
 
   private initThree(): void {
-    console.log('[rubik-window] initThree() starting...')
-    if (this.glDisposed) {
-      console.log('[rubik-window] initThree() aborted - already disposed')
-      return
-    }
+    if (this.glDisposed) return
     const scene = new THREE.Scene()
     this.scene = scene
-    console.log('[rubik-window] Scene created')
 
     const cam = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
     cam.position.set(2.9, 2.2, 3.8)
@@ -521,16 +516,13 @@ export class RubikWindow {
   }
 
   private async animateSliceTurn(token: TurnToken): Promise<void> {
-    console.log('[rubik-window] animateSliceTurn starting:', token)
     this.animating = true
 
     const fn = MOVE_MAP[token]
     if (!fn) {
-      console.log('[rubik-window] No move function for token:', token)
       this.animating = false
       return
     }
-    console.log('[rubik-window] Move function found for:', token)
 
     const faceLetter = token[0] as CubeMoveFace
     const isDouble = token.endsWith('2')

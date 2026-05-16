@@ -225,7 +225,7 @@ export class P5Window {
       const fullPath = `${dir}/${label}`
       const err = vfsWrite(fullPath, this.currentCode)
       if (err) {
-        console.warn('p5: could not write to VFS:', err)
+        // VFS write failed — silently skip save (err is the string error message)
         return
       }
       vfsPath = fullPath
