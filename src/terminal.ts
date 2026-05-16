@@ -36,6 +36,19 @@ import { windowSpawnEcho } from './cli-window-echo'
 import { randomPick } from './random-pick'
 import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog'
 
+/**
+ * Lines shown as the terminal's welcome message (motd).
+ * Returns plain strings (may contain ANSI codes) — no side effects.
+ */
+export function terminalMotdLines(): string[] {
+  return [
+    ...BANNER,
+    '',
+    `  ${c.pink}mrgrey.site${c.reset} — portfolio OS`,
+    `  ${c.dim}Type ${c.reset}help${c.dim} to see available commands.${c.reset}`,
+  ]
+}
+
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 const BOOT_LINES: Array<{ text: string; delay: number }> = [
