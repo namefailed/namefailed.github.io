@@ -5,6 +5,7 @@
  * Desktop is constructed before TerminalApp passes `openWindow` so `fit()` always
  * closes over real tiles, Matrix rain defers via idle callback so first paint stays cheap.
  */
+import { runBootSplash } from './boot-splash'
 import { initThemeFromStorage } from './theme'
 import { initRetroFxFromStorage } from './retro-fx'
 import { initMatrixBg } from './matrix-bg'
@@ -14,6 +15,7 @@ import { TerminalApp } from './terminal'
 import { Desktop } from './desktop'
 
 export async function bootstrapShellUi(): Promise<void> {
+  await runBootSplash()
   initThemeFromStorage()
   initRetroFxFromStorage()
   initOsSound()
