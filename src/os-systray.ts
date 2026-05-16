@@ -10,6 +10,8 @@ import {
 import { getRetroFx, setRetroFx } from './retro-fx'
 import { getMatrixBgHandle } from './matrix-bg'
 import { applyTheme, getThemeId, listThemeSummaries } from './theme'
+import { resetAllHints } from './hint-bubbles'
+import { resetTileLayout } from './desktop-tiles'
 
 function syncSettingsSwitch(btn: HTMLElement, on: boolean): void {
   btn.setAttribute('aria-pressed', on ? 'true' : 'false')
@@ -197,4 +199,16 @@ export function initSystray(): void {
   )
 
   syncSettingsSoundToggle()
+
+  const restoreHintsBtn = document.getElementById('settings-restore-hints')
+  restoreHintsBtn?.addEventListener('click', () => {
+    resetAllHints()
+    pushToast('Hints restored — reload to see them.', 3000)
+  })
+
+  const resetDesktopBtn = document.getElementById('settings-reset-desktop')
+  resetDesktopBtn?.addEventListener('click', () => {
+    resetTileLayout()
+    pushToast('Desktop reset — reload to apply.', 3000)
+  })
 }

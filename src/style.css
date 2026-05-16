@@ -5717,3 +5717,18 @@ html.retro-fx .xterm-screen {
   from { transform: translateY(4px) scale(0.95); opacity: 0; }
   to   { transform: translateY(0)   scale(1);    opacity: 1; }
 }
+
+/* ─── settings panel action buttons ──────────────────────────── */
+.yasb-settings-action {
+  background: transparent;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  width: 100%;
+  text-align: left;
+}
+.yasb-settings-action:hover { border-color: #f5c2e7; }
