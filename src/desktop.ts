@@ -32,6 +32,8 @@ import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { mountDesktopTiles } from './desktop-tiles'
 import { mountHintBubbles } from './hint-bubbles'
+import { runIntroToasts } from './intro-toasts'
+import { pushToast } from './os-systray'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
 //
@@ -219,6 +221,9 @@ export class Desktop {
         )
       },
     })
+
+    // Fire welcome toasts on first visit (async, non-blocking)
+    void runIntroToasts({ push: pushToast })
 
     this.sync()
   }
