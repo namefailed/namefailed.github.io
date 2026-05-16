@@ -5666,3 +5666,37 @@ html.retro-fx .xterm-screen {
 .desktop-tile--fun .desktop-tile-glyph {
   color: #94e2d5;
 }
+
+/* ─── hint bubbles ────────────────────────────────────────── */
+.hint-bubble {
+  position: absolute;
+  background: #f5c2e7;
+  color: #1e1e2e;
+  padding: 4px 10px 4px 12px;
+  border-radius: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 50;
+  animation: hint-pop 220ms ease;
+}
+.hint-bubble-close {
+  background: transparent;
+  border: 0;
+  color: #1e1e2e;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 4px;
+  opacity: 0.55;
+}
+.hint-bubble-close:hover { opacity: 1; }
+
+@keyframes hint-pop {
+  from { transform: translateY(4px) scale(0.95); opacity: 0; }
+  to   { transform: translateY(0)   scale(1);    opacity: 1; }
+}

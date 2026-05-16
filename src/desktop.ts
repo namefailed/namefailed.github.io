@@ -31,6 +31,7 @@ import {
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { mountDesktopTiles } from './desktop-tiles'
+import { mountHintBubbles } from './hint-bubbles'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
 //
@@ -199,6 +200,23 @@ export class Desktop {
       host: workspaceEl,
       onActivate: cmd => {
         void this.openWindow({ command: cmd } as WindowSpec)
+      },
+    })
+
+    // Mount hint bubbles anchored to portfolio tiles
+    mountHintBubbles({
+      host: workspaceEl,
+      resolveAnchor: cmd => {
+        const tile = workspaceEl.querySelector<HTMLElement>(`.desktop-tile[data-cmd="${cmd}"]`)
+        if (!tile) return null
+        const hostRect = workspaceEl.getBoundingClientRect()
+        const tileRect = tile.getBoundingClientRect()
+        return new DOMRect(
+          tileRect.left - hostRect.left,
+          tileRect.top - hostRect.top,
+          tileRect.width,
+          tileRect.height,
+        )
       },
     })
 
