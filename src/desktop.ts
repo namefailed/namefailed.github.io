@@ -30,6 +30,7 @@ import {
 } from './launcher-catalog'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
+import { mountDesktopTiles } from './desktop-tiles'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
 //
@@ -191,6 +192,16 @@ export class Desktop {
     this.initTopBarClock()
     this.initYasbChrome()
     setDesktopRef(this)
+
+    // Mount draggable desktop tiles into workspace
+    const workspaceEl = document.getElementById('desktop-workspace')!
+    mountDesktopTiles({
+      host: workspaceEl,
+      onActivate: cmd => {
+        void this.openWindow({ command: cmd } as WindowSpec)
+      },
+    })
+
     this.sync()
   }
 

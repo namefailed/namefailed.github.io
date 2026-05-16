@@ -97,3 +97,97 @@ export function saveTileLayout(layout: TileLayout): void {
 export function resetTileLayout(): void {
   window.localStorage.removeItem(TILE_POSITIONS_KEY)
 }
+
+export interface MountTilesOptions {
+  /** Where to mount tiles (e.g. #desktop-workspace) */
+  host: HTMLElement
+  /** Called when a tile is activated (click without significant drag). */
+  onActivate: (cmd: string) => void
+}
+
+const DRAG_THRESHOLD_PX = 4
+
+/** Render tiles into `host`, wire drag + snap, persist on drop. */
+export function mountDesktopTiles(opts: MountTilesOptions): void {
+  const layout = loadTileLayout()
+  const tiles = visibleDesktopTiles()
+
+  for (const tile of tiles) {
+    const el = document.createElement('button')
+    el.type = 'button'
+    el.className = [
+      'desktop-tile',
+      tile.zone === ZONE_PORTFOLIO ? 'desktop-tile--portfolio' : '',
+      tile.accent === 'fun' ? 'desktop-tile--fun' : '',
+    ].filter(Boolean).join(' ')
+    el.dataset.cmd = tile.cmd
+    el.style.left = `${layout[tile.cmd].x}px`
+    el.style.top = `${layout[tile.cmd].y}px`
+    el.innerHTML = `<span class="desktop-tile-glyph">${escapeHtml(tile.glyph)}</span>${escapeHtml(tile.label)}`
+
+    attachTileDrag(el, tile.cmd, opts.onActivate)
+    opts.host.appendChild(el)
+  }
+}
+
+function attachTileDrag(
+  el: HTMLElement,
+  cmd: string,
+  onActivate: (cmd: string) => void,
+): void {
+  let startX = 0, startY = 0
+  let origLeft = 0, origTop = 0
+  let dragging = false
+  let moved = false
+
+  const onMove = (e: PointerEvent): void => {
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+    if (!moved && Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+      moved = true
+      el.classList.add('desktop-tile--dragging')
+    }
+    if (moved) {
+      el.style.left = `${origLeft + dx}px`
+      el.style.top = `${origTop + dy}px`
+    }
+  }
+
+  const onUp = (e: PointerEvent): void => {
+    el.releasePointerCapture(e.pointerId)
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUp)
+    if (!dragging) return
+    dragging = false
+
+    if (moved) {
+      const x = snapToGrid(parseFloat(el.style.left))
+      const y = snapToGrid(parseFloat(el.style.top))
+      el.style.left = `${x}px`
+      el.style.top = `${y}px`
+      el.classList.remove('desktop-tile--dragging')
+      const layout = loadTileLayout()
+      layout[cmd] = { x, y }
+      saveTileLayout(layout)
+    } else {
+      onActivate(cmd)
+    }
+    moved = false
+  }
+
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return
+    dragging = true
+    startX = e.clientX
+    startY = e.clientY
+    origLeft = parseFloat(el.style.left) || 0
+    origTop = parseFloat(el.style.top) || 0
+    el.setPointerCapture(e.pointerId)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  })
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}

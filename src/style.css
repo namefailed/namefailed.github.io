@@ -5625,3 +5625,44 @@ html.retro-fx .xterm-screen {
 @keyframes boot-fade-out {
   to { opacity: 0; }
 }
+
+/* ─── desktop tiles ──────────────────────────────────────── */
+.desktop-tile {
+  position: absolute;
+  width: 76px;
+  padding: 8px 4px 6px;
+  text-align: center;
+  background: rgba(49, 50, 68, 0.85);
+  border: 1px solid #45475a;
+  border-radius: 8px;
+  color: #cdd6f4;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: grab;
+  user-select: none;
+  backdrop-filter: blur(4px);
+  transition: transform 80ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.desktop-tile:hover {
+  border-color: #f5c2e7;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.desktop-tile--dragging {
+  cursor: grabbing;
+  transform: scale(1.04);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+  z-index: 100;
+}
+.desktop-tile--portfolio {
+  border-color: #f5c2e7;
+}
+.desktop-tile-glyph {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+  color: #f5c2e7;
+  margin-bottom: 2px;
+}
+.desktop-tile--fun .desktop-tile-glyph {
+  color: #94e2d5;
+}
