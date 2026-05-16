@@ -148,7 +148,14 @@ export class TerminalApp {
     // Sync badge for initial vim-on state
     this.onModeChange('insert')
 
-    await this.runBootSequence()
+    // Boot sequence is now handled by TerminalWindow.mount() via terminalMotdLines()
+    this.isProcessing = false
+    this.prompt()
+  }
+
+  /** Write a single line to the terminal (used by TerminalWindow motd). */
+  public writeLine(s: string): void {
+    this.xterm.writeln(s)
   }
 
   /** Called by Desktop when window tiles change size. */
@@ -628,5 +635,100 @@ export class TerminalApp {
 
     this.isProcessing = false
     this.prompt()
+  }
+}
+
+// ── TerminalWindow ─────────────────────────────────────────────────────────────
+
+export interface TerminalWindowOptions {
+  onClose:       () => void
+  onMinimize:    () => void
+  onMaximize:    () => void
+  onFocus:       () => void
+  onOpenWindow:  (spec: WindowSpec) => void
+}
+
+/**
+ * Lazy-loaded terminal tile — mirrors the paint-window / snake-window pattern.
+ * Created on demand by Desktop.openWindow({ command: 'terminal' }).
+ */
+export class TerminalWindow {
+  readonly el:      HTMLElement
+  readonly command  = 'terminal' as const
+  readonly onFocus: () => void
+  private inner:    HTMLElement
+  private app:      TerminalApp
+  private themeAbort = new AbortController()
+
+  constructor(opts: TerminalWindowOptions) {
+    this.onFocus = opts.onFocus
+
+    this.el = document.createElement('div')
+    this.el.className = 'app-window content-window terminal-app'
+    this.el.addEventListener('mousedown', opts.onFocus)
+
+    const chrome = document.createElement('div')
+    chrome.className = 'win-titlebar'
+    chrome.innerHTML =
+      `<span class="win-title">terminal</span>` +
+      `<button type="button" class="win-btn win-min" title="minimize">_</button>` +
+      `<button type="button" class="win-btn win-max" title="maximize">□</button>` +
+      `<button type="button" class="win-btn win-close" title="close">×</button>`
+    chrome.querySelector('.win-close')!.addEventListener('click', () => {
+      this.themeAbort.abort()
+      opts.onClose()
+    })
+    chrome.querySelector('.win-min')!.addEventListener('click', opts.onMinimize)
+    chrome.querySelector('.win-max')!.addEventListener('click', opts.onMaximize)
+    this.el.appendChild(chrome)
+
+    this.inner = document.createElement('div')
+    this.inner.className = 'terminal-host'
+    this.el.appendChild(this.inner)
+
+    const modeLine = document.createElement('div')
+    modeLine.id = 'vim-mode-line-tw'
+    modeLine.className = 'vim-mode-line'
+    this.el.appendChild(modeLine)
+
+    this.app = new TerminalApp(this.inner, modeLine, opts.onOpenWindow)
+
+    // Keep palette in sync when theme changes, until this window is closed.
+    window.addEventListener(
+      'mrgrey-theme-change',
+      () => this.app.syncXtermTheme(),
+      { signal: this.themeAbort.signal },
+    )
+  }
+
+  async mount(): Promise<void> {
+    await this.app.mount()
+    for (const line of terminalMotdLines()) {
+      this.app.writeLine(line)
+    }
+    this.app.writeLine('')
+  }
+
+  /** Pass through to TerminalApp for window resize events. */
+  fit(): void { this.app.fit() }
+
+  focusShell(): void { this.app.focusShell() }
+
+  /** Required by TiledWin interface — delegates to TerminalApp. */
+  syncXtermTheme(): void { this.app.syncXtermTheme() }
+
+  /** Required by TiledWin — mirrors AppWindow.setActive. */
+  setActive(active: boolean): void {
+    this.el.classList.toggle('active', active)
+  }
+
+  /** Required by TiledWin — mirrors AppWindow.setMinimized. */
+  setMinimized(min: boolean): void {
+    this.el.classList.toggle('minimized', min)
+  }
+
+  /** Required by TiledWin — mirrors AppWindow.isMaximized. */
+  isMaximized(): boolean {
+    return this.el.classList.contains('maximized')
   }
 }

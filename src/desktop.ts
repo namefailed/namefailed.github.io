@@ -13,6 +13,7 @@ import type { PaintWindow } from './paint-window'
 import type { PongWindow } from './pong-window'
 import type { SnakeWindow } from './snake-window'
 import type { P5Window } from './p5-window'
+import type { TerminalWindow } from './terminal'
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { FS_HOME, vfsNormalize } from './os-fs'
 import { Splitter } from './splitter'
@@ -93,6 +94,7 @@ type TiledWin =
   | SnakeWindow
   | PongWindow
   | P5Window
+  | TerminalWindow
 
 interface MinimizedEntry {
   win: TiledWin
@@ -423,6 +425,31 @@ export class Desktop {
       this.windows.push(pw)
       this.attachVerticalSplitters()
       this.focusWindow(pw)
+      return
+    }
+
+    if (spec.command === 'terminal') {
+      const min = this.minimized.find(m => m.win.command === 'terminal')
+      if (min) { this.restoreMinimized(min); return }
+
+      const existing = this.windows.find(w => w.command === 'terminal')
+      if (existing) { this.focusWindow(existing); return }
+
+      const { TerminalWindow: TerminalWindowCtor } = await import('./terminal')
+      let tw!: TerminalWindow
+      tw = new TerminalWindowCtor({
+        onClose:       () => this.closeWindow(tw),
+        onMinimize:    () => this.minimizeWindow(tw),
+        onMaximize:    () => this.toggleMaximizeContent(tw),
+        onFocus:       () => this.focusWindow(tw),
+        onOpenWindow:  s  => void this.openWindow(s),
+      })
+      this.appendToRightPane(tw.el)
+      this.windows.push(tw)
+      this.attachVerticalSplitters()
+      await tw.mount()
+      tw.fit()
+      this.focusWindow(tw)
       return
     }
 
@@ -1333,8 +1360,8 @@ export class Desktop {
     ev.preventDefault()
     ev.stopImmediatePropagation()
 
-    // Ctrl+T → terminal (restore if minimized)
-    if (key === 't') { this.focusTerminal(); return }
+    // Ctrl+T → open terminal app window (or focus if already open)
+    if (key === 't') { void this.openWindow({ command: 'terminal', title: 'terminal', content: [] }); return }
 
     // Ctrl+1..9 → taskbar slot (launcher order, left → right)
     const n = parseInt(key, 10)

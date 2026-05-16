@@ -1,9 +1,7 @@
 /**
- * Turns the HTML shell into the live desktop + terminal app.
- *
- * Ordering is annoying but deliberate: palettes and systray state land before xterm,
- * Desktop is constructed before TerminalApp passes `openWindow` so `fit()` always
- * closes over real tiles, Matrix rain defers via idle callback so first paint stays cheap.
+ * Turns the HTML shell into the live desktop.
+ * The terminal is now a lazy-loaded tile opened via the desktop tile or Ctrl+T.
+ * Matrix rain defers via idle callback so first paint stays cheap.
  */
 import { runBootSplash } from './boot-splash'
 import { initThemeFromStorage } from './theme'
@@ -11,7 +9,6 @@ import { initRetroFxFromStorage } from './retro-fx'
 import { initMatrixBg } from './matrix-bg'
 import { initOsSound } from './os-sound'
 import { initSystray, syncSettingsSoundToggle } from './os-systray'
-import { TerminalApp } from './terminal'
 import { Desktop } from './desktop'
 
 export async function bootstrapShellUi(): Promise<void> {
@@ -22,16 +19,17 @@ export async function bootstrapShellUi(): Promise<void> {
   initSystray()
   syncSettingsSoundToggle()
 
-  const terminalEl = document.getElementById('terminal')
   const terminalWin = document.getElementById('terminal-window')
-  const vimModeLine = document.getElementById('vim-mode-line') as HTMLElement | null
   const desktopEl = document.getElementById('desktop')
   const matrixCanvas = document.getElementById('matrix-bg') as HTMLCanvasElement | null
 
-  if (!terminalEl || !terminalWin || !desktopEl) {
-    console.error('[bootstrap-shell] Missing #terminal, #terminal-window, or #desktop.')
+  if (!terminalWin || !desktopEl) {
+    console.error('[bootstrap-shell] Missing #terminal-window or #desktop.')
     return
   }
+
+  // Hide the static terminal pane — terminal is now a lazy tile.
+  terminalWin.classList.add('terminal-closed')
 
   const scheduleMatrixInit = (): void => {
     const canvas = matrixCanvas
@@ -48,15 +46,5 @@ export async function bootstrapShellUi(): Promise<void> {
   }
   scheduleMatrixInit()
 
-  let app!: TerminalApp
-  const desktop = new Desktop(desktopEl, terminalWin, () => app.fit())
-  app = new TerminalApp(terminalEl, vimModeLine, spec => void desktop.openWindow(spec))
-
-  window.addEventListener('mrgrey-theme-change', () => app.syncXtermTheme())
-
-  await app.mount()
-  document.querySelector<HTMLAnchorElement>('a.skip-link')?.addEventListener('click', e => {
-    e.preventDefault()
-    app.focusShell()
-  })
+  new Desktop(desktopEl, terminalWin, () => {})
 }
