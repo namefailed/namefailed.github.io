@@ -92,7 +92,7 @@ export const appCommands: Record<string, Command> = {
   },
 
   p5: {
-    description: 'p5.js sketch viewer — p5 [/vfs/path.js]; Examples dropdown, drag-and-drop, Edit opens in editor',
+    description: 'p5.js sketch viewer — 9 built-in sketches seeded under ~/sketches/; double-click .js in file explorer to play; drag-drop .js or Open… from VFS',
     run: () => [],
   },
 

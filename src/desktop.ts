@@ -346,13 +346,26 @@ export class Desktop {
         onMinimize: () => this.minimizeWindow(ex),
         onMaximize: () => this.toggleMaximizeContent(ex),
         onFocus: () => this.focusWindow(ex),
-        onOpenInEditor: absFilePath =>
+        onOpenInEditor: absFilePath => {
+          // .js files route to the p5 viewer so double-clicking a sketch in
+          // ~/sketches plays it directly. The viewer's Edit button still
+          // bounces the file into the mini-vim if the user wants to modify.
+          if (absFilePath.endsWith('.js')) {
+            void this.openWindow({
+              command: 'p5',
+              title: absFilePath.split('/').pop() ?? 'p5.js',
+              content: [],
+              p5SketchPath: absFilePath,
+            })
+            return
+          }
           void this.openWindow({
             command: 'edit',
             title: `edit — ${absFilePath}`,
             content: [],
             editorPath: absFilePath,
-          }),
+          })
+        },
       })
       this.appendToRightPane(ex.el)
       this.windows.push(ex)

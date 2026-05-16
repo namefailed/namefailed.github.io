@@ -5,6 +5,19 @@ export interface P5Example {
   code: string
 }
 
+/**
+ * Stable filename for a sketch label — used both for the dropdown's display
+ * and to seed `/home/namefailed/sketches/` in the VFS. Slug rules: lowercase,
+ * non-alphanumerics become single hyphens, no leading/trailing hyphens.
+ */
+export function sketchFilename(label: string): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `${slug}.js`
+}
+
 export const P5_EXAMPLES: P5Example[] = [
   {
     label: 'Flow Field',
@@ -281,6 +294,249 @@ function hsvToRgb(h, s, v) {
 }
 
 function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+`,
+  },
+
+  {
+    label: 'Bouncing Balls',
+    code: `
+const COUNT = 60;
+const GRAVITY = 0.18;
+let balls = [];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  colorMode(HSB, 360, 100, 100, 100);
+  for (let i = 0; i < COUNT; i++) spawn();
+}
+
+function spawn() {
+  const r = random(8, 26);
+  balls.push({
+    x: random(r, width - r),
+    y: random(r, height * 0.4),
+    vx: random(-3, 3),
+    vy: random(-2, 2),
+    r,
+    hue: random(360),
+  });
+}
+
+function draw() {
+  background(240, 25, 8, 30);
+  noStroke();
+
+  for (const b of balls) {
+    b.vy += GRAVITY;
+    b.x += b.vx;
+    b.y += b.vy;
+
+    if (b.x < b.r) { b.x = b.r; b.vx *= -0.92; }
+    if (b.x > width - b.r) { b.x = width - b.r; b.vx *= -0.92; }
+    if (b.y > height - b.r) {
+      b.y = height - b.r;
+      b.vy *= -0.85;
+      b.vx *= 0.98;
+    }
+
+    fill(b.hue, 70, 95, 80);
+    circle(b.x, b.y, b.r * 2);
+    fill(0, 0, 100, 30);
+    circle(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.5);
+  }
+}
+
+function mousePressed() {
+  for (let i = 0; i < 5; i++) {
+    balls.push({
+      x: mouseX, y: mouseY,
+      vx: random(-6, 6), vy: random(-9, -3),
+      r: random(8, 22), hue: random(360),
+    });
+  }
+  if (balls.length > 200) balls.splice(0, balls.length - 200);
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+`,
+  },
+
+  {
+    label: 'Mandelbrot',
+    code: `
+let cx = -0.5, cy = 0;
+let zoom = 1;
+const MAX_ITER = 80;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  colorMode(HSB, 360, 100, 100);
+  pixelDensity(1);
+  noSmooth();
+  render();
+  textFont('monospace');
+  textSize(11);
+}
+
+function render() {
+  loadPixels();
+  const w = width, h = height;
+  const aspect = w / h;
+  const span = 3 / zoom;
+
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      const x0 = cx + (px / w - 0.5) * span * aspect;
+      const y0 = cy + (py / h - 0.5) * span;
+      let x = 0, y = 0, iter = 0;
+      while (x * x + y * y <= 4 && iter < MAX_ITER) {
+        const xt = x * x - y * y + x0;
+        y = 2 * x * y + y0;
+        x = xt;
+        iter++;
+      }
+      const idx = 4 * (px + py * w);
+      if (iter === MAX_ITER) {
+        pixels[idx] = pixels[idx + 1] = pixels[idx + 2] = 10;
+      } else {
+        const t = iter / MAX_ITER;
+        const [r, g, b] = hsv(((t * 360 + 220) % 360) / 360, 0.85, 0.95);
+        pixels[idx] = r;
+        pixels[idx + 1] = g;
+        pixels[idx + 2] = b;
+      }
+      pixels[idx + 3] = 255;
+    }
+  }
+  updatePixels();
+}
+
+function draw() {
+  // static — render() is invoked on click + resize only
+  fill(0, 0, 100, 75);
+  noStroke();
+  rect(0, height - 22, 280, 22);
+  fill(0, 0, 0);
+  text('click = zoom in  ·  right-click = zoom out', 10, height - 7);
+}
+
+function mousePressed() {
+  const aspect = width / height;
+  const span = 3 / zoom;
+  cx += (mouseX / width - 0.5) * span * aspect;
+  cy += (mouseY / height - 0.5) * span;
+  zoom *= (mouseButton === RIGHT) ? 0.5 : 2;
+  render();
+  return false;
+}
+
+function hsv(h, s, v) {
+  const i = floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const tv = v * (1 - (1 - f) * s);
+  const m = i % 6;
+  const r = [v, q, p, p, tv, v][m];
+  const g = [tv, v, v, q, p, p][m];
+  const b = [p, p, tv, v, v, q][m];
+  return [r * 255, g * 255, b * 255];
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); render(); }
+`,
+  },
+
+  {
+    label: 'Noise Terrain',
+    code: `
+const COLS = 80, ROWS = 60;
+let cellW, cellH;
+let scrollY = 0;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight, WEBGL);
+  colorMode(HSB, 360, 100, 100, 100);
+  recalcCells();
+  noStroke();
+}
+
+function recalcCells() {
+  cellW = width / COLS;
+  cellH = height / ROWS;
+}
+
+function draw() {
+  background(240, 25, 10);
+  rotateX(PI / 3);
+  translate(-width / 2, -height / 2, 0);
+  scrollY += 0.015;
+
+  for (let y = 0; y < ROWS - 1; y++) {
+    beginShape(TRIANGLE_STRIP);
+    for (let x = 0; x < COLS; x++) {
+      const e1 = elevation(x, y);
+      const e2 = elevation(x, y + 1);
+      const hueA = map(e1, -100, 100, 200, 30);
+      const hueB = map(e2, -100, 100, 200, 30);
+      fill(hueA, 55, 90);
+      vertex(x * cellW, y * cellH, e1);
+      fill(hueB, 55, 90);
+      vertex(x * cellW, (y + 1) * cellH, e2);
+    }
+    endShape();
+  }
+}
+
+function elevation(x, y) {
+  return map(noise(x * 0.12, y * 0.12 + scrollY), 0, 1, -100, 100);
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); recalcCells(); }
+`,
+  },
+
+  {
+    label: 'Spirograph',
+    code: `
+let t = 0;
+let R = 200, r = 60, d = 100;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  colorMode(HSB, 360, 100, 100, 100);
+  background(240, 25, 8);
+}
+
+function draw() {
+  translate(width / 2, height / 2);
+  background(240, 25, 8, 6);
+
+  // Slow drift in parameters for a hypnotic effect
+  R = 180 + sin(t * 0.07) * 60;
+  r = 50 + cos(t * 0.05) * 30;
+  d = 80 + sin(t * 0.03) * 40;
+
+  const k = r / R;
+  const steps = 600;
+  noFill();
+  for (let i = 0; i < steps; i++) {
+    const u = (i / steps) * TWO_PI + t * 0.02;
+    const x = (R - r) * cos(u) + d * cos(((R - r) / r) * u);
+    const y = (R - r) * sin(u) - d * sin(((R - r) / r) * u);
+    const hue = ((i / steps) * 360 + t * 20) % 360;
+    stroke(hue, 75, 95, 70);
+    strokeWeight(1.4);
+    point(x, y);
+  }
+
+  t += 1;
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  background(240, 25, 8);
+}
 `,
   },
 ]

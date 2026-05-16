@@ -15,9 +15,14 @@
  */
 
 import { storageGet, storageSet } from './storage'
+import { P5_EXAMPLES, sketchFilename } from './p5-sketches'
 
-/** Bumped so `/home/namefailed` default tree replaces older `/home/mrgrey` saves. v3: removed welcome.txt. */
-const STORAGE_KEY = 'portfolio-vfs-v3-namefailed-home'
+/**
+ * Bumped on each schema change so older saves don't shadow new default content.
+ *   v3 — removed welcome.txt
+ *   v4 — seeded /home/namefailed/sketches/ with the p5 example library
+ */
+const STORAGE_KEY = 'portfolio-vfs-v4-namefailed-home'
 
 /** Debounce delay for VFS saves to reduce localStorage writes during rapid operations. */
 const SAVE_DEBOUNCE_MS = 150
@@ -76,6 +81,15 @@ function defaultRoot(): FsDir {
   const pics = mkEmptyDir()
   pics.c['.keep'] = { t: 'f', body: '' }
   user.c['Pictures'] = pics
+
+  // Seed the bundled p5 sketches. Double-clicking these in the file explorer
+  // launches the p5 viewer; the same set also shows in the viewer's Examples
+  // dropdown so the two paths stay in sync.
+  const sketches = mkEmptyDir()
+  for (const ex of P5_EXAMPLES) {
+    sketches.c[sketchFilename(ex.label)] = { t: 'f', body: ex.code }
+  }
+  user.c['sketches'] = sketches
   const cfg = mkEmptyDir()
   cfg.c['user-dirs.dirs'] = {
     t: 'f',
