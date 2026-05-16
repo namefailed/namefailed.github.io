@@ -71,3 +71,29 @@ export function defaultTileLayout(): TileLayout {
   }
   return out
 }
+
+export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions'
+
+export function loadTileLayout(): TileLayout {
+  const defaults = defaultTileLayout()
+  const raw = window.localStorage.getItem(TILE_POSITIONS_KEY)
+  if (!raw) return defaults
+  try {
+    const parsed = JSON.parse(raw) as Record<string, TilePosition>
+    const merged: TileLayout = {}
+    for (const key of Object.keys(defaults)) {
+      merged[key] = parsed[key] ?? defaults[key]
+    }
+    return merged
+  } catch {
+    return defaults
+  }
+}
+
+export function saveTileLayout(layout: TileLayout): void {
+  window.localStorage.setItem(TILE_POSITIONS_KEY, JSON.stringify(layout))
+}
+
+export function resetTileLayout(): void {
+  window.localStorage.removeItem(TILE_POSITIONS_KEY)
+}
