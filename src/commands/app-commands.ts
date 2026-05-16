@@ -93,7 +93,6 @@ export const appCommands: Record<string, Command> = {
 
   p5: {
     description: 'p5.js sketch viewer — p5 [/vfs/path.js]; Examples dropdown, drag-and-drop, Edit opens in editor',
-    hidden: true, // Temporarily hidden — remove flag to restore
     run: () => [],
   },
 

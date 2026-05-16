@@ -5534,6 +5534,26 @@ html.retro-fx .xterm-screen {
   pointer-events: none;
 }
 
+.p5-error-banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 12;
+  padding: 8px 12px;
+  background: rgba(235, 111, 146, 0.18);
+  border-bottom: 1px solid rgba(235, 111, 146, 0.55);
+  color: var(--th-red, #eb6f92);
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  text-align: center;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.p5-error-banner[hidden] { display: none; }
+
 .p5-drop-overlay--active {
   display: flex;
 }

@@ -59,8 +59,7 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   { kind: 'app', cmd: 'cube', label: 'Cube', glyph: '▦' },
   { kind: 'app', cmd: 'snake', label: 'Snake', glyph: '≈' },
   { kind: 'app', cmd: 'pong', label: 'Pong', glyph: '◎' },
-  // Temporarily hidden — uncomment to restore
-  // { kind: 'app', cmd: 'p5', label: 'p5.js', glyph: 'p5' },
+  { kind: 'app', cmd: 'p5', label: 'p5.js', glyph: 'p5' },
 ]
 
 /** Hover/focus on launcher row → kick dynamic import before click */

@@ -1,4 +1,19 @@
-/** p5.js sketch viewer — run built-in examples, drop a .js file, or open from the VFS. */
+/**
+ * p5.js sketch viewer.
+ *
+ * Sandboxed iframe loads the p5 library from a CDN, then executes the
+ * user's sketch in global mode. Sketches can come from:
+ *   — the built-in Examples dropdown
+ *   — drag-and-drop of a .js file
+ *   — `Open…` against the VFS (terminal `p5 /path.js` form)
+ *
+ * On open with no `initialVfsPath`, the first example auto-runs so the
+ * tile is never blank.
+ *
+ * Iframe error/console messages are forwarded to the parent via a
+ * window.onerror shim injected into the sketch HTML — surfaced as a
+ * red error banner inside the tile.
+ */
 
 import type { WindowSpec } from './appwindow'
 import { P5_EXAMPLES } from './p5-sketches'
@@ -15,7 +30,30 @@ export interface P5WindowOptions {
 
 const P5_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.0/p5.min.js'
 
-function buildHtml(code: string): string {
+/** Random nonce identifies postMessage events from this tile's iframe. */
+function makeNonce(): string {
+  return `p5${Math.random().toString(36).slice(2, 10)}`
+}
+
+function buildHtml(code: string, nonce: string): string {
+  // The error shim catches sketch errors before p5 starts AND runtime errors
+  // during draw(). It posts `{ kind: 'p5-error', nonce, message }` to the
+  // parent window so the tile can render the failure as a banner.
+  const errorShim = `
+    (function () {
+      var nonce = ${JSON.stringify(nonce)};
+      function post(message) {
+        try { parent.postMessage({ kind: 'p5-error', nonce: nonce, message: message }, '*'); } catch (e) {}
+      }
+      window.addEventListener('error', function (e) {
+        post((e && e.message) ? e.message + (e.lineno ? ' (line ' + e.lineno + ')' : '') : 'Unknown error');
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e && e.reason;
+        post(r && r.message ? r.message : String(r));
+      });
+    })();
+  `
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -27,6 +65,7 @@ function buildHtml(code: string): string {
 </style>
 </head>
 <body>
+<script>${errorShim}<\/script>
 <script src="${P5_CDN}"><\/script>
 <script>
 ${code}
@@ -37,22 +76,26 @@ ${code}
 
 export class P5Window {
   readonly el: HTMLElement
-  readonly command: string
+  /** Literal — must match a launcher cmd so dock/taskbar icon lookup succeeds. */
+  readonly command = 'p5' as const
   readonly onFocus: () => void
 
-  private iframe: HTMLIFrameElement
+  private iframe!: HTMLIFrameElement
   private blobUrl: string | null = null
   private currentCode: string | null = null
   private currentLabel = 'untitled.js'
   private currentVfsPath: string | null = null
+  /** Unique-per-instance — filters postMessage events from other tiles' iframes. */
+  private iframeNonce = makeNonce()
 
-  private ro: ResizeObserver | null = null
   private dropdown: HTMLElement | null = null
 
   private labelEl!: HTMLElement
+  private runBtn!: HTMLButtonElement
   private editBtn!: HTMLButtonElement
   private emptyState!: HTMLElement
   private dropOverlay!: HTMLElement
+  private errorBanner!: HTMLElement
 
   private onOpenWindowFn: (spec: WindowSpec) => void
   private onClose: () => void
@@ -65,27 +108,50 @@ export class P5Window {
     }
   }
 
+  private readonly onWinMessage = (e: MessageEvent): void => {
+    const data = e.data
+    if (!data || typeof data !== 'object') return
+    if (data.kind !== 'p5-error') return
+    if (data.nonce !== this.iframeNonce) return
+    const message = typeof data.message === 'string' ? data.message : 'Sketch failed'
+    this.showError(message)
+  }
+
   constructor(opts: P5WindowOptions) {
-    this.command = `p5-${Date.now()}`
     this.onFocus = opts.onFocus
     this.onOpenWindowFn = opts.onOpenWindow
     this.onClose = opts.onClose
     this.onMinimize = opts.onMinimize
     this.onMaximize = opts.onMaximize
 
-    // ── shell ───────────────────────────────────────────────────────────────
     this.el = document.createElement('div')
     this.el.className = 'app-window p5-app'
     this.el.dataset.app = 'p5'
     this.el.addEventListener('mousedown', () => opts.onFocus())
 
-    // ── title bar ───────────────────────────────────────────────────────────
+    this.el.appendChild(this.buildTitleBar())
+    this.el.appendChild(this.buildBody())
+
+    document.addEventListener('click', this.onDocClick)
+    window.addEventListener('message', this.onWinMessage)
+
+    // First-run: load initial VFS path if provided, otherwise auto-run the
+    // first example so the user always sees a working sketch.
+    if (opts.initialVfsPath) {
+      void this.loadFromVfs(opts.initialVfsPath)
+    } else {
+      const first = P5_EXAMPLES[0]
+      if (first) this.runExample(first.label, first.code)
+    }
+  }
+
+  // ── DOM construction ────────────────────────────────────────────────────────
+
+  private buildTitleBar(): HTMLElement {
     const bar = document.createElement('div')
     bar.className = 'win-titlebar'
     bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">p5.js</span>
-      </div>
+      <div class="win-title-left"><span class="win-title">p5.js</span></div>
       <div class="win-traffic">
         <span class="dot dot-min"   title="minimize"></span>
         <span class="dot dot-max"   title="maximize / restore"></span>
@@ -95,20 +161,27 @@ export class P5Window {
     bar.querySelector('.dot-close')!.addEventListener('click', e => { e.stopPropagation(); this.onClose() })
     bar.querySelector('.dot-min')!.addEventListener('click', e => { e.stopPropagation(); this.onMinimize() })
     bar.querySelector('.dot-max')!.addEventListener('click', e => { e.stopPropagation(); this.onMaximize() })
-    bar.addEventListener('mousedown', () => opts.onFocus())
+    bar.addEventListener('mousedown', () => this.onFocus())
+    return bar
+  }
+
+  private buildBody(): HTMLElement {
+    const stack = document.createElement('div')
+    stack.className = 'p5-stack'
 
     // ── toolbar ─────────────────────────────────────────────────────────────
     const toolbar = document.createElement('div')
     toolbar.className = 'p5-toolbar'
 
-    const runBtn = document.createElement('button')
-    runBtn.className = 'os-toolbar-btn'
-    runBtn.title = 'Run / reload sketch'
-    runBtn.textContent = '▶ Run'
-    runBtn.addEventListener('click', () => { if (this.currentCode) this.run(this.currentCode) })
+    this.runBtn = document.createElement('button')
+    this.runBtn.className = 'os-toolbar-btn'
+    this.runBtn.title = 'Run / reload sketch'
+    this.runBtn.textContent = '▶ Run'
+    this.runBtn.disabled = true
+    this.runBtn.addEventListener('click', () => { if (this.currentCode) this.run(this.currentCode) })
 
-    const sep = document.createElement('span')
-    sep.className = 'p5-toolbar-sep'
+    const sep1 = document.createElement('span')
+    sep1.className = 'p5-toolbar-sep'
 
     this.labelEl = document.createElement('span')
     this.labelEl.className = 'p5-label'
@@ -120,24 +193,26 @@ export class P5Window {
     this.editBtn = document.createElement('button')
     this.editBtn.className = 'os-toolbar-btn'
     this.editBtn.textContent = 'Edit'
+    this.editBtn.title = 'Open current sketch in the mini-vim editor'
     this.editBtn.disabled = true
     this.editBtn.addEventListener('click', () => void this.editCurrent())
 
     const openBtn = document.createElement('button')
     openBtn.className = 'os-toolbar-btn'
     openBtn.textContent = 'Open…'
+    openBtn.title = 'Load a sketch from the virtual filesystem'
     openBtn.addEventListener('click', () => this.showVfsModal())
 
-    // examples dropdown wrapper
-    const exWrap = document.createElement('div')
-    exWrap.className = 'p5-examples-wrap'
-    const exBtn = document.createElement('button')
-    exBtn.className = 'os-toolbar-btn'
-    exBtn.textContent = 'Examples ▾'
-    exBtn.addEventListener('click', e => { e.stopPropagation(); this.toggleDropdown(exWrap) })
-    exWrap.appendChild(exBtn)
+    const examplesWrap = document.createElement('div')
+    examplesWrap.className = 'p5-examples-wrap'
+    const examplesBtn = document.createElement('button')
+    examplesBtn.className = 'os-toolbar-btn'
+    examplesBtn.textContent = 'Examples ▾'
+    examplesBtn.title = 'Built-in p5.js demo sketches'
+    examplesBtn.addEventListener('click', e => { e.stopPropagation(); this.toggleDropdown(examplesWrap) })
+    examplesWrap.appendChild(examplesBtn)
 
-    toolbar.append(runBtn, sep, this.labelEl, sep2, this.editBtn, openBtn, exWrap)
+    toolbar.append(this.runBtn, sep1, this.labelEl, sep2, this.editBtn, openBtn, examplesWrap)
 
     // ── iframe host ─────────────────────────────────────────────────────────
     const iframeHost = document.createElement('div')
@@ -152,13 +227,15 @@ export class P5Window {
     this.emptyState.className = 'p5-empty-state'
     this.emptyState.innerHTML = `<div class="p5-empty-icon">⬡</div><div>pick an example or open a sketch</div>`
 
+    this.errorBanner = document.createElement('div')
+    this.errorBanner.className = 'p5-error-banner'
+    this.errorBanner.hidden = true
+
     this.dropOverlay = document.createElement('div')
     this.dropOverlay.className = 'p5-drop-overlay'
     this.dropOverlay.textContent = 'Drop .js here'
 
-    iframeHost.appendChild(this.iframe)
-    iframeHost.appendChild(this.emptyState)
-    iframeHost.appendChild(this.dropOverlay)
+    iframeHost.append(this.iframe, this.emptyState, this.errorBanner, this.dropOverlay)
 
     // drag-and-drop
     iframeHost.addEventListener('dragover', e => {
@@ -175,37 +252,38 @@ export class P5Window {
       if (file) this.handleDrop(file)
     })
 
-    // ── stack ────────────────────────────────────────────────────────────────
-    const stack = document.createElement('div')
-    stack.className = 'p5-stack'
-    stack.appendChild(bar)
-    stack.appendChild(toolbar)
-    stack.appendChild(iframeHost)
-    this.el.appendChild(stack)
-
-    document.addEventListener('click', this.onDocClick)
-
-    // load initial VFS path if provided
-    if (opts.initialVfsPath) {
-      void this.loadFromVfs(opts.initialVfsPath)
-    }
+    stack.append(toolbar, iframeHost)
+    return stack
   }
+
+  // ── Sketch loading / running ────────────────────────────────────────────────
 
   private run(code: string): void {
     this.currentCode = code
-    const html = buildHtml(code)
+    this.hideError()
+    const html = buildHtml(code, this.iframeNonce)
     const blob = new Blob([html], { type: 'text/html' })
     if (this.blobUrl) URL.revokeObjectURL(this.blobUrl)
     this.blobUrl = URL.createObjectURL(blob)
     this.iframe.src = this.blobUrl
     this.emptyState.style.display = 'none'
+    this.runBtn.disabled = false
     this.editBtn.disabled = false
   }
 
-  private async loadFromVfs(path: string): Promise<void> {
+  private runExample(label: string, code: string): void {
+    this.currentVfsPath = null
+    this.currentLabel = `${label}.js`
+    this.labelEl.textContent = label
+    this.run(code)
+  }
+
+  /** Public so the desktop can reuse an existing p5 tile when a new path is requested. */
+  async loadFromVfs(path: string): Promise<void> {
     const result = vfsReadRaw(path)
     if (!result.ok) {
       this.labelEl.textContent = `not found: ${path}`
+      this.showError(`Could not read ${path} — file does not exist in the VFS`)
       return
     }
     this.currentVfsPath = result.abs
@@ -219,13 +297,14 @@ export class P5Window {
 
     let vfsPath = this.currentVfsPath
     if (!vfsPath) {
+      // Sketch came from an Example or drag-drop — persist it before editing.
       const dir = '/home/namefailed/sketches'
       vfsMkdir(dir)
       const label = this.currentLabel.endsWith('.js') ? this.currentLabel : `${this.currentLabel}.js`
       const fullPath = `${dir}/${label}`
       const err = vfsWrite(fullPath, this.currentCode)
       if (err) {
-        // VFS write failed — silently skip save (err is the string error message)
+        this.showError(`Could not save sketch to ${fullPath}: ${err}`)
         return
       }
       vfsPath = fullPath
@@ -239,6 +318,20 @@ export class P5Window {
       editorPath: vfsPath,
     })
   }
+
+  // ── Error banner ────────────────────────────────────────────────────────────
+
+  private showError(message: string): void {
+    this.errorBanner.textContent = `⚠ ${message}`
+    this.errorBanner.hidden = false
+  }
+
+  private hideError(): void {
+    this.errorBanner.hidden = true
+    this.errorBanner.textContent = ''
+  }
+
+  // ── Examples dropdown ───────────────────────────────────────────────────────
 
   private toggleDropdown(anchor: HTMLElement): void {
     if (this.dropdown) {
@@ -256,10 +349,7 @@ export class P5Window {
       btn.textContent = ex.label
       btn.addEventListener('click', e => {
         e.stopPropagation()
-        this.currentVfsPath = null
-        this.currentLabel = `${ex.label}.js`
-        this.labelEl.textContent = ex.label
-        this.run(ex.code)
+        this.runExample(ex.label, ex.code)
         this.closeDropdown()
       })
       menu.appendChild(btn)
@@ -275,6 +365,8 @@ export class P5Window {
     }
   }
 
+  // ── VFS open modal ──────────────────────────────────────────────────────────
+
   private showVfsModal(): void {
     const existing = this.el.querySelector('.p5-vfs-modal')
     if (existing) { existing.remove(); return }
@@ -289,7 +381,7 @@ export class P5Window {
     const input = document.createElement('input')
     input.type = 'text'
     input.className = 'p5-vfs-modal-input'
-    input.placeholder = '/home/namefailed/sketch.js'
+    input.placeholder = '/home/namefailed/sketches/my-sketch.js'
     input.value = this.currentVfsPath ?? ''
 
     const row = document.createElement('div')
@@ -321,8 +413,13 @@ export class P5Window {
     input.select()
   }
 
+  // ── File drop ───────────────────────────────────────────────────────────────
+
   private handleDrop(file: File): void {
-    if (!file.name.endsWith('.js')) return
+    if (!file.name.endsWith('.js')) {
+      this.showError(`Only .js files are accepted (got ${file.name})`)
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => {
       const code = reader.result as string
@@ -331,8 +428,13 @@ export class P5Window {
       this.labelEl.textContent = file.name
       this.run(code)
     }
+    reader.onerror = () => {
+      this.showError(`Could not read ${file.name}`)
+    }
     reader.readAsText(file)
   }
+
+  // ── External API ────────────────────────────────────────────────────────────
 
   setActive(active: boolean): void {
     this.el.classList.toggle('active', active)
@@ -346,16 +448,18 @@ export class P5Window {
     return this.el.classList.contains('maximized')
   }
 
-  scrollBy(_delta: number): void { /* no-op: canvas fills the pane */ }
+  /** No-op — the iframe canvas fills the pane and handles its own resizing. */
+  scrollBy(_delta: number): void { /* intentionally empty */ }
 
   dispose(): void {
-    this.ro?.disconnect()
-    this.ro = null
     if (this.blobUrl) {
       URL.revokeObjectURL(this.blobUrl)
       this.blobUrl = null
     }
+    // Stop the iframe's animation loop and free its globals.
+    this.iframe.src = 'about:blank'
     document.removeEventListener('click', this.onDocClick)
+    window.removeEventListener('message', this.onWinMessage)
     this.closeDropdown()
   }
 }

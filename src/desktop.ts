@@ -405,10 +405,28 @@ export class Desktop {
     }
 
     if (spec.command === 'p5') {
+      const pathArg = spec.p5SketchPath ?? null
+
+      // Restore minimized — load the new path into it if one was supplied.
+      const min = this.minimized.find(m => m.win.command === 'p5')
+      if (min) {
+        if (pathArg) void (min.win as P5Window).loadFromVfs(pathArg)
+        this.restoreMinimized(min)
+        return
+      }
+
+      // Already open — focus it and load the new path if any.
+      const existing = this.windows.find(w => w.command === 'p5')
+      if (existing) {
+        if (pathArg) void (existing as P5Window).loadFromVfs(pathArg)
+        this.focusWindow(existing)
+        return
+      }
+
       const { P5Window: P5WindowCtor } = await import('./p5-window')
       let pw!: P5Window
       pw = new P5WindowCtor({
-        initialVfsPath: spec.p5SketchPath ?? null,
+        initialVfsPath: pathArg,
         onOpenWindow: s => void this.openWindow(s),
         onClose:    () => this.closeWindow(pw),
         onMinimize: () => this.minimizeWindow(pw),
