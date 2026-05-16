@@ -5545,3 +5545,83 @@ html.retro-fx .xterm-screen {
 .p5-vfs-modal-ok:hover {
   opacity: 0.85;
 }
+
+/* ─── boot splash ─────────────────────────────────────────── */
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  flex-direction: column;
+}
+.boot-splash--out {
+  animation: boot-fade-out 320ms ease forwards;
+}
+.boot-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 48px 16px;
+}
+.boot-logo {
+  font-size: clamp(10px, 1.6vw, 18px);
+  line-height: 1;
+  white-space: pre;
+  color: #f5c2e7;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0 0 18px rgba(245, 194, 231, 0.25);
+  margin-bottom: 12px;
+}
+.boot-logo-sub {
+  text-align: center;
+  color: #94e2d5;
+  font-size: 13px;
+  letter-spacing: 4px;
+  margin-bottom: 24px;
+}
+.boot-section {
+  color: #6c7086;
+  margin-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 10px;
+}
+.boot-line {
+  color: #a6adc8;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.boot-line--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.boot-ts   { color: #585b70; }
+.boot-info { color: #94e2d5; }
+.boot-ok   { color: #a6e3a1; }
+.boot-warn { color: #f9e2af; }
+.boot-err  { color: #f38ba8; }
+.boot-footer {
+  border-top: 1px solid #313244;
+  padding: 14px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  background: #181825;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+.boot-footer--in { opacity: 1; }
+.boot-footer-welcome { color: #f5c2e7; font-weight: bold; }
+.boot-footer-hint    { color: #6c7086; font-style: italic; }
+.boot-footer-hint b  { color: #cba6f7; }
+
+@keyframes boot-fade-out {
+  to { opacity: 0; }
+}
