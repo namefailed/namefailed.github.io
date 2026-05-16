@@ -10,7 +10,6 @@ class MockStorage implements Storage {
   key(index: number) { return [...this.data.keys()][index] ?? null }
 }
 
-// @ts-expect-error mock for tests
 ;(globalThis as unknown as { localStorage: Storage }).localStorage = new MockStorage()
 
 describe('matrix-bg default', () => {

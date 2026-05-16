@@ -16,9 +16,6 @@ function writeStoredMatrix(on: boolean): void {
   storageSet(STORAGE_KEY, on ? 'on' : 'off')
 }
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
 
 /** Weighted toward decimal digits so the rain reads as numbers falling. */
 const DECIMAL = '0123456789'
