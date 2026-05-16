@@ -12,288 +12,275 @@ export interface CubeFaces {
 export type CubeFaceKey = keyof CubeFaces
 
 export function solvedCube(): CubeFaces {
-  const mk = (c: number) => Array(9).fill(c)
+  const face = (color: number) => Array<number>(9).fill(color)
   return {
-    U: mk(0),
-    R: mk(1),
-    F: mk(2),
-    D: mk(3),
-    L: mk(4),
-    B: mk(5),
+    U: face(0),
+    R: face(1),
+    F: face(2),
+    D: face(3),
+    L: face(4),
+    B: face(5),
   }
 }
 
-function rotFaceCW(f: number[]): void {
-  const o = f.slice()
-  f[0] = o[6]
-  f[1] = o[3]
-  f[2] = o[0]
-  f[3] = o[7]
-  f[4] = o[4]
-  f[5] = o[1]
-  f[6] = o[8]
-  f[7] = o[5]
-  f[8] = o[2]
+/** Rotate a face array 90° clockwise in-place (standard cubie numbering 0–8, row-major). */
+function rotFaceCW(face: number[]): void {
+  const orig = face.slice()
+  face[0] = orig[6]
+  face[1] = orig[3]
+  face[2] = orig[0]
+  face[3] = orig[7]
+  face[4] = orig[4]
+  face[5] = orig[1]
+  face[6] = orig[8]
+  face[7] = orig[5]
+  face[8] = orig[2]
 }
 
-export function cloneCube(c: CubeFaces): CubeFaces {
+export function cloneCube(cube: CubeFaces): CubeFaces {
   return {
-    U: [...c.U],
-    R: [...c.R],
-    F: [...c.F],
-    D: [...c.D],
-    L: [...c.L],
-    B: [...c.B],
+    U: [...cube.U],
+    R: [...cube.R],
+    F: [...cube.F],
+    D: [...cube.D],
+    L: [...cube.L],
+    B: [...cube.B],
   }
 }
 
-export function isSolved(c: CubeFaces): boolean {
-  const ok = (f: number[]) => f.every(x => x === f[4])
-  return ok(c.U) && ok(c.R) && ok(c.F) && ok(c.D) && ok(c.L) && ok(c.B)
+export function isSolved(cube: CubeFaces): boolean {
+  const allMatchCenter = (face: number[]) => face.every(cell => cell === face[4])
+  return (
+    allMatchCenter(cube.U) &&
+    allMatchCenter(cube.R) &&
+    allMatchCenter(cube.F) &&
+    allMatchCenter(cube.D) &&
+    allMatchCenter(cube.L) &&
+    allMatchCenter(cube.B)
+  )
 }
 
 /** U clockwise */
-export function moveU(c: CubeFaces): void {
-  rotFaceCW(c.U)
-  const t = [c.F[0], c.F[1], c.F[2]]
-  c.F[0] = c.R[0]
-  c.F[1] = c.R[1]
-  c.F[2] = c.R[2]
-  c.R[0] = c.B[0]
-  c.R[1] = c.B[1]
-  c.R[2] = c.B[2]
-  c.B[0] = c.L[0]
-  c.B[1] = c.L[1]
-  c.B[2] = c.L[2]
-  c.L[0] = t[0]
-  c.L[1] = t[1]
-  c.L[2] = t[2]
+export function moveU(cube: CubeFaces): void {
+  rotFaceCW(cube.U)
+  const saved = [cube.F[0], cube.F[1], cube.F[2]]
+  cube.F[0] = cube.R[0]
+  cube.F[1] = cube.R[1]
+  cube.F[2] = cube.R[2]
+  cube.R[0] = cube.B[0]
+  cube.R[1] = cube.B[1]
+  cube.R[2] = cube.B[2]
+  cube.B[0] = cube.L[0]
+  cube.B[1] = cube.L[1]
+  cube.B[2] = cube.L[2]
+  cube.L[0] = saved[0]
+  cube.L[1] = saved[1]
+  cube.L[2] = saved[2]
 }
 
-export function moveUi(c: CubeFaces): void {
-  for (let i = 0; i < 3; i++) moveU(c)
+/** U counter-clockwise (3× clockwise) */
+export function moveUi(cube: CubeFaces): void {
+  for (let i = 0; i < 3; i++) moveU(cube)
 }
 
 /** D clockwise (view from bottom) */
-export function moveD(c: CubeFaces): void {
-  rotFaceCW(c.D)
-  const t = [c.F[6], c.F[7], c.F[8]]
-  c.F[6] = c.L[6]
-  c.F[7] = c.L[7]
-  c.F[8] = c.L[8]
-  c.L[6] = c.B[6]
-  c.L[7] = c.B[7]
-  c.L[8] = c.B[8]
-  c.B[6] = c.R[6]
-  c.B[7] = c.R[7]
-  c.B[8] = c.R[8]
-  c.R[6] = t[0]
-  c.R[7] = t[1]
-  c.R[8] = t[2]
+export function moveD(cube: CubeFaces): void {
+  rotFaceCW(cube.D)
+  const saved = [cube.F[6], cube.F[7], cube.F[8]]
+  cube.F[6] = cube.L[6]
+  cube.F[7] = cube.L[7]
+  cube.F[8] = cube.L[8]
+  cube.L[6] = cube.B[6]
+  cube.L[7] = cube.B[7]
+  cube.L[8] = cube.B[8]
+  cube.B[6] = cube.R[6]
+  cube.B[7] = cube.R[7]
+  cube.B[8] = cube.R[8]
+  cube.R[6] = saved[0]
+  cube.R[7] = saved[1]
+  cube.R[8] = saved[2]
 }
 
-export function moveDi(c: CubeFaces): void {
-  for (let i = 0; i < 3; i++) moveD(c)
+/** D counter-clockwise */
+export function moveDi(cube: CubeFaces): void {
+  for (let i = 0; i < 3; i++) moveD(cube)
 }
 
 /** R clockwise (look from right) */
-export function moveR(c: CubeFaces): void {
-  rotFaceCW(c.R)
-  const t = [c.U[2], c.U[5], c.U[8]]
-  c.U[2] = c.F[2]
-  c.U[5] = c.F[5]
-  c.U[8] = c.F[8]
-  c.F[2] = c.D[2]
-  c.F[5] = c.D[5]
-  c.F[8] = c.D[8]
-  c.D[2] = c.B[6]
-  c.D[5] = c.B[3]
-  c.D[8] = c.B[0]
-  c.B[6] = t[0]
-  c.B[3] = t[1]
-  c.B[0] = t[2]
+export function moveR(cube: CubeFaces): void {
+  rotFaceCW(cube.R)
+  const saved = [cube.U[2], cube.U[5], cube.U[8]]
+  cube.U[2] = cube.F[2]
+  cube.U[5] = cube.F[5]
+  cube.U[8] = cube.F[8]
+  cube.F[2] = cube.D[2]
+  cube.F[5] = cube.D[5]
+  cube.F[8] = cube.D[8]
+  cube.D[2] = cube.B[6]
+  cube.D[5] = cube.B[3]
+  cube.D[8] = cube.B[0]
+  cube.B[6] = saved[0]
+  cube.B[3] = saved[1]
+  cube.B[0] = saved[2]
 }
 
-export function moveRi(c: CubeFaces): void {
-  for (let i = 0; i < 3; i++) moveR(c)
+/** R counter-clockwise */
+export function moveRi(cube: CubeFaces): void {
+  for (let i = 0; i < 3; i++) moveR(cube)
 }
 
 /** L clockwise (look from left) */
-export function moveL(c: CubeFaces): void {
-  rotFaceCW(c.L)
-  const t = [c.U[0], c.U[3], c.U[6]]
-  c.U[0] = c.B[8]
-  c.U[3] = c.B[5]
-  c.U[6] = c.B[2]
-  c.B[8] = c.D[6]
-  c.B[5] = c.D[3]
-  c.B[2] = c.D[0]
-  c.D[6] = c.F[0]
-  c.D[3] = c.F[3]
-  c.D[0] = c.F[6]
-  c.F[0] = t[0]
-  c.F[3] = t[1]
-  c.F[6] = t[2]
+export function moveL(cube: CubeFaces): void {
+  rotFaceCW(cube.L)
+  const saved = [cube.U[0], cube.U[3], cube.U[6]]
+  cube.U[0] = cube.B[8]
+  cube.U[3] = cube.B[5]
+  cube.U[6] = cube.B[2]
+  cube.B[8] = cube.D[6]
+  cube.B[5] = cube.D[3]
+  cube.B[2] = cube.D[0]
+  cube.D[6] = cube.F[0]
+  cube.D[3] = cube.F[3]
+  cube.D[0] = cube.F[6]
+  cube.F[0] = saved[0]
+  cube.F[3] = saved[1]
+  cube.F[6] = saved[2]
 }
 
-export function moveLi(c: CubeFaces): void {
-  for (let i = 0; i < 3; i++) moveL(c)
+/** L counter-clockwise */
+export function moveLi(cube: CubeFaces): void {
+  for (let i = 0; i < 3; i++) moveL(cube)
 }
 
 /** F clockwise (look from front) */
-export function moveF(c: CubeFaces): void {
-  rotFaceCW(c.F)
-  const t = [c.U[6], c.U[7], c.U[8]]
-  c.U[6] = c.L[8]
-  c.U[7] = c.L[5]
-  c.U[8] = c.L[2]
-  c.L[2] = c.D[0]
-  c.L[5] = c.D[1]
-  c.L[8] = c.D[2]
-  c.D[0] = c.R[6]
-  c.D[1] = c.R[3]
-  c.D[2] = c.R[0]
-  c.R[0] = t[2]
-  c.R[3] = t[1]
-  c.R[6] = t[0]
+export function moveF(cube: CubeFaces): void {
+  rotFaceCW(cube.F)
+  const saved = [cube.U[6], cube.U[7], cube.U[8]]
+  cube.U[6] = cube.L[8]
+  cube.U[7] = cube.L[5]
+  cube.U[8] = cube.L[2]
+  cube.L[2] = cube.D[0]
+  cube.L[5] = cube.D[1]
+  cube.L[8] = cube.D[2]
+  cube.D[0] = cube.R[6]
+  cube.D[1] = cube.R[3]
+  cube.D[2] = cube.R[0]
+  cube.R[0] = saved[2]
+  cube.R[3] = saved[1]
+  cube.R[6] = saved[0]
 }
 
-export function moveFi(c: CubeFaces): void {
-  for (let i = 0; i < 3; i++) moveF(c)
+/** F counter-clockwise */
+export function moveFi(cube: CubeFaces): void {
+  for (let i = 0; i < 3; i++) moveF(cube)
 }
 
 /** B clockwise (look from back toward front) */
-export function moveB(c: CubeFaces): void {
-  rotFaceCW(c.B)
-  const t = [c.U[0], c.U[1], c.U[2]]
-  c.U[0] = c.R[2]
-  c.U[1] = c.R[5]
-  c.U[2] = c.R[8]
-  c.R[8] = c.D[8]
-  c.R[5] = c.D[7]
-  c.R[2] = c.D[6]
-  c.D[8] = c.L[0]
-  c.D[7] = c.L[3]
-  c.D[6] = c.L[6]
-  c.L[6] = t[2]
-  c.L[3] = t[1]
-  c.L[0] = t[0]
+export function moveB(cube: CubeFaces): void {
+  rotFaceCW(cube.B)
+  const saved = [cube.U[0], cube.U[1], cube.U[2]]
+  cube.U[0] = cube.R[2]
+  cube.U[1] = cube.R[5]
+  cube.U[2] = cube.R[8]
+  cube.R[8] = cube.D[8]
+  cube.R[5] = cube.D[7]
+  cube.R[2] = cube.D[6]
+  cube.D[8] = cube.L[0]
+  cube.D[7] = cube.L[3]
+  cube.D[6] = cube.L[6]
+  cube.L[6] = saved[2]
+  cube.L[3] = saved[1]
+  cube.L[0] = saved[0]
 }
 
-export function moveBi(c: CubeFaces): void {
-  for (let i = 0; i < 3; i++) moveB(c)
+/** B counter-clockwise */
+export function moveBi(cube: CubeFaces): void {
+  for (let i = 0; i < 3; i++) moveB(cube)
 }
 
-export const MOVE_MAP: Record<string, (c: CubeFaces) => void> = {
-  U: moveU,
+/** All 18 standard WCA moves keyed by notation token. */
+export const MOVE_MAP: Record<string, (cube: CubeFaces) => void> = {
+  U:    moveU,
   "U'": moveUi,
-  U2: c => {
-    moveU(c)
-    moveU(c)
-  },
-  D: moveD,
+  U2:   cube => { moveU(cube); moveU(cube) },
+  D:    moveD,
   "D'": moveDi,
-  D2: c => {
-    moveD(c)
-    moveD(c)
-  },
-  R: moveR,
+  D2:   cube => { moveD(cube); moveD(cube) },
+  R:    moveR,
   "R'": moveRi,
-  R2: c => {
-    moveR(c)
-    moveR(c)
-  },
-  L: moveL,
+  R2:   cube => { moveR(cube); moveR(cube) },
+  L:    moveL,
   "L'": moveLi,
-  L2: c => {
-    moveL(c)
-    moveL(c)
-  },
-  F: moveF,
+  L2:   cube => { moveL(cube); moveL(cube) },
+  F:    moveF,
   "F'": moveFi,
-  F2: c => {
-    moveF(c)
-    moveF(c)
-  },
-  B: moveB,
+  F2:   cube => { moveF(cube); moveF(cube) },
+  B:    moveB,
   "B'": moveBi,
-  B2: c => {
-    moveB(c)
-    moveB(c)
-  },
+  B2:   cube => { moveB(cube); moveB(cube) },
 }
 
 /**
- * Loose tutorial / Scratch-style tokens → spaced WCA (`rprime`, `Ri`, `U2`).
+ * Loose tutorial / Scratch-style tokens → spaced WCA notation (`rprime`, `Ri`, `U2` → `R'`, `R'`, `U2`).
  * Returns null if any segment is unrecognized.
  */
 export function normalizeNotationInput(raw: string): string | null {
-  let s = raw
+  const normalized = raw
     .trim()
-    .replace(/[’′]/g, "'")
+    .replace(/['′]/g, "'")
     .replace(/\bRi\b/gi, "R'")
     .replace(/\bUi\b/gi, "U'")
     .replace(/\bLi\b/gi, "L'")
     .replace(/\bDi\b/gi, "D'")
     .replace(/\bFi\b/gi, "F'")
     .replace(/\bBi\b/gi, "B'")
-    .replace(/\b([udrlfb])prime\b/gi, (_, c: string) => `${c.toUpperCase()}'`)
+    .replace(/\b([udrlfb])prime\b/gi, (_, letter: string) => `${letter.toUpperCase()}'`)
 
-  const parts = s.split(/\s+/).filter(Boolean)
-  const out: string[] = []
+  const tokens = normalized.split(/\s+/).filter(Boolean)
+  const output: string[] = []
 
-  for (const t of parts) {
-    const m2 = /^([udrlfb])2$/i.exec(t)
-    if (m2) {
-      out.push(`${m2[1]!.toUpperCase()}2`)
-      continue
-    }
+  for (const token of tokens) {
+    const matchDouble  = /^([udrlfb])2$/i.exec(token)
+    if (matchDouble) { output.push(`${matchDouble[1]!.toUpperCase()}2`); continue }
 
-    const mp = /^([udrlfb])'$/i.exec(t)
-    if (mp) {
-      out.push(`${mp[1]!.toUpperCase()}'`)
-      continue
-    }
+    const matchPrime   = /^([udrlfb])'$/i.exec(token)
+    if (matchPrime)  { output.push(`${matchPrime[1]!.toUpperCase()}'`);  continue }
 
-    const mib = /^([udrlfb])i$/i.exec(t)
-    if (mib) {
-      out.push(`${mib[1]!.toUpperCase()}'`)
-      continue
-    }
+    const matchInverse = /^([udrlfb])i$/i.exec(token)
+    if (matchInverse) { output.push(`${matchInverse[1]!.toUpperCase()}'`); continue }
 
-    const mb = /^[udrlfb]$/i.exec(t)
-    if (mb) {
-      out.push(mb[0]!.toUpperCase())
-      continue
-    }
+    const matchBare    = /^[udrlfb]$/i.exec(token)
+    if (matchBare)   { output.push(matchBare[0]!.toUpperCase()); continue }
 
     return null
   }
 
-  return out.join(' ')
+  return output.join(' ')
 }
 
-/** Apply notation — rejects unknown tokens instead of silently skipping. */
-export function applyNotationStrict(c: CubeFaces, alg: string): boolean {
+/** Apply notation — rejects unknown tokens instead of silently skipping. Returns false on first unknown token. */
+export function applyNotationStrict(cube: CubeFaces, alg: string): boolean {
   for (const token of alg.trim().split(/\s+/).filter(Boolean)) {
     const fn = MOVE_MAP[token]
     if (!fn) return false
-    fn(c)
+    fn(cube)
   }
   return true
 }
 
-export function applyNotation(c: CubeFaces, alg: string): void {
+/** Apply notation — silently skips unknown tokens. */
+export function applyNotation(cube: CubeFaces, alg: string): void {
   for (const token of alg.trim().split(/\s+/).filter(Boolean)) {
     const fn = MOVE_MAP[token]
-    if (fn) fn(c)
+    if (fn) fn(cube)
   }
 }
 
-export function scrambleCube(c: CubeFaces, moves = 25): void {
-  const keys = ['U', "U'", 'R', "R'", 'F', "F'", 'L', "L'", 'D', "D'", 'B', "B'"]
+/** Apply `moves` random quarter-turns to `cube` in place. */
+export function scrambleCube(cube: CubeFaces, moves = 25): void {
+  const moveKeys = ['U', "U'", 'R', "R'", 'F', "F'", 'L', "L'", 'D', "D'", 'B', "B'"]
   for (let i = 0; i < moves; i++) {
-    const k = keys[Math.floor(Math.random() * keys.length)]!
-    MOVE_MAP[k]!(c)
+    const key = moveKeys[Math.floor(Math.random() * moveKeys.length)]!
+    MOVE_MAP[key]!(cube)
   }
 }
