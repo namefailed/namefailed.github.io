@@ -64,17 +64,6 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   // { kind: 'app', cmd: 'p5', label: 'p5.js', glyph: 'p5' },
 ]
 
-/** Commands omitted from dock pills — still in Applications grid */
-export const DOCK_HIDDEN_COMMANDS = new Set(['paint', 'snake', 'pong', 'cube', 'p5'])
-
-export function dockPinnedCommandSet(): Set<string> {
-  const s = new Set<string>()
-  for (const item of LAUNCHER_ICON_ROWS) {
-    if (item.kind === 'app' && !DOCK_HIDDEN_COMMANDS.has(item.cmd)) s.add(item.cmd)
-  }
-  return s
-}
-
 /** Hover/focus on launcher row → kick dynamic import before click */
 export function prefetchLazyWindowModule(invokedCmd: string): void {
   const cmd = EDITOR_LAUNCH_ALIASES.has(invokedCmd) ? 'edit' : invokedCmd
