@@ -56,10 +56,12 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   { kind: 'app', cmd: 'whoami', label: 'About me', glyph: '☺' },
   { kind: 'app', cmd: 'links', label: 'Contact', glyph: '✉' },
   { kind: 'app', cmd: 'paint', label: 'Paint', glyph: '◐' },
-  { kind: 'app', cmd: 'cube', label: 'Cube', glyph: '▦' },
+  // Temporarily hidden — uncomment to restore
+  // { kind: 'app', cmd: 'cube', label: 'Cube', glyph: '▦' },
   { kind: 'app', cmd: 'snake', label: 'Snake', glyph: '≈' },
   { kind: 'app', cmd: 'pong', label: 'Pong', glyph: '◎' },
-  { kind: 'app', cmd: 'p5', label: 'p5.js', glyph: 'p5' },
+  // Temporarily hidden — uncomment to restore
+  // { kind: 'app', cmd: 'p5', label: 'p5.js', glyph: 'p5' },
 ]
 
 /** Commands omitted from dock pills — still in Applications grid */

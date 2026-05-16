@@ -134,6 +134,7 @@ export const commands: Record<string, Command> = {
 
   cube: {
     description: "Rubik's cube — click stickers to turn, or use U D L R F B keys",
+    hidden: true, // Temporarily hidden — remove flag to restore
     run: () => [],
   },
 
@@ -149,6 +150,7 @@ export const commands: Record<string, Command> = {
 
   p5: {
     description: 'p5.js sketch viewer — p5 [/vfs/path.js]; Examples dropdown, drag-and-drop, Edit opens in editor',
+    hidden: true, // Temporarily hidden — remove flag to restore
     run: () => [],
   },
 
