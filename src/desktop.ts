@@ -36,6 +36,8 @@ import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { mountWelcomeGuide } from './welcome-guide'
 import { mountDesktopTiles } from './desktop-tiles'
+import type { WindowLayout } from './window-layout'
+import { BspLayout } from './bsp-layout'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
 //
@@ -130,6 +132,9 @@ export class Desktop {
   /** Opens launcher via status-bar Applications (distinct from Ctrl+D). */
   private launcherOpen = false
 
+  /** Active tiling layout — swap via `Desktop.createLayout()` (future). */
+  private layout: WindowLayout
+
   /** `null` | terminal sentinel | content window command id */
   private maximizedId: string | null = null
 
@@ -146,6 +151,7 @@ export class Desktop {
     this.taskbarDock      = document.getElementById('wm-taskbar-dock')!
     this.hSplitter        = document.getElementById('h-splitter')!
     this.reducedMotionMQ  = window.matchMedia('(prefers-reduced-motion: reduce)')
+    this.layout           = new BspLayout(this.rightPane)
 
     // Terminal window clicks → focus terminal
     termWin.addEventListener('mousedown', () => this.focusTerminal())
@@ -294,7 +300,7 @@ export class Desktop {
           }),
       })
       this.enforceTileLimit()
-      this.appendToRightPane(ed.el)
+      this.appendToRightPane(ed)
       this.windows.push(ed)
       this.attachVerticalSplitters()
       this.focusWindow(ed)
@@ -358,7 +364,7 @@ export class Desktop {
         },
       })
       this.enforceTileLimit()
-      this.appendToRightPane(ex.el)
+      this.appendToRightPane(ex)
       this.windows.push(ex)
       this.attachVerticalSplitters()
       this.focusWindow(ex)
@@ -402,7 +408,7 @@ export class Desktop {
         onFocus: () => this.focusWindow(br),
       })
       this.enforceTileLimit()
-      this.appendToRightPane(br.el)
+      this.appendToRightPane(br)
       this.windows.push(br)
       this.attachVerticalSplitters()
       this.focusWindow(br)
@@ -439,7 +445,7 @@ export class Desktop {
         onFocus:    () => this.focusWindow(pw),
       })
       this.enforceTileLimit()
-      this.appendToRightPane(pw.el)
+      this.appendToRightPane(pw)
       this.windows.push(pw)
       this.attachVerticalSplitters()
       this.focusWindow(pw)
@@ -463,7 +469,7 @@ export class Desktop {
         onOpenWindow:  s  => void this.openWindow(s),
       })
       this.enforceTileLimit()
-      this.appendToRightPane(tw.el)
+      this.appendToRightPane(tw)
       this.windows.push(tw)
       this.attachVerticalSplitters()
       await tw.mount()
@@ -501,7 +507,7 @@ export class Desktop {
           onMaximize: () => this.toggleMaximizeContent(pw),
           onFocus: () => this.focusWindow(pw),
         })
-        this.appendToRightPane(pw.el)
+        this.appendToRightPane(pw)
         this.windows.push(pw)
         this.attachVerticalSplitters()
         this.focusWindow(pw)
@@ -516,7 +522,7 @@ export class Desktop {
           onMaximize: () => this.toggleMaximizeContent(sw),
           onFocus: () => this.focusWindow(sw),
         })
-        this.appendToRightPane(sw.el)
+        this.appendToRightPane(sw)
         this.windows.push(sw)
         this.attachVerticalSplitters()
         this.focusWindow(sw)
@@ -530,7 +536,7 @@ export class Desktop {
         onMaximize: () => this.toggleMaximizeContent(pong),
         onFocus: () => this.focusWindow(pong),
       })
-      this.appendToRightPane(pong.el)
+      this.appendToRightPane(pong)
       this.windows.push(pong)
       this.attachVerticalSplitters()
       this.focusWindow(pong)
@@ -560,7 +566,7 @@ export class Desktop {
     })
 
     this.enforceTileLimit()
-    this.appendToRightPane(win.el)
+    this.appendToRightPane(win)
     this.windows.push(win)
     this.attachVerticalSplitters()
     this.focusWindow(win)
@@ -630,11 +636,14 @@ export class Desktop {
 
   // ── private: window lifecycle ─────────────────────────────────────────────
 
-  /** Mount a tile on the right stack with a one-shot entrance animation. */
-  private appendToRightPane(el: HTMLElement): void {
-    this.rightPane.appendChild(el)
-    this.playMountAnim(el)
-    // Notify welcome guide on first window open
+  /**
+   * Place `win` in the active layout, play its mount animation, and signal
+   * the first-window event.  Windows are never moved after placement so
+   * iframe-backed windows (p5, browse) never reload.
+   */
+  private appendToRightPane(win: TiledWin): void {
+    this.layout.mount(win.el, this.windows.length)
+    this.playMountAnim(win.el)
     window.dispatchEvent(new CustomEvent('mrgrey-first-window'))
   }
 
@@ -834,7 +843,7 @@ export class Desktop {
     this.launcherOpen = false
 
     entry.win.setMinimized(false)
-    this.appendToRightPane(entry.win.el)
+    this.appendToRightPane(entry.win)
     this.windows.push(entry.win)
     this.attachVerticalSplitters()
     this.focusWindow(entry.win)
@@ -1100,12 +1109,12 @@ export class Desktop {
   // ── private: vertical splitters between stacked content windows ───────────
 
   /**
-   * Enforce a maximum of 2 simultaneously visible tiled windows.
+   * Enforce the layout's maximum number of simultaneously visible tiled windows.
    * Instantly (no animation) bumps the oldest non-focused window to the minimized dock.
    * Call this before appending a new window to #right-pane.
    */
   private enforceTileLimit(): void {
-    if (this.windows.length < 2) return
+    if (this.windows.length < this.layout.maxVisible) return
     // Prefer to bump the window that isn't currently focused
     const bump = this.windows.find(w => w.command !== this.focusedId) ?? this.windows[0]
     if (!bump) return
@@ -1118,33 +1127,9 @@ export class Desktop {
     if (this.focusedId === bump.command) this.focusedId = null
   }
 
-  /**
-   * Rebuild the drag-to-resize handle between the two side-by-side content windows.
-   *
-   * #right-pane is flex-direction:row so windows sit side by side. We only ever
-   * need one splitter (between window 0 and window 1). Called after any change
-   * that modifies the set or order of tiled windows.
-   */
+  /** Rebuild layout splitters after any window close, minimize, or restore. */
   private attachVerticalSplitters(): void {
-    // Remove any existing v-splitters and rebuild
-    this.rightPane.querySelectorAll('.splitter-v').forEach(el => el.remove())
-
-    // Only the first two windows in #right-pane get a splitter between them
-    const tiled = this.windows.filter(w => w.el.parentElement === this.rightPane)
-    if (tiled.length < 2) return
-
-    const splitter = document.createElement('div')
-    splitter.className = 'splitter splitter-v'
-    this.rightPane.insertBefore(splitter, tiled[1].el)
-
-    new Splitter({
-      el:          splitter,
-      orientation: 'h',   // resizes width of the left window in the row
-      target:      tiled[0].el,
-      container:   this.rightPane,
-      min:         200,
-      max:         () => Math.max(200, this.rightPane.clientWidth - 200),
-    })
+    this.layout.rebuild(this.windows.map(w => w.el))
   }
 
   // ── private: layout sync ───────────────────────────────────────────────────
