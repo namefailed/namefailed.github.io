@@ -1154,7 +1154,8 @@ html.retro-fx::before {
   z-index: var(--ui-z-launcher-panel);
   flex: 1;
   min-height: 0;
-  margin: var(--ui-space-4);
+  /* margin ≥ desktop corner-radius so #desktop overflow:hidden never clips panel corners */
+  margin: var(--ui-radius-md-inner);
   padding: var(--ui-space-8) var(--ui-space-10) var(--ui-space-10);
   display: flex;
   flex-direction: column;
@@ -1441,13 +1442,25 @@ html.retro-fx::before {
   min-width: 0 !important;
 }
 
-/* Hide every sibling that isn't the maximized window */
-#panes.max-content #right-pane > .content-window:not(.maximized),
+/* BSP maximize: hide all columns except the one with the maximized window */
+#panes.max-content .bsp-col:not(:has(.content-window.maximized)),
 #panes.max-content #right-pane > .splitter-v {
   display: none !important;
 }
 
-#panes.max-content #right-pane > .content-window.maximized {
+/* Expand the column that owns the maximized window */
+#panes.max-content .bsp-col:has(.content-window.maximized) {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* Hide every sibling window and splitter inside the active column */
+#panes.max-content .bsp-col > .content-window:not(.maximized),
+#panes.max-content .bsp-col > .splitter-bsp-h {
+  display: none !important;
+}
+
+#panes.max-content .bsp-col > .content-window.maximized {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   width: auto !important;
@@ -1487,8 +1500,7 @@ html.retro-fx::before {
   width: auto;
 }
 
-/* Slave pane: up to 2 tiled windows side-by-side; .splitter-v (7px) is the vertical
-   bar between them, same width as .splitter-h between terminal and this pane. */
+/* Slave pane: BSP columns side-by-side; each .bsp-col stacks windows vertically. */
 #right-pane {
   flex: 1;
   min-width: 0;
@@ -1496,6 +1508,22 @@ html.retro-fx::before {
   flex-direction: row;
   gap: 0;
   transform-style: preserve-3d;
+}
+
+/* BSP column — a vertical flex container for up to 2 stacked content windows */
+.bsp-col {
+  flex: 1;
+  min-width: 200px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transform-style: preserve-3d;
+}
+
+/* Horizontal drag handle between two stacked windows inside a .bsp-col */
+.splitter-bsp-h {
+  cursor: ns-resize;
 }
 
 #desktop[data-content-count="0"] #right-pane,
@@ -5826,8 +5854,9 @@ html.retro-fx .xterm-screen {
 
 .welcome-guide {
   position: fixed;
-  bottom: 72px; /* above dock */
-  left: 20px;
+  /* Align with desktop content edge: monitor inset + monitor padding + dock height + wm gap */
+  bottom: calc(1vh + var(--ui-monitor-pad) + var(--ui-gap-wm) + var(--ui-reserve-dock) + var(--ui-gap-wm));
+  left: calc(1vw + var(--ui-monitor-pad) + var(--ui-gap-wm));
   width: 272px;
   background: var(--th-surface0, #313244);
   border: 1px solid var(--th-surface1, #45475a);
@@ -6193,3 +6222,11 @@ html.retro-fx .xterm-screen {
   text-align: left;
 }
 .yasb-settings-action:hover { border-color: #f5c2e7; }
+.yasb-settings-action--danger {
+  border-color: rgba(243, 139, 168, 0.35);
+  color: #f38ba8;
+}
+.yasb-settings-action--danger:hover {
+  border-color: #f38ba8;
+  background: rgba(243, 139, 168, 0.1);
+}
