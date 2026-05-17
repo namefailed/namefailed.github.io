@@ -19,6 +19,15 @@ export function tileTitleForPortfolioCommand(cmd: string): string {
   }
 }
 
+/**
+ * Apps pinned permanently in the dock.
+ * 'terminal' is a special sentinel — it focuses the master terminal pane.
+ * All others are portfolio/tool commands that `openWindow` understands.
+ */
+export const PINNED_DOCK_CMDS: readonly string[] = [
+  'terminal', 'resume', 'projects', 'whoami', 'links',
+]
+
 /** Same set as `terminal.ts` WINDOW_COMMANDS — opens a right-pane tile */
 export const TILED_WINDOW_COMMANDS = new Set([
   'resume',

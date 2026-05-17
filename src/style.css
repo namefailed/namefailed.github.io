@@ -287,6 +287,12 @@ html.retro-fx::before {
   --workspace-dock-reserve: var(--ui-reserve-dock);
   padding-bottom: var(--workspace-dock-reserve);
   box-sizing: border-box;
+  transition: padding-bottom var(--ui-duration-slower) var(--ui-easing-emph);
+}
+
+/* Maximised windows fill the full viewport — no reserve for the (now auto-hidden) dock. */
+#desktop[data-maximized="1"] #desktop-workspace {
+  padding-bottom: 0;
 }
 
 .visually-hidden {
@@ -4172,8 +4178,14 @@ html.retro-fx .xterm-screen {
     transform var(--ui-duration-slower) var(--ui-easing-out-back),
     filter var(--ui-duration-slow) var(--ui-easing-smooth);
 }
-/* Reveal on hover-zone activation */
-#wm-taskbar.wm-taskbar.dock--visible {
+/* Auto-hide mode: active only when a window is maximised */
+#wm-taskbar.wm-taskbar.dock--auto-hide {
+  opacity: 0;
+  transform: translateY(calc(100% + 8px)) scale(0.96);
+  pointer-events: none;
+}
+/* Reveal on hover while auto-hiding */
+#wm-taskbar.wm-taskbar.dock--auto-hide.dock--visible {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
