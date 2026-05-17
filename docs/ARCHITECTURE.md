@@ -20,37 +20,60 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 | `desktop.ts` | Tiling window manager, dock, launcher overlay, focus management, Ctrl+chord keyboard handling |
 | `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
 | `bootstrap-shell.ts` | Boot sequence orchestration |
+| `launcher-catalog.ts` | Launcher grid definitions, dock membership, lazy-chunk prefetch triggers |
 
 ### Window Tiles (`*-window.ts`)
-Each tile is self-contained with close/minimize/maximize/focus callbacks. All lazy-loaded except `appwindow.ts`.
+Each tile is self-contained with close/minimize/maximize/focus callbacks. All lazy-loaded except `appwindow.ts`. `desktop.ts` uses dynamic `import()` so each module ships in its own chunk.
 
 | Module | Type | Notes |
 |--------|------|-------|
 | `appwindow.ts` | Content | Read-only portfolio tiles (resume, projects, contact, about) |
-| `editor-window.ts` | Editor | Vim-mode text editor over VFS |
-| `file-explorer-window.ts` | Explorer | File browser with cut/copy/paste/delete |
+| `editor-window.ts` | Editor | Vim-mode text editor over VFS; `F5` / `:run` plays a `.js` file in the p5 viewer |
+| `file-explorer-window.ts` | Explorer | File browser with rename/cut/copy/paste/delete; double-click `.js` → p5 viewer |
 | `browser-window.ts` | Browser | Iframe embed with URL bar, bookmarks |
 | `paint-window.ts` | Canvas | Pixel canvas with brush, eraser, fill |
+| `p5-window.ts` | Viewer | Sandboxed p5.js sketch viewer; loads built-in sketches + VFS files |
+| `rubik-window.ts` | Game | Interactive 3D Rubik's cube (Three.js); drag to spin, animated scramble/solve, algorithm picker |
 | `pong-window.ts` | Game | Pong vs CPU or P2 |
-| `snake-window.ts` | Game | Snake with powerups |
-| `rubik-window.ts` | Game | **Disabled** — rotation math needs fixing |
+| `snake-window.ts` | Game | Snake with WASD/arrow controls |
+
+Three.js ships exclusively in the `rubik-window` lazy chunk (~139 kB gzipped). It is never in the main bundle.
 
 ### Shared Utilities
 | Module | Purpose |
 |--------|---------|
-| `storage.ts` | **NEW** — Safe localStorage wrapper with JSON helpers, error handling for private mode |
-| `window-chrome.ts` | **NEW** — Shared window titlebar factory eliminates duplication across tiles |
+| `storage.ts` | Safe `localStorage` wrapper with JSON helpers, error handling for private mode |
+| `window-chrome.ts` | Shared window titlebar factory — eliminates duplication across tiles |
 | `splitter.ts` | Drag-to-resize handle for horizontal/vertical splits |
 | `theme.ts` / `theme-control.ts` / `theme-packs.ts` | Theme system — CSS custom properties, xterm palettes, matrix rain colors |
 | `ansi.ts` | ANSI-to-HTML conversion for rendering terminal output |
+| `ascii.ts` | ASCII art strings used in boot splash and neofetch |
+| `boot-splash.ts` | Scripted boot animation lines |
+| `hint-bubbles.ts` | Dismissable first-visit hint overlays |
+| `intro-toasts.ts` | Auto-dismiss toast notifications on first visit |
 | `matrix-bg.ts` | Canvas matrix rain animation with visibility pause optimization |
+| `random-pick.ts` | Seeded random / weighted pick utilities |
 | `retro-fx.ts` | CRT scanlines and vignette toggle |
 | `vim.ts` | Vim-style line editor — insert/normal/visual modes, operators, motions |
+
+### Rubik Model (`rubik-*.ts`)
+| Module | Purpose |
+|--------|---------|
+| `rubik-model.ts` | Pure cube state: face arrays, move functions, scramble generator, canonical algorithms |
+| `rubik-stickers-layout.ts` | Three.js geometry helpers: sticker center, animation axis/angle, face outward vector |
+
+### p5.js Sketches
+| Module | Purpose |
+|--------|---------|
+| `p5-sketches.ts` | 8+ built-in p5.js sketch definitions (code as strings); `sketchFilename()` helper |
+| `p5-window.ts` | Sandboxed iframe viewer; loads sketches from built-in list or VFS |
+
+Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ### Fake OS Layer (`os-*.ts`)
 | Module | Purpose |
 |--------|---------|
-| `os-fs.ts` | Virtual filesystem backed by `localStorage`. Debounced saves (150ms) |
+| `os-fs.ts` | Virtual filesystem backed by `localStorage` key `portfolio-vfs-v4-namefailed-home`. Debounced saves (150ms). Seeds `~/sketches/` with all p5 examples on first visit |
 | `os-sound.ts` | Web Audio API for UI sound effects |
 | `os-systray.ts` | Toast notifications, settings panel |
 | `os-registry.ts` | Shared ref for shell commands → Desktop (prevents circular imports) |
@@ -60,9 +83,12 @@ Each tile is self-contained with close/minimize/maximize/focus callbacks. All la
 ### Commands (`commands/`)
 | File | Purpose |
 |------|---------|
-| `index.ts` | Keyword-to-handler registry |
+| `index.ts` | Keyword-to-handler registry (thin merger of sub-registries) |
+| `app-commands.ts` | Tile launcher stubs — commands that return `[]` and are intercepted by the desktop layer |
+| `vfs-commands.ts` | VFS shell commands: `ls`, `cat`, `cd`, `mkdir`, `rm`, `mv`, `cp`, `touch`, `pwd`, `wc`, `tree` |
+| `system-commands.ts` | System-flavour commands: `echo`, `env`, `date`, `whoami`, `neofetch`, `cowsay`, `ssh`, `apt` |
 | `help-output.ts` | Help screen rendering |
-| `cli-text-utils.ts` | Fake Unix commands (`cal`, `uptime`, `wc`, etc.) |
+| `cli-text-utils.ts` | Text utilities: `cal`, `wc`, human-readable bytes |
 | `cli-fortunes.ts` | Echo flavor text |
 | `types.ts` | `Command` interface |
 
@@ -73,7 +99,7 @@ Each tile is self-contained with close/minimize/maximize/focus callbacks. All la
 | `copy/about-copy.ts` | `whoami` output, neofetch column |
 | `copy/contact-copy.ts` | Contact tile content |
 | `copy/projects-catalog.ts` | Project listings |
-| `portfolio.ts` | Re-exports for backward compatibility |
+| `portfolio.ts` | Assembled ANSI line arrays for each portfolio tile |
 
 ### Static Site (`src/static/`)
 | File | Purpose |
@@ -84,17 +110,28 @@ Each tile is self-contained with close/minimize/maximize/focus callbacks. All la
 
 ## Testing
 
-Tests are in `*.test.ts` files alongside the modules they test.
+297 tests across 18 test files. Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|
-| `os-fs.test.ts` | 57 tests — virtual filesystem operations |
-| `storage.test.ts` | 20 tests — localStorage wrapper, JSON serialization |
-| `vim.test.ts` | 36 tests — vim input: modes, motions, operators, undo |
-| `window-chrome.test.ts` | 8 tests — window chrome factory |
-| `browser-url.test.ts` | 5 tests — URL normalization |
-| `cli-text-utils.test.ts` | 21 tests — `cal`, `wc`, human-readable bytes |
-| `ansi.test.ts` | 24 tests — ANSI-to-HTML conversion |
+| `ansi.test.ts` | ANSI-to-HTML conversion |
+| `boot-splash.test.ts` | Boot animation line arrays |
+| `browser-url.test.ts` | URL normalization |
+| `commands/cli-text-utils.test.ts` | `cal`, `wc`, human-readable bytes |
+| `desktop-tiles.test.ts` | Tile layout, drag snap, persistence |
+| `hint-bubbles.test.ts` | Hint bubble show/dismiss logic |
+| `intro-toasts.test.ts` | Toast sequencing |
+| `launcher-catalog.test.ts` | Launcher grid, TILED_WINDOW_COMMANDS, prefetch |
+| `matrix-bg.test.ts` | Matrix rain canvas logic |
+| `os-fs.test.ts` | Virtual filesystem operations |
+| `p5-sketches.test.ts` | Sketch definitions, `sketchFilename()` |
+| `random-pick.test.ts` | Random/weighted pick |
+| `retro-fx.test.ts` | CRT toggle |
+| `rubik-model.test.ts` | Cube model: all moves, inverses, scramble, algorithms |
+| `storage.test.ts` | localStorage wrapper, JSON serialization |
+| `terminal-motd.test.ts` | MOTD rendering |
+| `vim.test.ts` | Vim input: modes, motions, operators, undo |
+| `window-chrome.test.ts` | Window chrome factory |
 
 Run tests: `npm test`
 
@@ -109,18 +146,7 @@ Run tests: `npm test`
 
 ## Key Patterns
 
-### Storage Utility (storage.ts)
-Replace all direct `localStorage` access with:
-```typescript
-import { storageGet, storageSet, storageGetJson, storageSetJson, storageGetBool } from './storage'
-
-storageSet('key', 'value')           // Returns boolean success
-storageGetJson<Config>('key', {})    // Returns fallback on error
-storageGetBool('key', true)          // Parses '1'/'0' strings
-```
-
 ### Window Chrome (window-chrome.ts)
-Replace duplicated titlebar HTML with:
 ```typescript
 import { createWindowChrome } from './window-chrome'
 
@@ -133,8 +159,20 @@ const { el, titlebar, titleEl, btnClose, btnMin, btnMax } = createWindowChrome({
 })
 ```
 
+### Storage Utility (storage.ts)
+```typescript
+import { storageGet, storageSet, storageGetJson, storageSetJson, storageGetBool } from './storage'
+
+storageSet('key', 'value')           // Returns boolean success
+storageGetJson<Config>('key', {})    // Returns fallback on error
+storageGetBool('key', true)          // Parses '1'/'0' strings
+```
+
+### Lazy Window Dispatch
+`desktop.ts` uses `await import('./module-name')` to open each tile. This keeps all window code out of the main bundle. The `prefetchLazyWindowModule()` function in `launcher-catalog.ts` fires the same import on hover/focus to warm the chunk before the user clicks.
+
 ### Theme System
-Themes are self-contained `ThemePack` objects in `theme-packs.ts`. Adding a theme requires no other file changes — the picker and `theme` command auto-detect.
+Themes are self-contained `ThemePack` objects in `theme-packs.ts`. Adding a theme requires no other file changes — the picker and `theme` command auto-detect via array iteration.
 
 ## Build & Deploy
 
@@ -150,73 +188,35 @@ Deploy publishes `dist/` to GitHub Pages via Actions (`.github/workflows/deploy-
 
 ## State Persistence
 
-All state stored in `localStorage`:
-- `portfolio-vfs-v3-namefailed-home` — VFS tree and cwd
-- `mrgrey-theme` — selected theme id
-- `mrgrey-os-sound` / `mrgrey-os-volume` — sound settings
-- `mrgrey-retro-fx` — CRT toggle
-- `mrgrey-matrix-bg` — matrix rain toggle
-- `mrgrey-browser-iframe-tip-dismiss` — browser tip dismissal
-- `portfolio-fe-prefs-v1` — file explorer preferences
+All state in `localStorage`:
+
+| Key | Contents |
+|-----|----------|
+| `portfolio-vfs-v4-namefailed-home` | VFS tree and cwd (bump version to force fresh defaults) |
+| `mrgrey-theme` | Selected theme id |
+| `mrgrey-os-sound` / `mrgrey-os-volume` | Sound on/off and volume |
+| `mrgrey-retro-fx` | CRT overlay toggle |
+| `mrgrey-matrix-bg` | Matrix rain toggle |
+| `mrgrey-browser-iframe-tip-dismiss` | Browser tile tip dismissal |
+| `mrgrey-desktop-tile-positions` | Desktop tile drag positions |
+| `portfolio-fe-prefs-v1` | File explorer preferences |
 
 No backend required.
 
-## Layers
+## Layers (narrative summary)
 
-**`content/`**  
-Portfolio copy. Long text lives under `content/copy/` (`resume-copy.ts`, `about-copy.ts`, `contact-copy.ts`, `projects-catalog.ts`). `portfolio.ts` re-exports everything so older import paths keep working. ANSI helper functions that belong to copy — not to the shell — live in `copy/ansi-widgets.ts`.
+**`content/`** — Portfolio copy. Long text lives under `content/copy/`. `portfolio.ts` assembles ANSI line arrays for each tile (resume, whoami, projects, links).
 
-**`commands/`**  
-`index.ts` is the keyword-to-handler map the terminal reads. Everything else is split out: `help-output.ts` for all help rendering, `cli-text-utils.ts` for the fake Unix commands, `cli-fortunes.ts` for the echo flavor text, `types.ts` for the `Command` interface.
+**`commands/`** — `index.ts` is the keyword-to-handler map. Split into `app-commands.ts` (tile stubs), `vfs-commands.ts` (filesystem), `system-commands.ts` (OS-flavour text commands).
 
-**`desktop.ts` + `launcher-catalog.ts`**  
-`desktop.ts` owns the tiling layout, dock, launcher overlay, focus, minimize/maximize, and all Ctrl-chord keyboard handling (Ctrl+H/L/K/J for vim-style window navigation). `launcher-catalog.ts` holds the grid definitions and dock membership so `desktop.ts` doesn't turn into a JSON dump.
+**`desktop.ts` + `launcher-catalog.ts`** — `desktop.ts` owns tiling layout, dock, focus, minimize/maximize, and all Ctrl-chord keyboard handling. `launcher-catalog.ts` holds grid definitions and dock membership.
 
-**`*-window.ts`**  
-One file per tile type: `appwindow.ts` (read-only portfolio content), `editor-window.ts`, `file-explorer-window.ts`, `browser-window.ts`, `paint-window.ts`, `rubik-window.ts`, `snake-window.ts`, `pong-window.ts`. Each takes close/minimize/maximize/focus callbacks so `desktop.ts` doesn't import their internals. All tile types except `appwindow.ts` are lazy-loaded on first open.
+**`*-window.ts`** — One file per tile. Each takes close/minimize/maximize/focus callbacks. All lazy-loaded on first open via `await import()`. Three.js is inside `rubik-window` only.
 
-> **Note:** `rubik-window.ts` is bundled but the cube tile is disabled in `launcher-catalog.ts` pending a geometry/rotation math fix.
+**`rubik-model.ts`** — Pure cube state with no DOM dependency. All move functions, inverse sequences, scramble generator, and named algorithms live here and are fully unit-tested.
 
-**`os-*.ts`**  
-The fake OS layer. `os-fs.ts` is a virtual filesystem backed by `localStorage` — key `portfolio-vfs-v3-namefailed-home` (bumping the version forces fresh default trees for returning visitors). `os-apt.ts` is an `apt install` joke. `os-packages.ts` has cowsay. `os-sound.ts` wraps Web Audio API. `os-systray.ts` manages toasts and the settings panel. `os-registry.ts` is a small shared ref so shell commands can call into `Desktop` without creating a circular import.
+**`p5-sketches.ts`** — Sketch definitions (code as strings). Seeded into the VFS by `os-fs.ts` on first visit. `p5-window.ts` renders them in a sandboxed iframe.
 
-**`theme-control.ts` + `theme-packs.ts`**  
-Theme packs define CSS custom properties (`--th-*`), xterm palette, and matrix rain colors as a unit. `theme-control.ts` applies them to the document root and saves the selection. The YASB settings panel and the `theme` shell command both call into this.
+**`os-*.ts`** — Fake OS layer. `os-fs.ts` is VFS v4 backed by localStorage. Bumping the version number forces fresh default trees for returning visitors.
 
-**`matrix-bg.ts`** — Animated canvas behind the tiling area.  
-**`retro-fx.ts`** — CRT scanlines and vignette, toggled from the settings panel.  
-**`vim.ts`** — Full vim-style line editor: insert/normal/visual modes, operators, word motions. Used only by `terminal.ts`.  
-**`splitter.ts`** — Drag-to-resize handle. Used for the horizontal split between terminal and right pane, and for vertical splits between stacked content windows.
-
-## Static site (`src/static/`)
-
-The brochure page is its own self-contained mini-app under `src/static/`:
-
-- **`static-data.ts`** — Single source of truth for profile, contact, skills, experience, education, and certs. Consumed by `main.ts`. Projects render from `content/portfolio.ts` via `plainProjectsFromPortfolio()`.
-- **`main.ts`** — Mounts the full page in JS: banner, hero, sections, footer, section nav. Key features:
-  - `mountProgressBar()` — fixed scroll-progress bar at the top
-  - `statsStrip()` + `animateCounter()` — "9+ years / 15+ projects / 3 industries" counters that animate in on first intersection
-  - `typewriter()` — headline typed in character-by-character after a 750ms fade-in delay
-  - `experienceCard()` — reads `entry.type` for inset colour strip; `entry.featured` for the "Featured" badge
-  - `buildSectionNav()` + `mountScrollSpy()` — floating right-side dot nav with tooltip labels; highlights the active section via IntersectionObserver
-  - `mountScrollCue()` — bouncing `↓` arrow that disappears after 80px of scroll
-  - All animated elements carry `data-anim`; `observeAnimations()` adds `is-visible` on first intersection
-- **`static.css`** — Standalone stylesheet; does not import `--th-*` tokens. Uses `--plain-*` properties scoped to the brochure page.
-
-## Naming conventions
-
-- `initXFromStorage` — reads and applies persisted state, called once at boot.
-- `openWindow` / `WindowSpec` — the contract between terminal commands and the desktop tile system.
-- `*-window.ts` — a self-contained tile. If it doesn't end in `-window.ts`, it isn't a tile.
-- Verb-first elsewhere: `runShellHelp`, `renderKeybindsLegend`, `playOsSound`, `pushToast`.
-
-## Getting started
-
-```
-npm install
-npm run dev
-```
-
-`npm run build` runs `tsc` then `vite build`. Both HTML entries compile to `dist/`. No backend — all persisted state is `localStorage` (VFS, theme, CRT, matrix, sound).
-
-Tests: `npm test` runs Vitest on `*.test.ts` files. Coverage is thin — `npm run build` passing is the main sanity check for now.
+**`theme-control.ts` + `theme-packs.ts`** — Theme packs define CSS custom properties (`--th-*`), xterm palette, and matrix rain colors. `theme-control.ts` applies them and persists the selection.

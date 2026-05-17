@@ -11,19 +11,18 @@ A second entry (`/static/`) serves the same portfolio content as a polished broc
 
 - TypeScript, Vite 8 (two HTML entry points)
 - [@xterm/xterm](https://github.com/xtermjs/xterm.js) + fit + web-links addons
+- Three.js (Rubik's cube — lazy-loaded in its own chunk)
 - Web Audio API (sound effects)
 - No framework — vanilla DOM throughout
-
-> **Note:** Three.js (Rubik's cube tile) is bundled but the cube is currently disabled pending a geometry/rotation fix.
 
 ## Features
 
 ### Desktop shell
 - Tiling window manager with floating dock and launcher overlay
 - xterm.js terminal with vim-mode editing (insert / normal / visual)
-- Seven switchable colour themes — Catppuccin Mocha, Dracula, Nord, Gruvbox, Tokyo Night, Solarized Dark, One Dark
+- Seven switchable colour themes — Catppuccin Mocha, Dracula, Nord, Gruvbox Dark, Tokyo Night, Solarized Dark, One Dark
 - Matrix rain backdrop and CRT scanline/vignette overlay (both toggleable and persistent)
-- Virtual filesystem (VFS v3) backed by `localStorage` — `cat`, `ls`, `mkdir`, `touch`, `rm`, `edit`, `wc`, and more
+- Virtual filesystem (VFS v4) backed by `localStorage` — `cat`, `ls`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `edit`, `wc`, and more
 
 ### Shell commands
 - `resume` — full résumé with inline skills matrix in ANSI colour
@@ -31,10 +30,17 @@ A second entry (`/static/`) serves the same portfolio content as a polished broc
 - `contact`, `about`, `help`, `whoami`, `motd`, `fortune`
 - `theme [id|list|random]` — switch colour packs at runtime
 - `browse <url>` — embedded browser tile
-- `edit [file]` — in-shell text editor backed by the VFS
+- `edit [file]` — in-shell text editor backed by the VFS; `F5` / `:run` plays a `.js` file in the p5 viewer
+- `p5` — p5.js sketch viewer; 8+ built-in sketches; `Open…` loads from VFS
+- `cube` — interactive Rubik's cube (Three.js); drag to spin, U/D/L/R/F/B keys, animated scramble/solve, algorithm picker
 - `snake`, `pong` — playable games
 - `paint` — pixel canvas
-- `ssh`, `apt`, `cowsay`, `neofetch`, `wc`, `matrix` — easter eggs and flavor commands
+- `ssh`, `apt`, `cowsay`, `neofetch`, `wc`, `matrix` — easter eggs and flavour commands
+
+### p5.js sketches
+Pre-loaded in `~/sketches/` (VFS):
+- Fractal Tree, Game of Life, Lorenz Attractor, Spirograph, Noise Terrain, Mandelbrot, Bouncing Balls, Sine Waves
+- Create your own: `edit ~/sketches/myscript.js` → `F5` to run it live
 
 ### Static brochure (`/static/`)
 - Scroll progress bar, floating section-nav dots with tooltips
@@ -46,6 +52,8 @@ A second entry (`/static/`) serves the same portfolio content as a polished broc
 ### Keybinds
 | Chord | Action |
 |-------|--------|
+| `Ctrl+T` | Open / focus terminal |
+| `Ctrl+D` | Desktop / launcher |
 | `Ctrl+H` | Focus terminal (← left) |
 | `Ctrl+L` | Enter right pane (→) |
 | `Ctrl+K` | Previous window (↑) |
@@ -72,14 +80,14 @@ The deploy publishes `dist/`, not the repo root. `index.html` at the root only w
 
 ## Docs
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module layout, bootstrap order, naming conventions, testing
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module layout, bootstrap order, chunk strategy, testing
 - [docs/THEMING.md](docs/THEMING.md) — ThemePack interface, custom property reference, how to add a pack
 - [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — TypeScript standards, CSS conventions, testing guidelines
 - [docs/API.md](docs/API.md) — Window system, VFS, storage utilities, theming API
 
 ## Testing
 
-171 tests across 7 test files:
+297 tests across 18 test files:
 - `npm test` — run Vitest suite
 - Tests co-located with source: `module.ts` → `module.test.ts`
-- Coverage: VFS, vim input, storage utilities, ANSI parsing, CLI tools, window chrome
+- Coverage: VFS, vim input, storage, ANSI, CLI tools, window chrome, matrix rain, boot splash, rubik model, p5 sketches, launcher catalog, desktop tiles, intro toasts, hint bubbles
