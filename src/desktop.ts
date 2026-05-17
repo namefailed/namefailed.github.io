@@ -19,7 +19,12 @@ import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { FS_HOME, vfsNormalize } from './os-fs'
 import { Splitter } from './splitter'
 import { commands } from './commands/index'
-import { PORTFOLIO_PROJECTS, resumeWindowSplitPayload } from './content/portfolio'
+import {
+  PORTFOLIO_PROJECTS,
+  resumeWindowSplitPayload,
+  whoamiAboutLines,
+  linksAndContactLines,
+} from './content/portfolio'
 import {
   attachLazyPrefetchHandlers,
   LAUNCHER_ICON_ROWS,
@@ -196,7 +201,7 @@ export class Desktop {
     mountDesktopTiles({
       host: workspaceEl,
       onActivate: cmd => {
-        void this.openWindow({ command: cmd } as WindowSpec)
+        void this.openWindow(this.specForCommand(cmd))
       },
     })
 
@@ -592,6 +597,44 @@ export class Desktop {
     this.windows.push(win)
     this.attachVerticalSplitters()
     this.focusWindow(win)
+  }
+
+  /**
+   * Build a fully-populated WindowSpec for a desktop-tile command.
+   * Portfolio commands (resume/projects/whoami/links) need their content
+   * pre-populated; tool/game commands only need the command key.
+   */
+  private specForCommand(cmd: string): WindowSpec {
+    switch (cmd) {
+      case 'resume':
+        return {
+          command: 'resume',
+          title: tileTitleForPortfolioCommand('resume'),
+          ...resumeWindowSplitPayload(),
+        }
+      case 'projects':
+        return {
+          command: 'projects',
+          title: tileTitleForPortfolioCommand('projects'),
+          content: [],
+          projectCards: PORTFOLIO_PROJECTS,
+        }
+      case 'whoami':
+        return {
+          command: 'whoami',
+          title: tileTitleForPortfolioCommand('whoami'),
+          content: whoamiAboutLines(),
+        }
+      case 'links':
+        return {
+          command: 'links',
+          title: tileTitleForPortfolioCommand('links'),
+          content: linksAndContactLines(),
+        }
+      default:
+        // Tool/game windows build their own content — only command key is needed.
+        return { command: cmd } as WindowSpec
+    }
   }
 
   focusTerminal(): void {

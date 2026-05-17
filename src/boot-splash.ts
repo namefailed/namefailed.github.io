@@ -27,14 +27,14 @@ export const BOOT_LINES: BootLine[] = [
   { ts: '0.401', kind: 'ok',   text: 'desktop tiling engine: ready',                 section: 'window manager' },
   { ts: '0.452', kind: 'ok',   text: 'window-chrome factory loaded',                 section: 'window manager' },
   { ts: '0.487', kind: 'ok',   text: 'splitter: drag handles armed',                 section: 'window manager' },
-  { ts: '0.523', kind: 'ok',   text: 'launcher catalog: 9 apps registered',          section: 'window manager' },
-  { ts: '0.567', kind: 'ok',   text: 'dock: auto-hide enabled',                      section: 'window manager' },
+  { ts: '0.523', kind: 'ok',   text: 'launcher catalog: 13 apps registered',         section: 'window manager' },
+  { ts: '0.567', kind: 'ok',   text: 'dock: always-visible, taskbar mounted',        section: 'window manager' },
 
   { ts: '0.612', kind: 'ok',   text: 'keybinds: 22 chords wired',                    section: 'input' },
   { ts: '0.634', kind: 'ok',   text: 'vim line editor: insert/normal/visual',        section: 'input' },
 
-  { ts: '0.679', kind: 'warn', text: 'cube.ko: disabled, math fix pending',          section: 'apps' },
-  { ts: '0.701', kind: 'warn', text: 'p5.ko: disabled, refactor pending',            section: 'apps' },
+  { ts: '0.679', kind: 'ok',   text: 'cube.ko: loaded, rubik solver ready',          section: 'apps' },
+  { ts: '0.701', kind: 'ok',   text: 'p5.ko: loaded, canvas runtime ready',         section: 'apps' },
   { ts: '0.745', kind: 'ok',   text: 'xterm-emulator: suspended (app-mode)',         section: 'apps' },
 
   { ts: '0.812', kind: 'ok',   text: 'sound subsystem armed (web-audio)',            section: 'system services' },

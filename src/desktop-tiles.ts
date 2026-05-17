@@ -26,8 +26,12 @@ const TILES: DesktopTile[] = [
   { cmd: 'terminal', label: 'Terminal', glyph: '~',  zone: ZONE_TOOLS },
   { cmd: 'explorer', label: 'Files',    glyph: '▣',  zone: ZONE_TOOLS },
   { cmd: 'edit',     label: 'Editor',   glyph: 'E',  zone: ZONE_TOOLS },
+  { cmd: 'browse',   label: 'Browser',  glyph: '⬡',  zone: ZONE_TOOLS },
   { cmd: 'paint',    label: 'Paint',    glyph: '◐',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'snake',    label: 'Snake',    glyph: '≈',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'pong',     label: 'Pong',     glyph: '⊟',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'cube',     label: 'Cube',     glyph: '⬡',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'p5',       label: 'p5.js',    glyph: '∿',  zone: ZONE_TOOLS, accent: 'fun' },
 ]
 
 /** Returns the tiles that should render on the desktop. */

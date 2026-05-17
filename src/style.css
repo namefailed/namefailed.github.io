@@ -4160,12 +4160,12 @@ html.retro-fx .xterm-screen {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  pointer-events: none;
+  pointer-events: auto;
   padding: 0 var(--ui-gap-wm);
   box-sizing: border-box;
-  /* Auto-hide: slide below viewport by default */
-  opacity: 0;
-  transform: translateY(calc(100% + 8px)) scale(0.96);
+  /* Always visible — only hidden by launchers-visible override */
+  opacity: 1;
+  transform: translateY(0) scale(1);
   transform-origin: 50% 100%;
   transition:
     opacity var(--ui-duration-slower) var(--ui-easing-emph),
@@ -5693,6 +5693,10 @@ html.retro-fx .xterm-screen {
   text-transform: uppercase;
   letter-spacing: 2px;
   font-size: 10px;
+  /* Start hidden — boot-line--in reveals it in sequence alongside boot-line rows */
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
 }
 .boot-line {
   color: #a6adc8;

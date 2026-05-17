@@ -31,9 +31,9 @@ beforeAll(() => {
 })
 
 describe('desktop-tiles catalog', () => {
-  it('exposes exactly the 9 visible tiles split across 2 zones', () => {
+  it('exposes exactly the 13 visible tiles split across 2 zones', () => {
     const tiles = visibleDesktopTiles()
-    expect(tiles.length).toBe(9)
+    expect(tiles.length).toBe(13)
   })
 
   it('Portfolio zone has 4 hero apps', () => {
@@ -41,12 +41,10 @@ describe('desktop-tiles catalog', () => {
     expect(portfolio.map((t: { cmd: string }) => t.cmd).sort()).toEqual(['links', 'projects', 'resume', 'whoami'])
   })
 
-  it('Tools & Fun zone has 5 apps; cube + p5 excluded', () => {
+  it('Tools & Fun zone has 9 apps including cube, p5, pong, browse', () => {
     const fun = visibleDesktopTiles().filter((t: { zone: string }) => t.zone === ZONE_TOOLS)
     const cmds = fun.map((t: { cmd: string }) => t.cmd).sort()
-    expect(cmds).toEqual(['edit', 'explorer', 'paint', 'snake', 'terminal'])
-    expect(cmds).not.toContain('cube')
-    expect(cmds).not.toContain('p5')
+    expect(cmds).toEqual(['browse', 'cube', 'edit', 'explorer', 'p5', 'paint', 'pong', 'snake', 'terminal'])
   })
 })
 
@@ -66,18 +64,21 @@ describe('snap-to-grid', () => {
 describe('defaultTileLayout', () => {
   it('produces a position for each visible tile', () => {
     const layout = defaultTileLayout()
-    expect(Object.keys(layout).length).toBe(9)
-    for (const cmd of ['resume', 'projects', 'whoami', 'links', 'terminal', 'explorer', 'edit', 'paint', 'snake']) {
+    expect(Object.keys(layout).length).toBe(13)
+    for (const cmd of [
+      'resume', 'projects', 'whoami', 'links',
+      'terminal', 'explorer', 'edit', 'browse', 'paint', 'snake', 'pong', 'cube', 'p5',
+    ]) {
       expect(layout[cmd]).toBeDefined()
-      expect(typeof layout[cmd].x).toBe('number')
-      expect(typeof layout[cmd].y).toBe('number')
+      expect(typeof layout[cmd]!.x).toBe('number')
+      expect(typeof layout[cmd]!.y).toBe('number')
     }
   })
 
   it('positions portfolio tiles above tools tiles', () => {
     const layout = defaultTileLayout()
-    const portfolioY = Math.max(layout.resume.y, layout.projects.y, layout.whoami.y, layout.links.y)
-    const toolsY = Math.min(layout.terminal.y, layout.explorer.y, layout.edit.y, layout.paint.y, layout.snake.y)
+    const portfolioY = Math.max(layout.resume!.y, layout.projects!.y, layout.whoami!.y, layout.links!.y)
+    const toolsY = Math.min(layout.terminal!.y, layout.explorer!.y, layout.edit!.y, layout.paint!.y, layout.snake!.y)
     expect(portfolioY).toBeLessThan(toolsY)
   })
 })
