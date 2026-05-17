@@ -42,9 +42,9 @@ export function createWindowChrome(opts: WindowChromeOptions): WindowChromeEleme
       <span class="win-title">${escapeHtml(opts.title)}</span>
     </div>
     <div class="win-traffic">
-      <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-      <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-      <span class="dot dot-close" title="close (ctrl+q)"></span>
+      <span class="dot dot-min" role="button" tabindex="0" title="minimize (ctrl+m)" aria-label="Minimize window"></span>
+      <span class="dot dot-max" role="button" tabindex="0" title="maximize / restore (ctrl+f)" aria-label="Maximize window"></span>
+      <span class="dot dot-close" role="button" tabindex="0" title="close (ctrl+q)" aria-label="Close window"></span>
     </div>
   `
 
@@ -53,21 +53,21 @@ export function createWindowChrome(opts: WindowChromeOptions): WindowChromeEleme
   const btnMin = titlebar.querySelector('.dot-min') as HTMLElement
   const btnMax = titlebar.querySelector('.dot-max') as HTMLElement
 
-  // Wire up button clicks
-  btnClose.addEventListener('click', (e) => {
-    e.stopPropagation()
-    opts.onClose()
-  })
+  // Wire up button clicks + keyboard activation for accessibility
+  function activateOnKeydown(fn: () => void): (e: KeyboardEvent) => void {
+    return (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn() }
+    }
+  }
 
-  btnMin.addEventListener('click', (e) => {
-    e.stopPropagation()
-    opts.onMinimize()
-  })
+  btnClose.addEventListener('click', (e) => { e.stopPropagation(); opts.onClose() })
+  btnClose.addEventListener('keydown', activateOnKeydown(opts.onClose))
 
-  btnMax.addEventListener('click', (e) => {
-    e.stopPropagation()
-    opts.onMaximize()
-  })
+  btnMin.addEventListener('click', (e) => { e.stopPropagation(); opts.onMinimize() })
+  btnMin.addEventListener('keydown', activateOnKeydown(opts.onMinimize))
+
+  btnMax.addEventListener('click', (e) => { e.stopPropagation(); opts.onMaximize() })
+  btnMax.addEventListener('keydown', activateOnKeydown(opts.onMaximize))
 
   // Focus on titlebar click (optional, but usually wanted)
   const focusOnTitlebar = opts.focusOnTitlebar !== false
