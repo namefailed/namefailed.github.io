@@ -31,12 +31,11 @@ const TILES: DesktopTile[] = [
   { cmd: 'paint',    label: 'Paint',    glyph: '◐',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'snake',    label: 'Snake',    glyph: '≈',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'pong',     label: 'Pong',     glyph: '◎',  zone: ZONE_TOOLS, accent: 'fun' },
-  { cmd: 'cube',     label: 'Cube',     glyph: '▦',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'p5',       label: 'p5.js',    glyph: 'p5', zone: ZONE_TOOLS, accent: 'fun' },
 ]
 
 /** Commands that live inside the "Games" folder tile (not rendered individually). */
-export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'cube', 'p5'])
+export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'p5'])
 
 /** All 13 tile definitions — used for persistence / tests. */
 export function visibleDesktopTiles(): readonly DesktopTile[] {
@@ -67,26 +66,27 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement on first visit. Anchors to the right half of the viewport. */
+/** Default desktop arrangement on first visit. */
 export function defaultTileLayout(): TileLayout {
   const w = (typeof window !== 'undefined' && window.innerWidth) || 1280
-  const STEP = GRID_CELL + 16          // tile width + gap
-  const YASB_H = 42                    // YASB bar height + small gap
-  const ROW_GAP = 20                   // gap between zones
+  const STEP = GRID_CELL + 16          // tile width + gap (96 px)
+  const YASB_H = 42
+  const EDGE = 120                     // min gap from right edge
 
-  // Right-anchored: a 4-column grid that leaves ~60 % of width for content windows
-  const COLS = 4
-  const gridWidth = COLS * STEP
-  const startX = Math.max(GRID_CELL, w - gridWidth - 24)
+  // Tools row is widest: 4 standalone tiles + 1 games folder = 5 columns
+  const MAX_COLS = 5
+  const gridWidth = MAX_COLS * STEP    // 480 px
+  // Right-anchor but keep at least EDGE px from both edges
+  const startX = Math.max(EDGE, w - gridWidth - EDGE)
 
-  const portfolioY = YASB_H + 12
-  const toolsY = portfolioY + STEP + ROW_GAP
+  const portfolioY = YASB_H + 24
+  const toolsY     = portfolioY + STEP + 20
 
   const out: TileLayout = {}
-  const tiles = visibleDesktopTiles()
+  const standalone = standaloneDesktopTiles()
 
   let pi = 0, ti = 0
-  for (const tile of tiles) {
+  for (const tile of standalone) {
     if (tile.zone === ZONE_PORTFOLIO) {
       out[tile.cmd] = { x: startX + pi * STEP, y: portfolioY }
       pi++
@@ -96,8 +96,8 @@ export function defaultTileLayout(): TileLayout {
     }
   }
 
-  // Games folder tile sits just after the 4 standalone tool tiles
-  out['games-folder'] = { x: startX + 4 * STEP, y: toolsY }
+  // Games folder sits after the standalone tool tiles
+  out['games-folder'] = { x: startX + ti * STEP, y: toolsY }
 
   return out
 }

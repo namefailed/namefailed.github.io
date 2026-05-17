@@ -125,7 +125,7 @@ export class P5Window {
     this.onMaximize = opts.onMaximize
 
     this.el = document.createElement('div')
-    this.el.className = 'app-window p5-app'
+    this.el.className = 'app-window content-window p5-app'
     this.el.dataset.app = 'p5'
     this.el.addEventListener('mousedown', () => opts.onFocus())
 
