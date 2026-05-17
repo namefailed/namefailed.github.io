@@ -10,7 +10,6 @@ import {
 import { getRetroFx, setRetroFx } from './retro-fx'
 import { getMatrixBgHandle } from './matrix-bg'
 import { applyTheme, getThemeId, listThemeSummaries } from './theme'
-import { resetAllHints } from './hint-bubbles'
 import { resetTileLayout } from './desktop-tiles'
 import { clearWallpaper } from './wallpaper'
 
@@ -221,12 +220,6 @@ export function initSystray(): void {
   )
 
   syncSettingsSoundToggle()
-
-  const restoreHintsBtn = document.getElementById('settings-restore-hints')
-  restoreHintsBtn?.addEventListener('click', () => {
-    resetAllHints()
-    pushToast('Hints restored — reload to see them.', 3000)
-  })
 
   const fullResetBtn = document.getElementById('settings-full-reset')
   fullResetBtn?.addEventListener('click', () => {
