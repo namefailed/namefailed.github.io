@@ -127,7 +127,7 @@ export class TerminalApp {
     window.addEventListener('resize', () => this.fitAddon.fit())
     this.xterm.onKey(({ domEvent }) => this.handleKey(domEvent))
     this.onModeChange('insert')
-    this.showMotd()
+    await this.showMotd()
   }
 
   /** Called by Desktop when window tiles change size. */
@@ -167,11 +167,17 @@ export class TerminalApp {
     return `${c.pink}namefailed${c.reset}${c.dim}@${c.reset}${c.blue}dev${c.reset}${c.dim}:${path}$${c.reset} `
   }
 
-  /** Write the MOTD banner instantly and drop to the prompt. */
-  private showMotd(): void {
-    for (const line of terminalMotdLines()) {
+  /** Animate the MOTD banner line-by-line, then drop to the prompt. */
+  private async showMotd(): Promise<void> {
+    // Reveal each banner line with a brief pause for a typewriter feel
+    for (const line of BANNER) {
       this.xterm.writeln(line)
+      await sleep(55)
     }
+    // Subtitle + help hint appear instantly after the banner completes
+    this.xterm.writeln('')
+    this.xterm.writeln(`  ${c.pink}mrgrey.site${c.reset} — portfolio OS`)
+    this.xterm.writeln(`  ${c.dim}Type ${c.reset}help${c.dim} to see available commands.${c.reset}`)
     this.xterm.writeln('')
     this.prompt()
   }
@@ -470,7 +476,7 @@ export class TerminalApp {
         this.history.push(raw)
         this.historyIndex = -1
         this.xterm.clear()
-        this.showMotd()
+        await this.showMotd()
         this.isProcessing = false
         return
       } else if (name === 'skills' || name === 'contact') {

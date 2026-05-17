@@ -5749,13 +5749,14 @@ html.retro-fx .xterm-screen {
   padding: 32px 48px 16px;
 }
 .boot-logo {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   font-size: clamp(10px, 1.6vw, 18px);
-  line-height: 1;
+  line-height: 1.15;
   white-space: pre;
   color: #f5c2e7;
   text-align: center;
-  font-weight: bold;
-  text-shadow: 0 0 18px rgba(245, 194, 231, 0.25);
+  font-weight: 400;
+  text-shadow: 0 0 12px rgba(245, 194, 231, 0.18);
   margin-bottom: 12px;
 }
 .boot-logo-sub {
