@@ -149,14 +149,18 @@ export class TerminalApp {
     // Sync badge for initial vim-on state
     this.onModeChange('insert')
 
-    // Boot sequence is now handled by TerminalWindow.mount() via terminalMotdLines()
     this.isProcessing = false
-    this.prompt()
+    // Do NOT call prompt() here — callers write MOTD first, then call showPrompt()
   }
 
   /** Write a single line to the terminal (used by TerminalWindow motd). */
   public writeLine(s: string): void {
     this.xterm.writeln(s)
+  }
+
+  /** Show the shell prompt — call after writing any MOTD lines post-mount(). */
+  public showPrompt(): void {
+    this.prompt()
   }
 
   /** Called by Desktop when window tiles change size. */
@@ -721,6 +725,7 @@ export class TerminalWindow {
       this.app.writeLine(line)
     }
     this.app.writeLine('')
+    this.app.showPrompt()
   }
 
   /** Pass through to TerminalApp for window resize events. */
