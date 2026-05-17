@@ -749,6 +749,14 @@ export class EditorWindow {
   }
 
   private onEditorKeydown(e: KeyboardEvent): void {
+    // F5 — save + open the current buffer in the p5 viewer. Works in any
+    // mode so users don't have to drop out of insert to play their sketch.
+    if (e.key === 'F5' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault()
+      this.runInP5()
+      return
+    }
+
     if (this.mode === 'cmd') return
 
     if (this.mode === 'insert') {

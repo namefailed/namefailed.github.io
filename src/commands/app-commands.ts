@@ -49,13 +49,13 @@ export const appCommands: Record<string, Command> = {
 
   edit: {
     description:
-      'Mini-vim buffer on the virtual FS — edit [path] (default notes.txt); :wq · hjkl · wb',
+      'Mini-vim buffer on the virtual FS — edit [path] (default notes.txt); :wq · hjkl · wb · :run / F5 plays current .js in p5',
     run: () => [],
   },
 
   editor: {
     description:
-      'Editor tile — editor [path] opens the same mini-vim buffer as edit (default notes.txt)',
+      'Editor tile — editor [path] opens the same mini-vim buffer as edit; :run or F5 plays a .js sketch in the p5 viewer',
     run: () => [],
   },
 

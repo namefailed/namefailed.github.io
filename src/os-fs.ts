@@ -85,7 +85,38 @@ function defaultRoot(): FsDir {
   // Seed the bundled p5 sketches. Double-clicking these in the file explorer
   // launches the p5 viewer; the same set also shows in the viewer's Examples
   // dropdown so the two paths stay in sync.
+  //
+  // _template.js is a minimal copy-paste starting point for new sketches —
+  // open the editor (`:e ~/sketches/myidea.js`), paste from this template,
+  // then press F5 to play in p5.
   const sketches = mkEmptyDir()
+  sketches.c['_template.js'] = {
+    t: 'f',
+    body: `// Minimal p5.js template — copy to a new filename and edit.
+// In the editor: press F5 or :run to play this in the p5 viewer.
+
+let t = 0;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  colorMode(HSB, 360, 100, 100, 100);
+  background(240, 25, 8);
+}
+
+function draw() {
+  background(240, 25, 8, 12);
+  translate(width / 2, height / 2);
+  const r = 100 + sin(t) * 60;
+  noFill();
+  stroke((t * 40) % 360, 75, 95);
+  strokeWeight(2);
+  circle(0, 0, r * 2);
+  t += 0.02;
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+`,
+  }
   for (const ex of P5_EXAMPLES) {
     sketches.c[sketchFilename(ex.label)] = { t: 'f', body: ex.code }
   }

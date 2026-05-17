@@ -303,6 +303,13 @@ export class Desktop {
         onMinimize: () => this.minimizeWindow(ed),
         onMaximize: () => this.toggleMaximizeContent(ed),
         onFocus: () => this.focusWindow(ed),
+        onRunInP5: absPath =>
+          void this.openWindow({
+            command: 'p5',
+            title: absPath.split('/').pop() ?? 'p5.js',
+            content: [],
+            p5SketchPath: absPath,
+          }),
       })
       this.appendToRightPane(ed.el)
       this.windows.push(ed)
