@@ -725,6 +725,9 @@ export class Desktop {
     this.windows.forEach(w => w.setActive(w === win))
     this.sync()
     switch (win.command) {
+      case 'terminal':
+        ;(win as TerminalWindow).focusShell()
+        break
       case 'edit':
         ;(win as EditorWindow).focusEditor()
         break

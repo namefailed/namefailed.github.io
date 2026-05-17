@@ -35,6 +35,7 @@ import { syncSettingsSoundToggle } from './os-systray'
 import { windowSpawnEcho } from './cli-window-echo'
 import { randomPick } from './random-pick'
 import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog'
+import { createWindowChrome } from './window-chrome'
 
 /**
  * Lines shown as the terminal's welcome message (motd).
@@ -181,7 +182,7 @@ export class TerminalApp {
   private onModeChange(mode: VimMode): void {
     if (!this.vimEnabled) return
     if (this.modeLine) {
-      const label = this.modeLine.querySelector('#vim-mode-text')
+      const label = this.modeLine.querySelector('.vim-mode-text')
       if (label) label.textContent = mode.toUpperCase()
       this.modeLine.className = `vim-mode-line mode-${mode}`
     }
@@ -663,33 +664,46 @@ export class TerminalWindow {
   constructor(opts: TerminalWindowOptions) {
     this.onFocus = opts.onFocus
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window terminal-app'
-    this.el.addEventListener('mousedown', opts.onFocus)
-
-    const chrome = document.createElement('div')
-    chrome.className = 'win-titlebar'
-    chrome.innerHTML =
-      `<span class="win-title">terminal</span>` +
-      `<button type="button" class="win-btn win-min" title="minimize">_</button>` +
-      `<button type="button" class="win-btn win-max" title="maximize">□</button>` +
-      `<button type="button" class="win-btn win-close" title="close">×</button>`
-    chrome.querySelector('.win-close')!.addEventListener('click', () => {
-      this.themeAbort.abort()
-      opts.onClose()
+    // ── Outer shell ──────────────────────────────────────────────────────────
+    const winChrome = createWindowChrome({
+      title: 'terminal',
+      onClose: () => { this.themeAbort.abort(); opts.onClose() },
+      onMinimize: opts.onMinimize,
+      onMaximize: opts.onMaximize,
+      onFocus: opts.onFocus,
     })
-    chrome.querySelector('.win-min')!.addEventListener('click', opts.onMinimize)
-    chrome.querySelector('.win-max')!.addEventListener('click', opts.onMaximize)
-    this.el.appendChild(chrome)
+    this.el = winChrome.el
+    this.el.classList.add('terminal-app')
 
+    // ── Terminal stack (mirrors static #terminal-window layout) ──────────────
+    const stack = document.createElement('div')
+    stack.className = 'terminal-stack'
+
+    // xterm host — must have flex layout or FitAddon sees 0 height
     this.inner = document.createElement('div')
     this.inner.className = 'terminal-host'
-    this.el.appendChild(this.inner)
+    stack.appendChild(this.inner)
 
-    const modeLine = document.createElement('div')
+    // Status bar with vim mode indicator — mirrors .terminal-status-bar in HTML
+    const statusBar = document.createElement('div')
+    statusBar.className = 'terminal-status-bar'
+    statusBar.setAttribute('aria-label', 'Shell status')
+
+    const modeLine = document.createElement('footer')
     modeLine.id = 'vim-mode-line-tw'
-    modeLine.className = 'vim-mode-line'
-    this.el.appendChild(modeLine)
+    modeLine.className = 'vim-mode-line mode-insert'
+    modeLine.setAttribute('aria-label', 'Vim input mode')
+    modeLine.innerHTML =
+      `<span class="vim-mode-glyph" aria-hidden="true">◆</span>` +
+      `<span class="vim-mode-core">` +
+        `<span class="vim-mode-dash">&#x2014;</span>` +
+        `<span class="vim-mode-text">INSERT</span>` +
+        `<span class="vim-mode-dash">&#x2014;</span>` +
+      `</span>`
+    statusBar.appendChild(modeLine)
+    stack.appendChild(statusBar)
+
+    this.el.appendChild(stack)
 
     this.app = new TerminalApp(this.inner, modeLine, opts.onOpenWindow)
 

@@ -1913,6 +1913,25 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   background-color: var(--th-surface1);
 }
 
+/* Lazy TerminalWindow tile — mirrors #terminal layout so FitAddon gets correct dimensions */
+.terminal-host {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--ui-space-4);
+  box-sizing: border-box;
+}
+
+.terminal-host .terminal-surface {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  background-color: var(--th-surface1);
+}
+
 /* ── xterm overrides ───────────────────────────────────────────────────────── */
 
 .xterm { height: 100%; }
@@ -1943,7 +1962,8 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   background-clip: padding-box;
 }
 
-html.retro-fx #terminal::before {
+html.retro-fx #terminal::before,
+html.retro-fx .terminal-host::before {
   content: '';
   position: absolute;
   inset: 0;
