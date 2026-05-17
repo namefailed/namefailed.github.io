@@ -220,7 +220,7 @@ export const vfsCommands: Record<string, Command> = {
   },
 
   vfsreset: {
-    description: '',
+    description: 'Reset VFS to default tree — wipes all files, restores default notes and sketches',
     hidden: true,
     run: () => {
       vfsReset()

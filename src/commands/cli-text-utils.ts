@@ -23,9 +23,16 @@ export function wcStats(s: string): { lines: number; words: number; chars: numbe
 
 export function runUnixDate(): string[] {
   const d = new Date()
+  let friendly: string
+  try {
+    friendly = d.toLocaleString(undefined, { weekday: 'long', dateStyle: 'full', timeStyle: 'medium' })
+  } catch {
+    // Fallback for environments without full ICU (e.g. Node.js without --icu-data-dir)
+    friendly = d.toString()
+  }
   return [
     '',
-    `  ${d.toLocaleString(undefined, { weekday: 'long', dateStyle: 'full', timeStyle: 'medium' })}`,
+    `  ${friendly}`,
     `  ${c.dim}epoch ms ${Date.now()} · UTC offset ${-d.getTimezoneOffset()} min${c.reset}`,
     '',
   ]
