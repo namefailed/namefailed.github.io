@@ -147,13 +147,13 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
   // Games folder tile
   const folderEl = createFolderTile(layout['games-folder'])
   attachTileDrag(folderEl, 'games-folder', () => {
-    toggleGamesPopup(folderEl, opts.host, opts.onActivate)
+    toggleGamesPopup(folderEl, opts.onActivate)
   })
   opts.host.appendChild(folderEl)
 
   // Close popup on outside click
   document.addEventListener('pointerdown', (e) => {
-    const popup = opts.host.querySelector<HTMLElement>('.games-folder-popup')
+    const popup = document.body.querySelector<HTMLElement>('.games-folder-popup')
     if (!popup) return
     if (!popup.contains(e.target as Node) && !folderEl.contains(e.target as Node)) {
       popup.remove()
@@ -215,11 +215,10 @@ function createFolderTile(pos: TilePosition): HTMLButtonElement {
 
 function toggleGamesPopup(
   anchor: HTMLElement,
-  host: HTMLElement,
   onActivate: (cmd: string) => void,
 ): void {
   // Toggle: close if already open
-  const existing = host.querySelector('.games-folder-popup')
+  const existing = document.body.querySelector('.games-folder-popup')
   if (existing) {
     existing.remove()
     return
