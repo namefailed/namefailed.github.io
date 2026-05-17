@@ -49,7 +49,7 @@ describe('TILED_WINDOW_COMMANDS', () => {
   })
 
   it('includes game and tool commands', () => {
-    for (const cmd of ['paint', 'snake', 'pong', 'p5', 'cube', 'explorer', 'browse']) {
+    for (const cmd of ['paint', 'snake', 'pong', 'p5', 'explorer', 'browse']) {
       expect(TILED_WINDOW_COMMANDS.has(cmd)).toBe(true)
     }
   })

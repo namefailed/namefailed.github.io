@@ -34,9 +34,9 @@ beforeAll(() => {
 })
 
 describe('desktop-tiles catalog', () => {
-  it('exposes exactly the 13 visible tiles split across 2 zones', () => {
+  it('exposes exactly the 12 visible tiles split across 2 zones', () => {
     const tiles = visibleDesktopTiles()
-    expect(tiles.length).toBe(13)
+    expect(tiles.length).toBe(12)
   })
 
   it('Portfolio zone has 4 hero apps', () => {
@@ -44,17 +44,18 @@ describe('desktop-tiles catalog', () => {
     expect(portfolio.map((t: { cmd: string }) => t.cmd).sort()).toEqual(['links', 'projects', 'resume', 'whoami'])
   })
 
-  it('Tools & Fun zone has 9 apps including cube, p5, pong, browse', () => {
+  it('Tools & Fun zone has 8 apps including p5, pong, browse (no cube)', () => {
     const fun = visibleDesktopTiles().filter((t: { zone: string }) => t.zone === ZONE_TOOLS)
     const cmds = fun.map((t: { cmd: string }) => t.cmd).sort()
-    expect(cmds).toEqual(['browse', 'cube', 'edit', 'explorer', 'p5', 'paint', 'pong', 'snake', 'terminal'])
+    expect(cmds).toEqual(['browse', 'edit', 'explorer', 'p5', 'paint', 'pong', 'snake', 'terminal'])
   })
 
-  it('GAME_CMDS contains exactly 5 game commands', () => {
-    expect(GAME_CMDS.size).toBe(5)
-    for (const cmd of ['paint', 'snake', 'pong', 'cube', 'p5']) {
+  it('GAME_CMDS contains exactly 4 game commands (no cube)', () => {
+    expect(GAME_CMDS.size).toBe(4)
+    for (const cmd of ['paint', 'snake', 'pong', 'p5']) {
       expect(GAME_CMDS.has(cmd)).toBe(true)
     }
+    expect(GAME_CMDS.has('cube')).toBe(false)
   })
 
   it('standaloneDesktopTiles returns 8 tiles (no games)', () => {
@@ -65,9 +66,9 @@ describe('desktop-tiles catalog', () => {
     }
   })
 
-  it('gameFolderTiles returns exactly the 5 game tiles', () => {
+  it('gameFolderTiles returns exactly the 4 game tiles (no cube)', () => {
     const games = gameFolderTiles()
-    expect(games.length).toBe(5)
+    expect(games.length).toBe(4)
     for (const t of games) {
       expect(GAME_CMDS.has(t.cmd)).toBe(true)
     }
@@ -88,13 +89,13 @@ describe('snap-to-grid', () => {
 })
 
 describe('defaultTileLayout', () => {
-  it('produces a position for each visible tile plus the games-folder', () => {
+  it('produces a position for each standalone tile plus the games-folder', () => {
     const layout = defaultTileLayout()
-    // 13 individual tiles + 1 games-folder = 14 entries
-    expect(Object.keys(layout).length).toBe(14)
+    // 8 standalone tiles (4 portfolio + 4 tools, games are inside folder) + 1 games-folder = 9 entries
+    expect(Object.keys(layout).length).toBe(9)
     for (const cmd of [
       'resume', 'projects', 'whoami', 'links',
-      'terminal', 'explorer', 'edit', 'browse', 'paint', 'snake', 'pong', 'cube', 'p5',
+      'terminal', 'explorer', 'edit', 'browse',
       'games-folder',
     ]) {
       expect(layout[cmd]).toBeDefined()
@@ -106,7 +107,7 @@ describe('defaultTileLayout', () => {
   it('positions portfolio tiles above tools tiles', () => {
     const layout = defaultTileLayout()
     const portfolioY = Math.max(layout.resume!.y, layout.projects!.y, layout.whoami!.y, layout.links!.y)
-    const toolsY = Math.min(layout.terminal!.y, layout.explorer!.y, layout.edit!.y, layout.paint!.y, layout.snake!.y)
+    const toolsY = Math.min(layout.terminal!.y, layout.explorer!.y, layout.edit!.y, layout.browse!.y)
     expect(portfolioY).toBeLessThan(toolsY)
   })
 })
