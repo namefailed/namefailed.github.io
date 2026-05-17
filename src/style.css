@@ -1425,12 +1425,24 @@ html.retro-fx::before {
 }
 
 #panes.max-content #terminal-window,
-#panes.max-content #h-splitter,
-#panes.max-content #right-pane {
+#panes.max-content #h-splitter {
   display: none !important;
 }
 
-#panes.max-content > .content-window.maximized {
+/* Keep #right-pane in place — don't move the iframe element (causes reload).
+   Stretch right-pane to fill all available space instead. */
+#panes.max-content #right-pane {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* Hide every sibling that isn't the maximized window */
+#panes.max-content #right-pane > .content-window:not(.maximized),
+#panes.max-content #right-pane > .splitter-v {
+  display: none !important;
+}
+
+#panes.max-content #right-pane > .content-window.maximized {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   width: auto !important;
@@ -1456,6 +1468,12 @@ html.retro-fx::before {
   flex: 0 0 auto;
   width: 460px;
   min-width: 280px;
+}
+
+/* No open windows → #panes is empty/transparent; let pointer events fall through
+   to desktop tiles underneath (which sit at a lower z-index). */
+#desktop[data-content-count="0"] #panes {
+  pointer-events: none;
 }
 
 /* When alone, terminal fills the whole desktop */

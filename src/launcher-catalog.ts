@@ -25,7 +25,7 @@ export function tileTitleForPortfolioCommand(cmd: string): string {
  * All others are portfolio/tool commands that `openWindow` understands.
  */
 export const PINNED_DOCK_CMDS: readonly string[] = [
-  'terminal', 'resume', 'projects', 'whoami', 'links',
+  'terminal', 'resume', 'projects', 'whoami', 'links', 'explorer', 'edit',
 ]
 
 /** Same set as `terminal.ts` WINDOW_COMMANDS — opens a right-pane tile */

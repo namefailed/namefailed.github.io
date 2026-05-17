@@ -98,10 +98,6 @@ interface MinimizedEntry {
   win: TiledWin
 }
 
-interface ContentRestore {
-  parent: HTMLElement
-  next: ChildNode | null
-}
 
 export class Desktop {
   /** Mount animation length (matches `wm-window-mount` + slack). */
@@ -139,7 +135,6 @@ export class Desktop {
 
   /** `null` | terminal sentinel | content window command id */
   private maximizedId: string | null = null
-  private contentRestore = new WeakMap<TiledWin, ContentRestore>()
 
   constructor(
     desktop:     HTMLElement,
@@ -790,11 +785,8 @@ export class Desktop {
       if (other) this.unmaximizeContent(other)
     }
 
-    this.contentRestore.set(win, {
-      parent: win.el.parentElement!,
-      next:   win.el.nextSibling,
-    })
-    this.panes.appendChild(win.el)
+    // Leave win.el in #right-pane — moving it in the DOM reloads iframes (p5).
+    // CSS hides non-maximized siblings and stretches #right-pane to fill #panes.
     win.el.classList.add('maximized')
     this.panes.classList.add('max-content')
     this.maximizedId = win.command
@@ -805,13 +797,8 @@ export class Desktop {
 
   private unmaximizeContent(win: TiledWin): void {
     if (!win.isMaximized()) return
-    const slot = this.contentRestore.get(win)
     win.el.classList.remove('maximized')
     this.panes.classList.remove('max-content')
-    if (slot) {
-      slot.parent.insertBefore(win.el, slot.next)
-      this.contentRestore.delete(win)
-    }
     if (this.maximizedId === win.command) this.maximizedId = null
     this.attachVerticalSplitters()
     this.sync()
