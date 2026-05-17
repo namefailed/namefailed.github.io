@@ -5748,44 +5748,155 @@ html.retro-fx .xterm-screen {
 }
 
 /* ─── desktop tiles ──────────────────────────────────────── */
+
+/* Right-pane passes pointer events through when nothing is open (tiles are clickable) */
+#right-pane:empty {
+  pointer-events: none;
+}
+
 .desktop-tile {
   position: absolute;
   width: 76px;
   padding: 8px 4px 6px;
   text-align: center;
-  background: rgba(49, 50, 68, 0.85);
-  border: 1px solid #45475a;
-  border-radius: 8px;
+  background: rgba(30, 30, 46, 0.82);
+  border: 1px solid rgba(69, 71, 90, 0.7);
+  border-radius: 10px;
   color: #cdd6f4;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   cursor: grab;
   user-select: none;
-  backdrop-filter: blur(4px);
-  transition: transform 80ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  backdrop-filter: blur(6px);
+  z-index: 1; /* behind tiling panes (z-index: 2), above matrix (z-index: 0) */
+  transition: transform 90ms ease, border-color 130ms ease, box-shadow 130ms ease,
+    background 130ms ease;
 }
-.desktop-tile:hover {
-  border-color: #f5c2e7;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+.desktop-tile:hover,
+.desktop-tile:focus-visible {
+  background: rgba(49, 50, 68, 0.92);
+  border-color: rgba(245, 194, 231, 0.6);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,194,231,0.12);
+  outline: none;
 }
 .desktop-tile--dragging {
   cursor: grabbing;
-  transform: scale(1.04);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+  transform: scale(1.05);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
   z-index: 100;
 }
 .desktop-tile--portfolio {
-  border-color: #f5c2e7;
+  border-color: rgba(245, 194, 231, 0.45);
+}
+.desktop-tile--portfolio:hover,
+.desktop-tile--portfolio:focus-visible {
+  border-color: rgba(245, 194, 231, 0.9);
 }
 .desktop-tile-glyph {
   display: block;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
   color: #f5c2e7;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  line-height: 1;
 }
 .desktop-tile--fun .desktop-tile-glyph {
   color: #94e2d5;
+}
+
+/* Games folder tile */
+.desktop-tile--folder {
+  border-color: rgba(148, 226, 213, 0.45);
+}
+.desktop-tile--folder:hover,
+.desktop-tile--folder:focus-visible {
+  border-color: rgba(148, 226, 213, 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(148,226,213,0.12);
+}
+
+/* 2×2 mini-grid of game icons inside folder tile */
+.folder-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 0 auto 4px;
+  width: 44px;
+}
+.folder-tile-mini {
+  background: rgba(69, 71, 90, 0.6);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  font-size: 8px;
+  color: #94e2d5;
+}
+
+/* ── Games folder popup ───────────────────────────────────── */
+.games-folder-popup {
+  position: fixed;
+  background: rgba(24, 24, 37, 0.94);
+  border: 1px solid rgba(69, 71, 90, 0.8);
+  border-radius: 14px;
+  padding: 14px 12px 10px;
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  animation: games-popup-in 160ms cubic-bezier(0.34, 1.24, 0.54, 1) both;
+}
+
+@keyframes games-popup-in {
+  from { transform: scale(0.88) translateY(6px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);   opacity: 1; }
+}
+
+.games-folder-popup-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #585b70;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.games-folder-popup-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.games-folder-popup-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px 6px;
+  border-radius: 10px;
+  background: rgba(49, 50, 68, 0.6);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  color: #cdd6f4;
+  transition: border-color 120ms, background 120ms;
+  min-width: 64px;
+}
+.games-folder-popup-item:hover,
+.games-folder-popup-item:focus-visible {
+  border-color: rgba(148, 226, 213, 0.7);
+  background: rgba(49, 50, 68, 0.9);
+  outline: none;
+}
+.games-folder-popup-item-glyph {
+  font-size: 22px;
+  color: #94e2d5;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.games-folder-popup-item-label {
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: center;
 }
 
 /* ─── hint bubbles ────────────────────────────────────────── */

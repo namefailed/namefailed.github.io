@@ -37,6 +37,7 @@ import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { runIntroToasts } from './intro-toasts'
 import { pushToast } from './os-systray'
+import { mountDesktopTiles } from './desktop-tiles'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
 //
@@ -200,6 +201,15 @@ export class Desktop {
 
     // Wire auto-hide hover zone for the dock
     this.setupDockHoverZone()
+
+    // Mount draggable desktop icon grid (behind tiling panes)
+    const workspace = document.getElementById('desktop-workspace')
+    if (workspace) {
+      mountDesktopTiles({
+        host: workspace,
+        onActivate: cmd => void this.openWindow(this.specForCommand(cmd)),
+      })
+    }
 
     this.sync()
   }
@@ -610,46 +620,28 @@ export class Desktop {
     }
   }
 
+  /** Open or focus the terminal tile (lazy — lives in the right pane like any other window). */
   focusTerminal(): void {
-    if (this.focusedId !== null) playOsSound('focus')
-    this.closeLauncherOverlay()
-    this.termWin.classList.remove('terminal-closed')
-    const restoring = this.termWin.classList.contains('minimized')
-    if (restoring) {
-      this.termWin.classList.remove('minimized')
-    }
-    if (restoring && !this.prefersReducedMotion()) {
-      requestAnimationFrame(() => this.playMountAnim(this.termWin))
-    }
-
-    this.focusedId = null
-    this.termWin.classList.add('active')
-    this.windows.forEach(w => w.setActive(false))
-    this.sync()
-    requestAnimationFrame(() => this.fitTerminal())
+    void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
   }
 
   /**
-   * Focus the terminal tile only if it is already visible. Does not restore a
-   * minimized or closed terminal (used after closing/minimizing another window).
+   * Transfer focus to the terminal tile only if it is already visible (not minimized).
+   * Used after closing/minimizing another window so focus does not go nowhere.
    */
   private focusTerminalIfAlreadyVisible(): void {
     this.closeLauncherOverlay()
-    if (
-      this.termWin.classList.contains('minimized') ||
-      this.termWin.classList.contains('terminal-closed')
-    ) {
-      this.focusedId = null
-      this.termWin.classList.remove('active')
-      this.windows.forEach(w => w.setActive(false))
-      this.sync()
+    // Find the visible (non-minimized) terminal tile
+    const termTile = this.windows.find(w => w.command === 'terminal')
+    if (termTile) {
+      this.focusWindow(termTile)
       return
     }
+    // No visible terminal — clear active state and let sync redraw
     this.focusedId = null
-    this.termWin.classList.add('active')
+    this.termWin.classList.remove('active')
     this.windows.forEach(w => w.setActive(false))
     this.sync()
-    requestAnimationFrame(() => this.fitTerminal())
   }
 
   // ── private: window lifecycle ─────────────────────────────────────────────
@@ -1086,7 +1078,7 @@ export class Desktop {
         btn.appendChild(makeIconGlyph(item.glyph))
         btn.appendChild(makeIconLabel(item.label))
         btn.addEventListener('click', () => {
-          this.focusTerminal()
+          void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
         })
       } else {
         const cmd = commands[item.cmd]
@@ -1246,37 +1238,29 @@ export class Desktop {
     if (!el) return
 
     if (this.focusedId !== null) {
-      el.textContent = ICON_META_BY_CMD.get(this.focusedId)?.label ?? this.focusedId
+      const label = this.focusedId === 'terminal'
+        ? 'namefailed@dev — ~/terminal'
+        : (ICON_META_BY_CMD.get(this.focusedId)?.label ?? this.focusedId)
+      el.textContent = label
       return
     }
 
-    if (this.termWin.classList.contains('terminal-closed')) {
-      el.textContent = this.windows.length === 0 ? 'mrgrey.site' : '\u2014'
-      return
-    }
-    // Minimized vs visible: same prompt line — dock shows wm-task-btn--minimized
-    el.textContent = 'namefailed@dev — ~/terminal'
+    el.textContent = this.windows.length === 0 ? 'mrgrey.site' : '—'
   }
 
   private syncTaskbar(): void {
     this.taskbarDock.replaceChildren()
 
     // ── Pinned apps (always visible even when not running) ────────────────────
-    const isTermClosed = this.termWin.classList.contains('terminal-closed')
-
     for (const cmd of PINNED_DOCK_CMDS) {
       const isTerminal = cmd === 'terminal'
 
-      const isRunning = isTerminal
-        ? !isTermClosed
-        : this.windows.some(w => w.command === cmd) ||
-          this.minimized.some(m => m.win.command === cmd)
+      const isRunning = this.windows.some(w => w.command === cmd) ||
+        this.minimized.some(m => m.win.command === cmd)
 
-      const isActive = isTerminal
-        ? this.focusedId === null && !isTermClosed
-        : this.focusedId === cmd
+      const isActive = this.focusedId === cmd
 
-      const isMinimized = !isTerminal && this.minimized.some(m => m.win.command === cmd)
+      const isMinimized = this.minimized.some(m => m.win.command === cmd)
 
       const meta = isTerminal
         ? { glyph: '~', label: 'Terminal' }
@@ -1400,7 +1384,7 @@ export class Desktop {
 
     // Ctrl+H → terminal (vim h = left), Ctrl+L → enter pane (vim l = right),
     // Ctrl+K → previous window up in column (vim k = up), Ctrl+J → next window down (vim j = down)
-    if (key === 'h') { this.focusTerminal(); return }
+    if (key === 'h') { void this.openWindow({ command: 'terminal', title: 'terminal', content: [] }); return }
     if (key === 'l') {
       if (!this.focusedId && this.windows[0]) this.focusWindow(this.windows[0])
       return
@@ -1438,14 +1422,14 @@ export class Desktop {
   }
 
   private focusLeft(): void {
-    if (this.focusedId === null) return                      // already at terminal
+    if (this.focusedId === null) return                      // nothing focused
     const idx = this.windows.findIndex(w => w.command === this.focusedId)
-    if (idx <= 0) { this.focusTerminal(); return }
+    if (idx <= 0) return                                     // already at first window
     this.focusWindow(this.windows[idx - 1])
   }
 
   private focusRight(): void {
-    if (this.focusedId === null) {                           // terminal → first window
+    if (this.focusedId === null) {                           // nothing focused → first window
       if (this.windows[0]) this.focusWindow(this.windows[0])
       return
     }

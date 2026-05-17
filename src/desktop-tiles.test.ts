@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import {
   visibleDesktopTiles,
+  standaloneDesktopTiles,
+  gameFolderTiles,
   ZONE_PORTFOLIO,
   ZONE_TOOLS,
+  GAME_CMDS,
   snapToGrid,
   defaultTileLayout,
   GRID_CELL,
@@ -46,6 +49,29 @@ describe('desktop-tiles catalog', () => {
     const cmds = fun.map((t: { cmd: string }) => t.cmd).sort()
     expect(cmds).toEqual(['browse', 'cube', 'edit', 'explorer', 'p5', 'paint', 'pong', 'snake', 'terminal'])
   })
+
+  it('GAME_CMDS contains exactly 5 game commands', () => {
+    expect(GAME_CMDS.size).toBe(5)
+    for (const cmd of ['paint', 'snake', 'pong', 'cube', 'p5']) {
+      expect(GAME_CMDS.has(cmd)).toBe(true)
+    }
+  })
+
+  it('standaloneDesktopTiles returns 8 tiles (no games)', () => {
+    const standalone = standaloneDesktopTiles()
+    expect(standalone.length).toBe(8)
+    for (const t of standalone) {
+      expect(GAME_CMDS.has(t.cmd)).toBe(false)
+    }
+  })
+
+  it('gameFolderTiles returns exactly the 5 game tiles', () => {
+    const games = gameFolderTiles()
+    expect(games.length).toBe(5)
+    for (const t of games) {
+      expect(GAME_CMDS.has(t.cmd)).toBe(true)
+    }
+  })
 })
 
 describe('snap-to-grid', () => {
@@ -62,12 +88,14 @@ describe('snap-to-grid', () => {
 })
 
 describe('defaultTileLayout', () => {
-  it('produces a position for each visible tile', () => {
+  it('produces a position for each visible tile plus the games-folder', () => {
     const layout = defaultTileLayout()
-    expect(Object.keys(layout).length).toBe(13)
+    // 13 individual tiles + 1 games-folder = 14 entries
+    expect(Object.keys(layout).length).toBe(14)
     for (const cmd of [
       'resume', 'projects', 'whoami', 'links',
       'terminal', 'explorer', 'edit', 'browse', 'paint', 'snake', 'pong', 'cube', 'p5',
+      'games-folder',
     ]) {
       expect(layout[cmd]).toBeDefined()
       expect(typeof layout[cmd]!.x).toBe('number')

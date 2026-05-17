@@ -1,6 +1,7 @@
 /**
  * Populated desktop with two zones (Portfolio · Tools & Fun).
  * Tiles are draggable, snap-to-grid; positions persist to localStorage.
+ * Game tiles (paint, snake, pong, cube, p5) live inside a "Games" folder tile.
  */
 
 export const ZONE_PORTFOLIO = 'portfolio' as const
@@ -26,17 +27,30 @@ const TILES: DesktopTile[] = [
   { cmd: 'terminal', label: 'Terminal', glyph: '~',  zone: ZONE_TOOLS },
   { cmd: 'explorer', label: 'Files',    glyph: '▣',  zone: ZONE_TOOLS },
   { cmd: 'edit',     label: 'Editor',   glyph: 'E',  zone: ZONE_TOOLS },
-  { cmd: 'browse',   label: 'Browser',  glyph: '⬡',  zone: ZONE_TOOLS },
+  { cmd: 'browse',   label: 'Browser',  glyph: 'w',  zone: ZONE_TOOLS },
   { cmd: 'paint',    label: 'Paint',    glyph: '◐',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'snake',    label: 'Snake',    glyph: '≈',  zone: ZONE_TOOLS, accent: 'fun' },
-  { cmd: 'pong',     label: 'Pong',     glyph: '⊟',  zone: ZONE_TOOLS, accent: 'fun' },
-  { cmd: 'cube',     label: 'Cube',     glyph: '⬡',  zone: ZONE_TOOLS, accent: 'fun' },
-  { cmd: 'p5',       label: 'p5.js',    glyph: '∿',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'pong',     label: 'Pong',     glyph: '◎',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'cube',     label: 'Cube',     glyph: '▦',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'p5',       label: 'p5.js',    glyph: 'p5', zone: ZONE_TOOLS, accent: 'fun' },
 ]
 
-/** Returns the tiles that should render on the desktop. */
+/** Commands that live inside the "Games" folder tile (not rendered individually). */
+export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'cube', 'p5'])
+
+/** All 13 tile definitions — used for persistence / tests. */
 export function visibleDesktopTiles(): readonly DesktopTile[] {
   return TILES
+}
+
+/** Tiles shown as individual icons on the desktop (games are inside the folder). */
+export function standaloneDesktopTiles(): readonly DesktopTile[] {
+  return TILES.filter(t => !GAME_CMDS.has(t.cmd))
+}
+
+/** Tiles that live inside the Games folder popup. */
+export function gameFolderTiles(): readonly DesktopTile[] {
+  return TILES.filter(t => GAME_CMDS.has(t.cmd))
 }
 
 export const GRID_CELL = 80
@@ -53,12 +67,20 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement on first visit. */
+/** Default desktop arrangement on first visit. Anchors to the right half of the viewport. */
 export function defaultTileLayout(): TileLayout {
-  const PAD_X = GRID_CELL          // 80px from left
-  const PORTFOLIO_Y = GRID_CELL    // 80px from top (under YASB bar)
-  const TOOLS_Y = GRID_CELL * 3    // 240px — leaves gap for "zone label" feel
-  const STEP = GRID_CELL + 16
+  const w = (typeof window !== 'undefined' && window.innerWidth) || 1280
+  const STEP = GRID_CELL + 16          // tile width + gap
+  const YASB_H = 42                    // YASB bar height + small gap
+  const ROW_GAP = 20                   // gap between zones
+
+  // Right-anchored: a 4-column grid that leaves ~60 % of width for content windows
+  const COLS = 4
+  const gridWidth = COLS * STEP
+  const startX = Math.max(GRID_CELL, w - gridWidth - 24)
+
+  const portfolioY = YASB_H + 12
+  const toolsY = portfolioY + STEP + ROW_GAP
 
   const out: TileLayout = {}
   const tiles = visibleDesktopTiles()
@@ -66,13 +88,17 @@ export function defaultTileLayout(): TileLayout {
   let pi = 0, ti = 0
   for (const tile of tiles) {
     if (tile.zone === ZONE_PORTFOLIO) {
-      out[tile.cmd] = { x: PAD_X + pi * STEP, y: PORTFOLIO_Y }
+      out[tile.cmd] = { x: startX + pi * STEP, y: portfolioY }
       pi++
     } else {
-      out[tile.cmd] = { x: PAD_X + ti * STEP, y: TOOLS_Y }
+      out[tile.cmd] = { x: startX + ti * STEP, y: toolsY }
       ti++
     }
   }
+
+  // Games folder tile sits just after the 4 standalone tool tiles
+  out['games-folder'] = { x: startX + 4 * STEP, y: toolsY }
+
   return out
 }
 
@@ -103,9 +129,9 @@ export function resetTileLayout(): void {
 }
 
 export interface MountTilesOptions {
-  /** Where to mount tiles (e.g. #desktop-workspace) */
+  /** Where to mount tiles — should be a `position: relative` container (e.g. #desktop-workspace). */
   host: HTMLElement
-  /** Called when a tile is activated (click without significant drag). */
+  /** Called when a tile (or a game inside the folder popup) is activated. */
   onActivate: (cmd: string) => void
 }
 
@@ -114,30 +140,161 @@ const DRAG_THRESHOLD_PX = 4
 /** Render tiles into `host`, wire drag + snap, persist on drop. */
 export function mountDesktopTiles(opts: MountTilesOptions): void {
   const layout = loadTileLayout()
-  const tiles = visibleDesktopTiles()
+  const standalone = standaloneDesktopTiles()
 
-  for (const tile of tiles) {
-    const el = document.createElement('button')
-    el.type = 'button'
-    el.className = [
-      'desktop-tile',
-      tile.zone === ZONE_PORTFOLIO ? 'desktop-tile--portfolio' : '',
-      tile.accent === 'fun' ? 'desktop-tile--fun' : '',
-    ].filter(Boolean).join(' ')
-    el.dataset.cmd = tile.cmd
-    el.style.left = `${layout[tile.cmd].x}px`
-    el.style.top = `${layout[tile.cmd].y}px`
-    el.innerHTML = `<span class="desktop-tile-glyph">${escapeHtml(tile.glyph)}</span>${escapeHtml(tile.label)}`
-
-    attachTileDrag(el, tile.cmd, opts.onActivate)
+  // Individual standalone tiles
+  for (const tile of standalone) {
+    const el = createTileButton(tile, layout[tile.cmd])
+    const cmd = tile.cmd
+    attachTileDrag(el, cmd, () => opts.onActivate(cmd))
     opts.host.appendChild(el)
   }
+
+  // Games folder tile
+  const folderEl = createFolderTile(layout['games-folder'])
+  attachTileDrag(folderEl, 'games-folder', () => {
+    toggleGamesPopup(folderEl, opts.host, opts.onActivate)
+  })
+  opts.host.appendChild(folderEl)
+
+  // Close popup on outside click
+  document.addEventListener('pointerdown', (e) => {
+    const popup = opts.host.querySelector<HTMLElement>('.games-folder-popup')
+    if (!popup) return
+    if (!popup.contains(e.target as Node) && !folderEl.contains(e.target as Node)) {
+      popup.remove()
+    }
+  }, { capture: true })
 }
+
+// ── Tile DOM helpers ─────────────────────────────────────────────────────────
+
+function createTileButton(tile: DesktopTile, pos: TilePosition): HTMLButtonElement {
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.className = [
+    'desktop-tile',
+    tile.zone === ZONE_PORTFOLIO ? 'desktop-tile--portfolio' : '',
+    tile.accent === 'fun' ? 'desktop-tile--fun' : '',
+  ].filter(Boolean).join(' ')
+  el.dataset.cmd = tile.cmd
+  el.style.left = `${pos.x}px`
+  el.style.top = `${pos.y}px`
+
+  const glyph = document.createElement('span')
+  glyph.className = 'desktop-tile-glyph'
+  glyph.textContent = tile.glyph
+  el.appendChild(glyph)
+
+  const label = document.createTextNode(tile.label)
+  el.appendChild(label)
+
+  return el
+}
+
+function createFolderTile(pos: TilePosition): HTMLButtonElement {
+  const el = document.createElement('button')
+  el.type = 'button'
+  el.className = 'desktop-tile desktop-tile--folder desktop-tile--fun'
+  el.dataset.cmd = 'games-folder'
+  el.style.left = `${pos.x}px`
+  el.style.top = `${pos.y}px`
+  el.title = 'Games'
+
+  // 2×2 mini-grid preview of game icons
+  const grid = document.createElement('div')
+  grid.className = 'folder-tile-grid'
+  const previews = gameFolderTiles().slice(0, 4)
+  for (const g of previews) {
+    const mini = document.createElement('div')
+    mini.className = 'folder-tile-mini'
+    mini.textContent = g.glyph
+    grid.appendChild(mini)
+  }
+  el.appendChild(grid)
+
+  const label = document.createTextNode('Games')
+  el.appendChild(label)
+
+  return el
+}
+
+function toggleGamesPopup(
+  anchor: HTMLElement,
+  host: HTMLElement,
+  onActivate: (cmd: string) => void,
+): void {
+  // Toggle: close if already open
+  const existing = host.querySelector('.games-folder-popup')
+  if (existing) {
+    existing.remove()
+    return
+  }
+
+  const popup = document.createElement('div')
+  popup.className = 'games-folder-popup'
+  popup.setAttribute('role', 'dialog')
+  popup.setAttribute('aria-label', 'Games')
+
+  const title = document.createElement('div')
+  title.className = 'games-folder-popup-title'
+  title.textContent = 'Games'
+  popup.appendChild(title)
+
+  const grid = document.createElement('div')
+  grid.className = 'games-folder-popup-grid'
+
+  for (const tile of gameFolderTiles()) {
+    const item = document.createElement('button')
+    item.type = 'button'
+    item.className = 'games-folder-popup-item'
+
+    const glyph = document.createElement('span')
+    glyph.className = 'games-folder-popup-item-glyph'
+    glyph.textContent = tile.glyph
+    item.appendChild(glyph)
+
+    const lbl = document.createElement('span')
+    lbl.className = 'games-folder-popup-item-label'
+    lbl.textContent = tile.label
+    item.appendChild(lbl)
+
+    item.addEventListener('click', () => {
+      popup.remove()
+      onActivate(tile.cmd)
+    })
+    grid.appendChild(item)
+  }
+
+  popup.appendChild(grid)
+
+  // Position popup above the anchor tile using fixed coords (avoids scroll offset issues)
+  document.body.appendChild(popup)
+  const rect = anchor.getBoundingClientRect()
+  const pw = popup.offsetWidth || 220
+  const ph = popup.offsetHeight || 180
+  let left = rect.left + rect.width / 2 - pw / 2
+  let top  = rect.top - ph - 10
+  // Keep within viewport
+  if (left < 8) left = 8
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8
+  if (top < 8) top = rect.bottom + 10
+  popup.style.left = `${left}px`
+  popup.style.top  = `${top}px`
+
+  // Keyboard close
+  const onKey = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape') { popup.remove(); document.removeEventListener('keydown', onKey) }
+  }
+  document.addEventListener('keydown', onKey)
+}
+
+// ── Drag logic ───────────────────────────────────────────────────────────────
 
 function attachTileDrag(
   el: HTMLElement,
   cmd: string,
-  onActivate: (cmd: string) => void,
+  onActivate: () => void,
 ): void {
   let startX = 0, startY = 0
   let origLeft = 0, origTop = 0
@@ -174,7 +331,7 @@ function attachTileDrag(
       layout[cmd] = { x, y }
       saveTileLayout(layout)
     } else {
-      onActivate(cmd)
+      onActivate()
     }
     moved = false
   }
@@ -190,8 +347,4 @@ function attachTileDrag(
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
   })
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
