@@ -677,8 +677,7 @@ html.retro-fx::before {
 .yasb-settings-heading {
   font-size: var(--ui-text-2xs);
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--th-subtext);
   margin: 0;
 }
