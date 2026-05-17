@@ -911,16 +911,17 @@ html.retro-fx::before {
 }
 
 .toast-stack {
-  position: absolute;
-  top: calc(100% + var(--ui-space-3));
-  right: 0;
-  z-index: var(--ui-z-chrome-popover);
+  position: fixed;
+  top: 52px; /* below YASB bar (42px) + gap */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--ui-z-yasb-popover);
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--ui-space-3);
   min-width: 220px;
-  max-width: min(340px, 42vw);
+  max-width: min(420px, 80vw);
   pointer-events: none;
 }
 
@@ -983,7 +984,7 @@ html.retro-fx::before {
 
 .toast.toast-out {
   opacity: 0;
-  transform: translateX(14px) scale(0.97);
+  transform: translateY(-8px) scale(0.97);
   filter: blur(2px);
   transition:
     opacity var(--ui-duration-med) var(--ui-easing-smooth),
@@ -994,12 +995,12 @@ html.retro-fx::before {
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateX(22px) scale(0.96);
+    transform: translateY(-12px) scale(0.96);
     filter: blur(4px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
     filter: blur(0);
   }
 }
