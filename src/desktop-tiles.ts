@@ -85,19 +85,18 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement — two folders clear of the top bar.
+/** Default desktop arrangement — two folders on the first allowed grid row.
  *  Both positions are exact multiples of GRID_CELL so they survive snap-to-grid. */
 export function defaultTileLayout(): TileLayout {
-  // y = 2 × GRID_CELL (192 px) keeps icons off the very top edge.
-  // x starts at 1 × GRID_CELL (96 px margin from the left edge).
+  // x/y = 1 × GRID_CELL — the minimum allowed position after the outer-ring guard.
   return {
-    'portfolio-folder': { x: GRID_CELL,     y: GRID_CELL * 2 },
-    'apps-folder':      { x: GRID_CELL * 2, y: GRID_CELL * 2 },
+    'portfolio-folder': { x: GRID_CELL,     y: GRID_CELL },
+    'apps-folder':      { x: GRID_CELL * 2, y: GRID_CELL },
   }
 }
 
-// Key bumped to v4 so old saves don't override the updated default positions.
-export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions-v4'
+// Key bumped to v5 so old saves don't override the updated default positions.
+export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions-v5'
 
 export function loadTileLayout(): TileLayout {
   const defaults = defaultTileLayout()
@@ -299,12 +298,17 @@ function attachTileDrag(
       let x = snapToGrid(parseFloat(el.style.left))
       let y = snapToGrid(parseFloat(el.style.top))
 
-      // Clamp so the tile can never be placed off-screen.
+      // Clamp: one GRID_CELL margin on every edge — icons can never land in
+      // the outer ring of grid cells (top/bottom/left/right border cells).
       const host = el.parentElement ?? document.documentElement
-      const maxX = Math.max(0, host.clientWidth  - (el.offsetWidth  || GRID_CELL))
-      const maxY = Math.max(0, host.clientHeight - (el.offsetHeight || GRID_CELL))
-      x = Math.max(0, Math.min(x, maxX))
-      y = Math.max(0, Math.min(y, maxY))
+      const elW  = el.offsetWidth  || GRID_CELL
+      const elH  = el.offsetHeight || GRID_CELL
+      const minX = GRID_CELL
+      const minY = GRID_CELL
+      const maxX = Math.max(minX, host.clientWidth  - elW - GRID_CELL)
+      const maxY = Math.max(minY, host.clientHeight - elH - GRID_CELL)
+      x = Math.max(minX, Math.min(x, maxX))
+      y = Math.max(minY, Math.min(y, maxY))
 
       el.style.left = `${x}px`
       el.style.top = `${y}px`
