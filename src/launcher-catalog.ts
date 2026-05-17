@@ -40,6 +40,7 @@ export const TILED_WINDOW_COMMANDS = new Set([
 /** Treat these as the editor tile for prefetch + focus heuristics */
 export const EDITOR_LAUNCH_ALIASES = new Set(['edit', 'editor', 'vim'])
 
+/** Sentinel value used as `win.command` for the terminal tile in dock/focus state. */
 export const TERMINAL_TILE_SENTINEL = '__terminal__'
 
 /** Grid entries: terminal shortcut + every app the shell can open */
@@ -95,6 +96,7 @@ export function prefetchLazyWindowModule(invokedCmd: string): void {
   }
 }
 
+/** Wire `prefetchLazyWindowModule` to pointer-enter and focus-in on a launcher element. */
 export function attachLazyPrefetchHandlers(el: HTMLElement, invokedCmd: string): void {
   const run = (): void => prefetchLazyWindowModule(invokedCmd)
   el.addEventListener('pointerenter', run, { passive: true })

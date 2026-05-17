@@ -330,6 +330,7 @@ export interface NamedAlgorithm {
   description: string
 }
 
+/** Named OLL/PLL algorithms and demo patterns, keyed by short id (e.g. `'sune'`). */
 export const CANONICAL_ALGORITHMS: Record<string, NamedAlgorithm> = {
   sune: {
     label: 'Sune (OLL)',

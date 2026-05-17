@@ -18,6 +18,7 @@ export function sketchFilename(label: string): string {
   return `${slug}.js`
 }
 
+/** All built-in sketches. Seeded into `~/sketches/` in the VFS on first visit. */
 export const P5_EXAMPLES: P5Example[] = [
   {
     label: 'Flow Field',
