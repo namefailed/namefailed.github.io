@@ -34,20 +34,33 @@ const TILES: DesktopTile[] = [
   { cmd: 'p5',       label: 'p5.js',    glyph: 'p5', zone: ZONE_TOOLS, accent: 'fun' },
 ]
 
-/** Commands that live inside the "Games" folder tile (not rendered individually). */
+/** Portfolio content tiles (résumé, projects, about, contact). */
+export const PORTFOLIO_CMDS: ReadonlySet<string> = new Set(['resume', 'projects', 'whoami', 'links'])
+
+/** Games/fun tiles that live inside the Apps folder. */
 export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'p5'])
 
-/** All 13 tile definitions — used for persistence / tests. */
+/** All 12 tile definitions — used for persistence / tests. */
 export function visibleDesktopTiles(): readonly DesktopTile[] {
   return TILES
 }
 
-/** Tiles shown as individual icons on the desktop (games are inside the folder). */
+/** All tiles live in folders — no standalone desktop icons. */
 export function standaloneDesktopTiles(): readonly DesktopTile[] {
-  return TILES.filter(t => !GAME_CMDS.has(t.cmd))
+  return []
 }
 
-/** Tiles that live inside the Games folder popup. */
+/** Tiles inside the Portfolio folder (résumé, projects, about, contact). */
+export function portfolioFolderTiles(): readonly DesktopTile[] {
+  return TILES.filter(t => PORTFOLIO_CMDS.has(t.cmd))
+}
+
+/** Tiles inside the Apps folder (tools + games — everything non-portfolio). */
+export function appsFolderTiles(): readonly DesktopTile[] {
+  return TILES.filter(t => !PORTFOLIO_CMDS.has(t.cmd))
+}
+
+/** Games subset of the Apps folder (paint, snake, pong, p5). */
 export function gameFolderTiles(): readonly DesktopTile[] {
   return TILES.filter(t => GAME_CMDS.has(t.cmd))
 }
@@ -66,34 +79,17 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement on first visit — top-left anchored. */
+/** Default desktop arrangement — two folders side by side, top-left anchored. */
 export function defaultTileLayout(): TileLayout {
   const STEP     = GRID_CELL + 16   // 96 px per tile
   const YASB_H   = 42
   const MARGIN_X = 40               // gap from left edge
   const MARGIN_Y = YASB_H + 20     // gap below YASB bar
 
-  const portfolioY = MARGIN_Y
-  const toolsY     = portfolioY + STEP + 20
-
-  const out: TileLayout = {}
-  const standalone = standaloneDesktopTiles()
-
-  let pi = 0, ti = 0
-  for (const tile of standalone) {
-    if (tile.zone === ZONE_PORTFOLIO) {
-      out[tile.cmd] = { x: MARGIN_X + pi * STEP, y: portfolioY }
-      pi++
-    } else {
-      out[tile.cmd] = { x: MARGIN_X + ti * STEP, y: toolsY }
-      ti++
-    }
+  return {
+    'portfolio-folder': { x: MARGIN_X,          y: MARGIN_Y },
+    'apps-folder':      { x: MARGIN_X + STEP,   y: MARGIN_Y },
   }
-
-  // Games folder sits after the standalone tool tiles
-  out['games-folder'] = { x: MARGIN_X + ti * STEP, y: toolsY }
-
-  return out
 }
 
 export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions'
@@ -134,110 +130,90 @@ const DRAG_THRESHOLD_PX = 4
 /** Render tiles into `host`, wire drag + snap, persist on drop. */
 export function mountDesktopTiles(opts: MountTilesOptions): void {
   const layout = loadTileLayout()
-  const standalone = standaloneDesktopTiles()
 
-  // Individual standalone tiles
-  for (const tile of standalone) {
-    const el = createTileButton(tile, layout[tile.cmd])
-    const cmd = tile.cmd
-    attachTileDrag(el, cmd, () => opts.onActivate(cmd))
+  const folderDefs: FolderDef[] = [
+    { cmd: 'portfolio-folder', label: 'Portfolio', modifier: 'portfolio', tiles: portfolioFolderTiles() },
+    { cmd: 'apps-folder',      label: 'Apps',      modifier: 'fun',       tiles: appsFolderTiles()      },
+  ]
+
+  const folderEls: HTMLButtonElement[] = []
+  for (const def of folderDefs) {
+    const pos = layout[def.cmd] ?? defaultTileLayout()[def.cmd]!
+    const el  = createFolderTile(pos, def)
+    attachTileDrag(el, def.cmd, () => toggleFolderPopup(el, def, opts.onActivate))
     opts.host.appendChild(el)
+    folderEls.push(el)
   }
 
-  // Games folder tile
-  const folderEl = createFolderTile(layout['games-folder'])
-  attachTileDrag(folderEl, 'games-folder', () => {
-    toggleGamesPopup(folderEl, opts.onActivate)
-  })
-  opts.host.appendChild(folderEl)
-
-  // Close popup on outside click
+  // Close popup when clicking outside any folder tile
   document.addEventListener('pointerdown', (e) => {
     const popup = document.body.querySelector<HTMLElement>('.games-folder-popup')
     if (!popup) return
-    if (!popup.contains(e.target as Node) && !folderEl.contains(e.target as Node)) {
-      popup.remove()
-    }
+    const inFolder = folderEls.some(f => f.contains(e.target as Node))
+    if (!inFolder && !popup.contains(e.target as Node)) popup.remove()
   }, { capture: true })
 }
 
 // ── Tile DOM helpers ─────────────────────────────────────────────────────────
 
-function createTileButton(tile: DesktopTile, pos: TilePosition): HTMLButtonElement {
-  const el = document.createElement('button')
-  el.type = 'button'
-  el.className = [
-    'desktop-tile',
-    tile.zone === ZONE_PORTFOLIO ? 'desktop-tile--portfolio' : '',
-    tile.accent === 'fun' ? 'desktop-tile--fun' : '',
-  ].filter(Boolean).join(' ')
-  el.dataset.cmd = tile.cmd
-  el.style.left = `${pos.x}px`
-  el.style.top = `${pos.y}px`
-
-  const glyph = document.createElement('span')
-  glyph.className = 'desktop-tile-glyph'
-  glyph.textContent = tile.glyph
-  el.appendChild(glyph)
-
-  const label = document.createTextNode(tile.label)
-  el.appendChild(label)
-
-  return el
+interface FolderDef {
+  cmd:      string
+  label:    string
+  modifier: string              // CSS modifier: 'portfolio' | 'fun' etc.
+  tiles:    readonly DesktopTile[]
 }
 
-function createFolderTile(pos: TilePosition): HTMLButtonElement {
+function createFolderTile(pos: TilePosition, def: FolderDef): HTMLButtonElement {
   const el = document.createElement('button')
   el.type = 'button'
-  el.className = 'desktop-tile desktop-tile--folder desktop-tile--fun'
-  el.dataset.cmd = 'games-folder'
+  el.className = `desktop-tile desktop-tile--folder desktop-tile--${def.modifier}`
+  el.dataset.cmd = def.cmd
   el.style.left = `${pos.x}px`
   el.style.top = `${pos.y}px`
-  el.title = 'Games'
+  el.title = def.label
 
-  // 2×2 mini-grid preview of game icons
+  // 2×2 mini-grid preview of up to 4 icons
   const grid = document.createElement('div')
   grid.className = 'folder-tile-grid'
-  const previews = gameFolderTiles().slice(0, 4)
-  for (const g of previews) {
+  for (const g of def.tiles.slice(0, 4)) {
     const mini = document.createElement('div')
     mini.className = 'folder-tile-mini'
     mini.textContent = g.glyph
     grid.appendChild(mini)
   }
   el.appendChild(grid)
-
-  const label = document.createTextNode('Games')
-  el.appendChild(label)
+  el.appendChild(document.createTextNode(def.label))
 
   return el
 }
 
-function toggleGamesPopup(
+function toggleFolderPopup(
   anchor: HTMLElement,
+  def: FolderDef,
   onActivate: (cmd: string) => void,
 ): void {
-  // Toggle: close if already open
-  const existing = document.body.querySelector('.games-folder-popup')
+  const existing = document.body.querySelector<HTMLElement>('.games-folder-popup')
   if (existing) {
+    const sameFolder = existing.dataset.openedBy === def.cmd
     existing.remove()
-    return
+    if (sameFolder) return   // clicking the same folder again → just close
   }
 
   const popup = document.createElement('div')
   popup.className = 'games-folder-popup'
+  popup.dataset.openedBy = def.cmd
   popup.setAttribute('role', 'dialog')
-  popup.setAttribute('aria-label', 'Games')
+  popup.setAttribute('aria-label', def.label)
 
   const title = document.createElement('div')
   title.className = 'games-folder-popup-title'
-  title.textContent = 'Games'
+  title.textContent = def.label
   popup.appendChild(title)
 
   const grid = document.createElement('div')
   grid.className = 'games-folder-popup-grid'
 
-  for (const tile of gameFolderTiles()) {
+  for (const tile of def.tiles) {
     const item = document.createElement('button')
     item.type = 'button'
     item.className = 'games-folder-popup-item'

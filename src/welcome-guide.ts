@@ -16,7 +16,7 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
   {
     id: 'open',
     glyph: '◐',
-    html: 'Click a <strong>tile</strong> or <strong>dock icon</strong> to open an app',
+    html: 'Click <strong>Portfolio</strong> or <strong>Apps</strong> to open an app',
   },
   {
     id: 'terminal',
@@ -26,7 +26,7 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
   {
     id: 'drag',
     glyph: '⠿',
-    html: 'Drag tiles anywhere to rearrange the desktop',
+    html: 'Drag folders to rearrange &nbsp;·&nbsp; <kbd>Ctrl+D</kbd> for all apps',
   },
   {
     id: 'keys',

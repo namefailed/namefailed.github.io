@@ -6009,7 +6009,7 @@ html.retro-fx .xterm-screen {
   color: #94e2d5;
 }
 
-/* Games folder tile */
+/* Folder tiles — base uses teal (apps/games); portfolio variant overrides to pink */
 .desktop-tile--folder {
   border-color: rgba(148, 226, 213, 0.45);
 }
@@ -6017,6 +6017,14 @@ html.retro-fx .xterm-screen {
 .desktop-tile--folder:focus-visible {
   border-color: rgba(148, 226, 213, 0.9);
   box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(148,226,213,0.12);
+}
+.desktop-tile--folder.desktop-tile--portfolio {
+  border-color: rgba(245, 194, 231, 0.45);
+}
+.desktop-tile--folder.desktop-tile--portfolio:hover,
+.desktop-tile--folder.desktop-tile--portfolio:focus-visible {
+  border-color: rgba(245, 194, 231, 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,194,231,0.12);
 }
 
 /* 2×2 mini-grid of game icons inside folder tile */
@@ -6068,7 +6076,7 @@ html.retro-fx .xterm-screen {
 
 .games-folder-popup-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 

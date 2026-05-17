@@ -7,8 +7,8 @@ export const INTRO_TOASTS_KEY = 'mrgrey-toasts-seen'
 
 export const INTRO_TOASTS: ReadonlyArray<string> = [
   "👋 Hey, I'm Matt — welcome to my portfolio OS.",
-  'Click the pink tiles to see my work — or drag them around.',
-  'Tools & games are below. Try whatever catches your eye.',
+  'Open the Portfolio folder to see my work, or drag it anywhere.',
+  'The Apps folder has tools & games. Try whatever catches your eye.',
   'Ctrl+D opens the launcher. Run cookies clear to replay this intro.',
 ]
 

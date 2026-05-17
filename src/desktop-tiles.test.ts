@@ -2,10 +2,13 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import {
   visibleDesktopTiles,
   standaloneDesktopTiles,
+  portfolioFolderTiles,
+  appsFolderTiles,
   gameFolderTiles,
   ZONE_PORTFOLIO,
   ZONE_TOOLS,
   GAME_CMDS,
+  PORTFOLIO_CMDS,
   snapToGrid,
   defaultTileLayout,
   GRID_CELL,
@@ -58,11 +61,24 @@ describe('desktop-tiles catalog', () => {
     expect(GAME_CMDS.has('cube')).toBe(false)
   })
 
-  it('standaloneDesktopTiles returns 8 tiles (no games)', () => {
-    const standalone = standaloneDesktopTiles()
-    expect(standalone.length).toBe(8)
-    for (const t of standalone) {
-      expect(GAME_CMDS.has(t.cmd)).toBe(false)
+  it('standaloneDesktopTiles returns 0 tiles (all tiles are in folders)', () => {
+    expect(standaloneDesktopTiles().length).toBe(0)
+  })
+
+  it('portfolioFolderTiles returns exactly the 4 portfolio tiles', () => {
+    const portfolio = portfolioFolderTiles()
+    expect(portfolio.length).toBe(4)
+    for (const t of portfolio) {
+      expect(PORTFOLIO_CMDS.has(t.cmd)).toBe(true)
+      expect(t.zone).toBe(ZONE_PORTFOLIO)
+    }
+  })
+
+  it('appsFolderTiles returns the 8 non-portfolio tiles (tools + games)', () => {
+    const apps = appsFolderTiles()
+    expect(apps.length).toBe(8)
+    for (const t of apps) {
+      expect(PORTFOLIO_CMDS.has(t.cmd)).toBe(false)
     }
   })
 
@@ -89,26 +105,24 @@ describe('snap-to-grid', () => {
 })
 
 describe('defaultTileLayout', () => {
-  it('produces a position for each standalone tile plus the games-folder', () => {
+  it('produces exactly 2 folder positions', () => {
     const layout = defaultTileLayout()
-    // 8 standalone tiles (4 portfolio + 4 tools, games are inside folder) + 1 games-folder = 9 entries
-    expect(Object.keys(layout).length).toBe(9)
-    for (const cmd of [
-      'resume', 'projects', 'whoami', 'links',
-      'terminal', 'explorer', 'edit', 'browse',
-      'games-folder',
-    ]) {
+    expect(Object.keys(layout).length).toBe(2)
+    for (const cmd of ['portfolio-folder', 'apps-folder']) {
       expect(layout[cmd]).toBeDefined()
       expect(typeof layout[cmd]!.x).toBe('number')
       expect(typeof layout[cmd]!.y).toBe('number')
     }
   })
 
-  it('positions portfolio tiles above tools tiles', () => {
+  it('both folders are on the same row (same y)', () => {
     const layout = defaultTileLayout()
-    const portfolioY = Math.max(layout.resume!.y, layout.projects!.y, layout.whoami!.y, layout.links!.y)
-    const toolsY = Math.min(layout.terminal!.y, layout.explorer!.y, layout.edit!.y, layout.browse!.y)
-    expect(portfolioY).toBeLessThan(toolsY)
+    expect(layout['portfolio-folder']!.y).toBe(layout['apps-folder']!.y)
+  })
+
+  it('apps-folder is to the right of portfolio-folder', () => {
+    const layout = defaultTileLayout()
+    expect(layout['apps-folder']!.x).toBeGreaterThan(layout['portfolio-folder']!.x)
   })
 })
 
@@ -117,20 +131,20 @@ describe('tile layout persistence', () => {
 
   it('returns default layout when nothing is stored', () => {
     const layout = loadTileLayout()
-    expect(layout.resume).toEqual(defaultTileLayout().resume)
+    expect(layout['portfolio-folder']).toEqual(defaultTileLayout()['portfolio-folder'])
   })
 
   it('round-trips a custom position', () => {
-    saveTileLayout({ resume: { x: 240, y: 320 } })
+    saveTileLayout({ 'portfolio-folder': { x: 240, y: 320 } })
     const layout = loadTileLayout()
-    expect(layout.resume).toEqual({ x: 240, y: 320 })
+    expect(layout['portfolio-folder']).toEqual({ x: 240, y: 320 })
   })
 
-  it('falls back to defaults for missing tiles in stored layout', () => {
-    window.localStorage.setItem(TILE_POSITIONS_KEY, JSON.stringify({ resume: { x: 1, y: 2 } }))
+  it('falls back to defaults for missing keys in stored layout', () => {
+    window.localStorage.setItem(TILE_POSITIONS_KEY, JSON.stringify({ 'portfolio-folder': { x: 1, y: 2 } }))
     const layout = loadTileLayout()
-    expect(layout.resume).toEqual({ x: 1, y: 2 })
-    expect(layout.projects).toEqual(defaultTileLayout().projects)
+    expect(layout['portfolio-folder']).toEqual({ x: 1, y: 2 })
+    expect(layout['apps-folder']).toEqual(defaultTileLayout()['apps-folder'])
   })
 
   it('survives corrupt JSON gracefully', () => {
