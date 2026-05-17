@@ -74,11 +74,12 @@ describe('desktop-tiles catalog', () => {
     }
   })
 
-  it('appsFolderTiles returns the 8 non-portfolio tiles (tools + games)', () => {
+  it('appsFolderTiles returns the 4 tool tiles (no portfolio, no games)', () => {
     const apps = appsFolderTiles()
-    expect(apps.length).toBe(8)
+    expect(apps.length).toBe(4)
     for (const t of apps) {
       expect(PORTFOLIO_CMDS.has(t.cmd)).toBe(false)
+      expect(GAME_CMDS.has(t.cmd)).toBe(false)
     }
   })
 
@@ -105,19 +106,20 @@ describe('snap-to-grid', () => {
 })
 
 describe('defaultTileLayout', () => {
-  it('produces exactly 2 folder positions', () => {
+  it('produces exactly 3 folder positions', () => {
     const layout = defaultTileLayout()
-    expect(Object.keys(layout).length).toBe(2)
-    for (const cmd of ['portfolio-folder', 'apps-folder']) {
+    expect(Object.keys(layout).length).toBe(3)
+    for (const cmd of ['portfolio-folder', 'apps-folder', 'games-folder']) {
       expect(layout[cmd]).toBeDefined()
       expect(typeof layout[cmd]!.x).toBe('number')
       expect(typeof layout[cmd]!.y).toBe('number')
     }
   })
 
-  it('both folders are on the same row (same y)', () => {
+  it('all three folders are on the same row (same y)', () => {
     const layout = defaultTileLayout()
     expect(layout['portfolio-folder']!.y).toBe(layout['apps-folder']!.y)
+    expect(layout['apps-folder']!.y).toBe(layout['games-folder']!.y)
   })
 
   it('apps-folder is to the right of portfolio-folder', () => {

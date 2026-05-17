@@ -57,10 +57,10 @@ export function portfolioFolderTiles(): readonly DesktopTile[] {
   )
 }
 
-/** Tiles inside the Apps folder (tools + games — everything non-portfolio) — sorted A→Z. */
+/** Tiles inside the Apps folder (tools only — games have their own folder) — sorted A→Z. */
 export function appsFolderTiles(): readonly DesktopTile[] {
-  return [...TILES.filter(t => !PORTFOLIO_CMDS.has(t.cmd))].sort((a, b) =>
-    a.label.localeCompare(b.label),
+  return [...TILES.filter(t => !PORTFOLIO_CMDS.has(t.cmd) && !GAME_CMDS.has(t.cmd))].sort(
+    (a, b) => a.label.localeCompare(b.label),
   )
 }
 
@@ -85,18 +85,19 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement — two folders on the first allowed grid row.
- *  Both positions are exact multiples of GRID_CELL so they survive snap-to-grid. */
+/** Default desktop arrangement — three folders on the first allowed row.
+ *  All positions are exact multiples of GRID_CELL so they survive snap-to-grid. */
 export function defaultTileLayout(): TileLayout {
   // x/y = 1 × GRID_CELL — the minimum allowed position after the outer-ring guard.
   return {
     'portfolio-folder': { x: GRID_CELL,     y: GRID_CELL },
     'apps-folder':      { x: GRID_CELL * 2, y: GRID_CELL },
+    'games-folder':     { x: GRID_CELL * 3, y: GRID_CELL },
   }
 }
 
-// Key bumped to v5 so old saves don't override the updated default positions.
-export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions-v5'
+// Key bumped to v6 so old saves don't override the updated default positions.
+export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions-v6'
 
 export function loadTileLayout(): TileLayout {
   const defaults = defaultTileLayout()
@@ -138,6 +139,7 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
   const folderDefs: FolderDef[] = [
     { cmd: 'portfolio-folder', label: 'Portfolio', modifier: 'portfolio', tiles: portfolioFolderTiles() },
     { cmd: 'apps-folder',      label: 'Apps',      modifier: 'fun',       tiles: appsFolderTiles()      },
+    { cmd: 'games-folder',     label: 'Games',     modifier: 'games',     tiles: gameFolderTiles()      },
   ]
 
   const folderEls: HTMLButtonElement[] = []

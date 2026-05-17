@@ -1294,14 +1294,17 @@ export class Desktop {
 
       if (isTerminal) {
         btn.addEventListener('click', () => {
-          // focusedId === null means the terminal pane is the active focus.
-          // 'active' is never set on termWin, so we must use focusedId.
-          const closed    = this.termWin.classList.contains('terminal-closed')
-          const minimized = this.termWin.classList.contains('minimized')
-          const visible   = !closed && !minimized
-          const focused   = this.focusedId === null
-          if (visible && focused) this.minimizeTerminal()
-          else this.focusTerminal()
+          // The tiling terminal lives in this.windows, not this.termWin.
+          // focusedId === 'terminal' when the terminal tile is the active window.
+          const termTile = this.windows.find(w => w.command === 'terminal')
+          const focused  = this.focusedId === 'terminal'
+          if (termTile && focused) {
+            // Already open and focused → minimize it
+            this.minimizeWindow(termTile)
+          } else {
+            // Closed, minimized, or not focused → open/restore/focus
+            void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+          }
         })
       } else {
         attachLazyPrefetchHandlers(btn, cmd)

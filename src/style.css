@@ -15,6 +15,7 @@
   --th-accent-rgb: 245, 194, 231;
   --th-accent: #f5c2e7;
   --th-blue-rgb: 137, 180, 250;
+  --th-blue: #89b4fa;
   --th-text: #cdd6f4;
   --th-text-muted: #a6adc8;
   --th-subtext: #585b70;
@@ -6025,6 +6026,15 @@ html.retro-fx .xterm-screen {
   border-color: rgba(var(--th-accent-rgb), 0.9);
   box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-accent-rgb), 0.12);
 }
+/* Games folder — blue accent */
+.desktop-tile--folder.desktop-tile--games {
+  border-color: rgba(var(--th-blue-rgb), 0.45);
+}
+.desktop-tile--folder.desktop-tile--games:hover,
+.desktop-tile--folder.desktop-tile--games:focus-visible {
+  border-color: rgba(var(--th-blue-rgb), 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-blue-rgb), 0.12);
+}
 
 /* 2×2 mini-grid of game icons inside folder tile */
 .folder-tile-grid {
@@ -6047,6 +6057,10 @@ html.retro-fx .xterm-screen {
 /* Portfolio folder preview icons use accent (pink) */
 .desktop-tile--portfolio .folder-tile-mini {
   color: var(--th-accent);
+}
+/* Games folder preview icons use blue */
+.desktop-tile--games .folder-tile-mini {
+  color: var(--th-blue);
 }
 
 /* ── Games folder popup ───────────────────────────────────── */
@@ -6116,6 +6130,14 @@ html.retro-fx .xterm-screen {
 .games-folder-popup[data-opened-by="portfolio-folder"] .games-folder-popup-item:hover,
 .games-folder-popup[data-opened-by="portfolio-folder"] .games-folder-popup-item:focus-visible {
   border-color: rgba(var(--th-accent-rgb), 0.7);
+}
+/* Games folder popup: glyphs and hover use blue */
+.games-folder-popup[data-opened-by="games-folder"] .games-folder-popup-item-glyph {
+  color: var(--th-blue);
+}
+.games-folder-popup[data-opened-by="games-folder"] .games-folder-popup-item:hover,
+.games-folder-popup[data-opened-by="games-folder"] .games-folder-popup-item:focus-visible {
+  border-color: rgba(var(--th-blue-rgb), 0.7);
 }
 .games-folder-popup-item-label {
   font-size: 10px;
