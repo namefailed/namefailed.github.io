@@ -52,25 +52,6 @@ export function terminalMotdLines(): string[] {
 
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
-const BOOT_LINES: Array<{ text: string; delay: number }> = [
-  { text: `${c.dim}[    0.000000] Booting mrgrey.site kernel v1.0.0-portfolio ...${c.reset}`, delay: 55 },
-  { text: `${c.dim}[    0.011204] Command line: BOOT_IMAGE=/portfolio root=/dev/reality net.ifnames=0${c.reset}`, delay: 75 },
-  { text: `${c.dim}[    0.052891] x86/fake: Booting SMP kernel ...${c.reset}`, delay: 70 },
-  { text: `${c.dim}[    0.089234] Initializing cgroup subsys cpu ...${c.green}OK${c.reset}`, delay: 85 },
-  { text: `${c.dim}[    0.134521] Memory: 16384K/${c.pink}∞${c.dim} available (browser-backed)${c.reset}`, delay: 95 },
-  { text: `${c.dim}[    0.198760] PCI: Probing imaginary USB hub ... ${c.green}found 0 devices${c.reset}`, delay: 90 },
-  { text: `${c.dim}[    0.234891] Loading portfolio modules (tree-shaken) ... ${c.green}OK${c.reset}`, delay: 100 },
-  { text: `${c.dim}[    0.356123] Mounting /home/namefailed on tmp persistence ... ${c.green}OK${c.reset}`, delay: 95 },
-  { text: `${c.dim}[    0.412045] rng-core: Pseudo RNG seeded from Date.now() ... ${c.green}OK${c.reset}`, delay: 85 },
-  { text: `${c.dim}[    0.512045] systemd[1]: Starting Terminus session on pts/0 ... ${c.green}OK${c.reset}`, delay: 100 },
-  { text: `${c.dim}[    0.612045] Starting terminal daemon (xterm.js+vim handlers) ... ${c.green}OK${c.reset}`, delay: 105 },
-  { text: `${c.dim}[    0.734567] Spawning tiling WM + status bar ... ${c.green}OK${c.reset}`, delay: 115 },
-  { text: `${c.dim}[    0.834567] Sound server: Web Audio API (opt-in bleeps) ... ${c.green}OK${c.reset}`, delay: 95 },
-  { text: `${c.dim}[    0.923891] ${c.green}***${c.dim} Portfolio OS ready — welcome back.${c.reset}`, delay: 380 },
-  { text: '', delay: 180 },
-  { text: `${c.pink}  Welcome back.${c.reset}`, delay: 520 },
-]
-
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
 
 /** Resolves `/static/` for http(s); uses `static/index.html` next to `index.html` for `file:` pages. */
@@ -145,11 +126,8 @@ export class TerminalApp {
     this.fitAddon.fit()
     window.addEventListener('resize', () => this.fitAddon.fit())
     this.xterm.onKey(({ domEvent }) => this.handleKey(domEvent))
-
-    // Sync badge for initial vim-on state
     this.onModeChange('insert')
-
-    await this.runBootSequence()
+    this.showMotd()
   }
 
   /** Called by Desktop when window tiles change size. */
@@ -182,49 +160,23 @@ export class TerminalApp {
     this.xterm.options.cursorStyle = mode === 'insert' ? 'bar' : 'block'
   }
 
-  // ── boot + banner ────────────────────────────────────────────────────────────
+  // ── banner + prompt ──────────────────────────────────────────────────────────
 
   private getPrompt(): string {
     const path = vfsPromptPath()
     return `${c.pink}namefailed${c.reset}${c.dim}@${c.reset}${c.blue}dev${c.reset}${c.dim}:${path}$${c.reset} `
   }
 
-  private async runBootSequence(): Promise<void> {
-    this.isProcessing = true
-    playOsSound('boot')
-
-    for (const { text, delay } of BOOT_LINES) {
-      this.xterm.writeln(text)
-      await sleep(delay)
+  /** Write the MOTD banner instantly and drop to the prompt. */
+  private showMotd(): void {
+    for (const line of terminalMotdLines()) {
+      this.xterm.writeln(line)
     }
-
-    await sleep(700)
-    this.xterm.clear()
-
-    for (const line of BANNER) {
-      await this.typewrite(line, 3)
-      this.xterm.writeln('')
-    }
-
-    await sleep(200)
     this.xterm.writeln('')
-    await this.typewrite(`  ${c.dim}type ${c.reset}${c.blue}help${c.reset}${c.dim} to get started.${c.reset}`, 22)
-    this.xterm.writeln('')
-
-    this.isProcessing = false
     this.prompt()
   }
 
   // ── rendering ────────────────────────────────────────────────────────────────
-
-  private async typewrite(text: string, charDelay = 25): Promise<void> {
-    let pos = 0
-    while (pos < text.length) {
-      const m = text.slice(pos).match(/^\x1b\[[0-9;]*m/)
-      if (m) { this.xterm.write(m[0]); pos += m[0].length }
-      else   { this.xterm.write(text[pos]); pos++; await sleep(charDelay) }
-    }
-  }
 
   private async showSpinner(label: string, ms: number): Promise<void> {
     const interval = 80
@@ -512,20 +464,12 @@ export class TerminalApp {
           )
         }
       } else if (name === 'reboot') {
-        const sub = args[0]?.toLowerCase()
-        if (sub === '--dry-run' || sub === '-n') {
-          const preview = BOOT_LINES.slice(0, 6)
-          this.writeln('')
-          for (const { text } of preview) this.writeln(text)
-          this.writeln(`  ${c.yellow}^ dry-run — warm reboot skipped.${c.reset}`)
-          this.writeln('')
-        } else {
-          this.history.push(raw)
-          this.historyIndex = -1
-          await this.runBootSequence()
-          this.isProcessing = false
-          return
-        }
+        this.history.push(raw)
+        this.historyIndex = -1
+        this.xterm.clear()
+        this.showMotd()
+        this.isProcessing = false
+        return
       } else if (name === 'skills' || name === 'contact') {
         const canonical = name === 'skills' ? 'resume' : 'links'
         const canonCmd = commands[canonical]

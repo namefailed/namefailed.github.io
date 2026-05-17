@@ -1482,13 +1482,13 @@ html.retro-fx::before {
   width: auto;
 }
 
-/* Slave pane: stacked content windows — no flex gap; .splitter-v (7px) is the only
-   space between rows, same as .splitter-h (7px) between terminal and this pane. */
+/* Slave pane: up to 2 tiled windows side-by-side; .splitter-v (7px) is the vertical
+   bar between them, same width as .splitter-h between terminal and this pane. */
 #right-pane {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0;
   transform-style: preserve-3d;
 }
@@ -1509,7 +1509,7 @@ html.retro-fx::before {
 }
 
 .splitter-h { cursor: col-resize; }
-.splitter-v { cursor: row-resize; flex-basis: var(--ui-gap-wm); }
+.splitter-v { cursor: col-resize; flex-basis: var(--ui-gap-wm); }
 
 /* Visible grip bar in the middle of each splitter */
 .splitter::before {
@@ -1537,8 +1537,8 @@ html.retro-fx::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(36px, 38%, calc(var(--ui-touch-min) + 24px));
-  height: 4px;
+  width: 4px;
+  height: clamp(36px, 28%, var(--ui-touch-min));
   border-radius: 3px;
   box-shadow: 0 0 0 1px rgba(var(--th-overlay-rgb), 0.35);
 }
@@ -1667,6 +1667,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 .content-window {
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 /* ── Title bar ─────────────────────────────────────────────────────────────── */

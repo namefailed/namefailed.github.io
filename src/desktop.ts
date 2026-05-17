@@ -296,6 +296,7 @@ export class Desktop {
             p5SketchPath: absPath,
           }),
       })
+      this.enforceTileLimit()
       this.appendToRightPane(ed.el)
       this.windows.push(ed)
       this.attachVerticalSplitters()
@@ -359,6 +360,7 @@ export class Desktop {
           })
         },
       })
+      this.enforceTileLimit()
       this.appendToRightPane(ex.el)
       this.windows.push(ex)
       this.attachVerticalSplitters()
@@ -402,6 +404,7 @@ export class Desktop {
         onMaximize: () => this.toggleMaximizeContent(br),
         onFocus: () => this.focusWindow(br),
       })
+      this.enforceTileLimit()
       this.appendToRightPane(br.el)
       this.windows.push(br)
       this.attachVerticalSplitters()
@@ -438,6 +441,7 @@ export class Desktop {
         onMaximize: () => this.toggleMaximizeContent(pw),
         onFocus:    () => this.focusWindow(pw),
       })
+      this.enforceTileLimit()
       this.appendToRightPane(pw.el)
       this.windows.push(pw)
       this.attachVerticalSplitters()
@@ -461,6 +465,7 @@ export class Desktop {
         onFocus:       () => this.focusWindow(tw),
         onOpenWindow:  s  => void this.openWindow(s),
       })
+      this.enforceTileLimit()
       this.appendToRightPane(tw.el)
       this.windows.push(tw)
       this.attachVerticalSplitters()
@@ -488,6 +493,8 @@ export class Desktop {
         this.closeWindow(existing)
         return
       }
+
+      this.enforceTileLimit()
 
       if (cmd === 'cube') {
         const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
@@ -571,6 +578,7 @@ export class Desktop {
       onFocus:    () => this.focusWindow(win),
     })
 
+    this.enforceTileLimit()
     this.appendToRightPane(win.el)
     this.windows.push(win)
     this.attachVerticalSplitters()
@@ -1112,33 +1120,51 @@ export class Desktop {
   // ── private: vertical splitters between stacked content windows ───────────
 
   /**
-   * Rebuild the vertical drag-to-resize handles between stacked content windows.
+   * Enforce a maximum of 2 simultaneously visible tiled windows.
+   * Instantly (no animation) bumps the oldest non-focused window to the minimized dock.
+   * Call this before appending a new window to #right-pane.
+   */
+  private enforceTileLimit(): void {
+    if (this.windows.length < 2) return
+    // Prefer to bump the window that isn't currently focused
+    const bump = this.windows.find(w => w.command !== this.focusedId) ?? this.windows[0]
+    if (!bump) return
+    if (bump.isMaximized()) this.unmaximizeContent(bump)
+    bump.setMinimized(true)
+    bump.el.remove()
+    const idx = this.windows.indexOf(bump)
+    if (idx !== -1) this.windows.splice(idx, 1)
+    this.minimized.push({ win: bump })
+    if (this.focusedId === bump.command) this.focusedId = null
+  }
+
+  /**
+   * Rebuild the drag-to-resize handle between the two side-by-side content windows.
    *
-   * Called after any change that modifies the set or order of tiled windows. Splitters are torn
-   * down and recreated from scratch because the `Splitter` instances hold element references and
-   * there is no cheap incremental diff — the list changes infrequently enough that a full rebuild
-   * is simpler and less error-prone than patching individual handles.
+   * #right-pane is flex-direction:row so windows sit side by side. We only ever
+   * need one splitter (between window 0 and window 1). Called after any change
+   * that modifies the set or order of tiled windows.
    */
   private attachVerticalSplitters(): void {
-    // Remove any existing v-splitters and rebuild — keep windows in order
+    // Remove any existing v-splitters and rebuild
     this.rightPane.querySelectorAll('.splitter-v').forEach(el => el.remove())
 
-    // While maximized, the active window lives under #panes — only tile splits in #right-pane
+    // Only the first two windows in #right-pane get a splitter between them
     const tiled = this.windows.filter(w => w.el.parentElement === this.rightPane)
+    if (tiled.length < 2) return
 
-    for (let i = 0; i < tiled.length - 1; i++) {
-      const splitter = document.createElement('div')
-      splitter.className = 'splitter splitter-v'
-      this.rightPane.insertBefore(splitter, tiled[i + 1].el)
+    const splitter = document.createElement('div')
+    splitter.className = 'splitter splitter-v'
+    this.rightPane.insertBefore(splitter, tiled[1].el)
 
-      new Splitter({
-        el:          splitter,
-        orientation: 'v',
-        target:      tiled[i].el,
-        container:   this.rightPane,
-        min:         100,
-      })
-    }
+    new Splitter({
+      el:          splitter,
+      orientation: 'h',   // resizes width of the left window in the row
+      target:      tiled[0].el,
+      container:   this.rightPane,
+      min:         200,
+      max:         () => Math.max(200, this.rightPane.clientWidth - 200),
+    })
   }
 
   // ── private: layout sync ───────────────────────────────────────────────────
