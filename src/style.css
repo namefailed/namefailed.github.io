@@ -5888,7 +5888,7 @@ html.retro-fx .xterm-screen {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 10px 8px;
+  padding: 12px 14px 10px;
   border-bottom: 1px solid var(--th-surface1, #45475a);
 }
 
@@ -5924,11 +5924,11 @@ html.retro-fx .xterm-screen {
 }
 
 .welcome-guide-body {
-  padding: 9px 12px 12px;
+  padding: 12px 16px 16px;
 }
 
 .welcome-guide-intro {
-  margin: 0 0 9px;
+  margin: 0 0 12px;
   color: var(--th-subtext1, #bac2de);
   line-height: 1.5;
   font-size: 11px;
@@ -5940,7 +5940,7 @@ html.retro-fx .xterm-screen {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 10px;
 }
 
 .welcome-guide-tip {
