@@ -11,6 +11,7 @@ import type { EditorWindow } from './editor-window'
 import type { FileExplorerWindow } from './file-explorer-window'
 import type { PaintWindow } from './paint-window'
 import type { PongWindow } from './pong-window'
+import type { RubikWindow } from './rubik-window'
 import type { SnakeWindow } from './snake-window'
 import type { P5Window } from './p5-window'
 import type { TerminalWindow } from './terminal'
@@ -82,6 +83,7 @@ type TiledWin =
   | FileExplorerWindow
   | BrowserWindow
   | PaintWindow
+  | RubikWindow
   | SnakeWindow
   | PongWindow
   | P5Window
@@ -488,7 +490,8 @@ export class Desktop {
     const miniGameOpen = (
       spec.command === 'paint' ||
       spec.command === 'snake' ||
-      spec.command === 'pong'
+      spec.command === 'pong' ||
+      spec.command === 'cube'
     )
     if (miniGameOpen) {
       const cmd = spec.command
@@ -503,6 +506,21 @@ export class Desktop {
         return
       }
 
+      if (cmd === 'cube') {
+        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
+        let rw!: RubikWindow
+        rw = new RubikWindowCtor({
+          onClose: () => this.closeWindow(rw),
+          onMinimize: () => this.minimizeWindow(rw),
+          onMaximize: () => this.toggleMaximizeContent(rw),
+          onFocus: () => this.focusWindow(rw),
+        })
+        this.appendToRightPane(rw.el)
+        this.windows.push(rw)
+        this.attachVerticalSplitters()
+        this.focusWindow(rw)
+        return
+      }
       if (cmd === 'paint') {
         const { PaintWindow: PaintWindowCtor } = await import('./paint-window')
         let pw!: PaintWindow
@@ -707,6 +725,9 @@ export class Desktop {
         break
       case 'browse':
         ;(win as BrowserWindow).focusAddressBar()
+        break
+      case 'cube':
+        ;(win as RubikWindow).focusCanvas()
         break
       case 'paint':
       case 'snake':

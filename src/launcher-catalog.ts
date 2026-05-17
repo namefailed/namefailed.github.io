@@ -75,6 +75,9 @@ export function prefetchLazyWindowModule(invokedCmd: string): void {
     case 'edit':
       void import('./editor-window')
       return
+    case 'cube':
+      void import('./rubik-window')
+      return
     case 'paint':
       void import('./paint-window')
       return
