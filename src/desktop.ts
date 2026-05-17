@@ -1193,18 +1193,27 @@ export class Desktop {
     zone.className = 'dock-hover-zone'
     document.body.appendChild(zone)
 
-    const reveal = (): void => taskbar.classList.add('dock--visible')
-    /** Only retract when dock is actually in auto-hide mode. */
-    const hide = (): void => {
-      if (taskbar.classList.contains('dock--auto-hide')) {
-        taskbar.classList.remove('dock--visible')
-      }
+    let hideTimer: ReturnType<typeof setTimeout> | null = null
+
+    const reveal = (): void => {
+      if (hideTimer !== null) { clearTimeout(hideTimer); hideTimer = null }
+      taskbar.classList.add('dock--visible')
+    }
+    /** Retract after a short grace period so brief pointer exits don't flicker the dock. */
+    const scheduleHide = (): void => {
+      if (hideTimer !== null) clearTimeout(hideTimer)
+      hideTimer = setTimeout(() => {
+        hideTimer = null
+        if (taskbar.classList.contains('dock--auto-hide')) {
+          taskbar.classList.remove('dock--visible')
+        }
+      }, 420)
     }
 
     zone.addEventListener('pointerenter', reveal)
     taskbar.addEventListener('pointerenter', reveal)
     taskbar.addEventListener('pointerleave', e => {
-      if (!(e.relatedTarget instanceof Node) || !taskbar.contains(e.relatedTarget as Node)) hide()
+      if (!(e.relatedTarget instanceof Node) || !taskbar.contains(e.relatedTarget as Node)) scheduleHide()
     })
   }
 

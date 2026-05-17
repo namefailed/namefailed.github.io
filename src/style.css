@@ -4256,13 +4256,13 @@ html.retro-fx .xterm-screen {
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
-/* Thin hover trigger strip at viewport bottom */
+/* Hover trigger strip at viewport bottom — intentionally taller than visible so it's easy to hit */
 .dock-hover-zone {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 8px;
+  height: 24px;
   z-index: var(--ui-z-chrome-popover);
   pointer-events: auto;
 }
