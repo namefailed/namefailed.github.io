@@ -1,6 +1,7 @@
 /** File browser over the fake VFS: navigate, rename, delete, clipboard cut/copy/paste. */
 
 import {
+  vfsCat,
   vfsFormatPath,
   vfsListEntries,
   vfsNormalize,
@@ -11,7 +12,13 @@ import {
   vfsTouch,
   FS_HOME,
 } from './os-fs'
+import { setWallpaper } from './wallpaper'
 import { storageGet, storageSetJson } from './storage'
+
+/** Returns true when a filename has an image extension. */
+function isImageFile(name: string): boolean {
+  return /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i.test(name)
+}
 
 /** Persisted explorer UI — safe to orphan on parse failure. */
 const FE_PREFS_KEY = 'portfolio-fe-prefs-v1'
@@ -100,7 +107,7 @@ export class FileExplorerWindow {
     bar.className = 'win-titlebar'
     bar.innerHTML = `
       <div class="win-title-left">
-        <span class="win-title">Files</span>
+        <span class="win-title">files</span>
       </div>
       <div class="win-traffic">
         <span class="dot dot-min" title="minimize (ctrl+m)"></span>
@@ -225,12 +232,12 @@ export class FileExplorerWindow {
     this.btnEdit = document.createElement('button')
     this.btnEdit.type = 'button'
     this.btnEdit.className = 'fe-footer-btn fe-footer-btn--accent'
-    this.btnEdit.textContent = 'Open in editor'
+    this.btnEdit.textContent = 'open in editor'
     this.btnEdit.title = 'Opens the selected file in the editor tile'
     this.btnEdit.disabled = true
     this.btnEdit.addEventListener('click', () => {
       opts.onFocus()
-      this.openSelectedInEditor()
+      this.primaryFileAction()
     })
 
     foot.appendChild(this.statusEl)
@@ -438,7 +445,14 @@ export class FileExplorerWindow {
     this.btnCut.disabled = !hasSel
     this.btnCopy.disabled = !hasSel
     this.btnPaste.disabled = !this.clip
-    this.btnEdit.disabled = !hasSel || this.selected?.kind !== 'f'
+    const isFile = hasSel && this.selected?.kind === 'f'
+    this.btnEdit.disabled = !isFile
+    const name = this.selected?.name ?? ''
+    this.btnEdit.textContent = isFile && isImageFile(name)
+      ? 'set as wallpaper'
+      : isFile && name.endsWith('.js')
+      ? 'open in p5.js'
+      : 'open in editor'
     this.clipboardLine()
   }
 
@@ -532,6 +546,27 @@ export class FileExplorerWindow {
     if (!row) return
     row.focus()
     this.selectRow(ent, row)
+  }
+
+  private primaryFileAction(): void {
+    if (!this.selected || this.selected.kind !== 'f') return
+    if (isImageFile(this.selected.name)) {
+      this.setSelectedAsWallpaper()
+    } else {
+      this.openSelectedInEditor()
+    }
+  }
+
+  private setSelectedAsWallpaper(): void {
+    const abs = this.selectedAbs()
+    if (!abs) return
+    const url = vfsCat(abs)
+    if (!url?.trim()) {
+      this.pushStatusWhenIdle('Wallpaper file is empty', true)
+      return
+    }
+    setWallpaper(url.trim())
+    this.pushStatusWhenIdle('Wallpaper applied ✓')
   }
 
   private openSelectedInEditor(): void {

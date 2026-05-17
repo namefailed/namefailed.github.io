@@ -9,11 +9,13 @@ import { initRetroFxFromStorage } from './retro-fx'
 import { initMatrixBg } from './matrix-bg'
 import { initOsSound } from './os-sound'
 import { initSystray, syncSettingsSoundToggle } from './os-systray'
+import { loadSavedWallpaper } from './wallpaper'
 import { Desktop } from './desktop'
 
 export async function bootstrapShellUi(): Promise<void> {
   await runBootSplash()
   initThemeFromStorage()
+  loadSavedWallpaper()
   initRetroFxFromStorage()
   initOsSound()
   initSystray()

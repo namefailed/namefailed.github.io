@@ -53,6 +53,9 @@
   --th-badge-fg: #1e1e2e;
   --th-scroll-thumb: #313244;
   --th-scroll-thumb-hover: #45475a;
+  /* Secondary/teal accent — the "fun/tools" colour; matches each theme's terminal cyan */
+  --th-teal-rgb: 148, 226, 213;
+  --th-teal: #94e2d5;
 
   /* ── UI tokens (layout / rhythm — unchanged by theme packs) ───────────────── */
   --ui-font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
@@ -3421,8 +3424,6 @@ html.retro-fx .xterm-screen {
 .file-explorer-app .win-title {
   font-size: var(--ui-text-2xs);
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--th-subtext);
 }
 
@@ -3874,8 +3875,6 @@ html.retro-fx .xterm-screen {
 .browser-app .win-title {
   font-size: var(--ui-text-2xs);
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--th-subtext);
 }
 
@@ -5762,7 +5761,7 @@ html.retro-fx .xterm-screen {
 }
 .boot-logo-sub {
   text-align: center;
-  color: #94e2d5;
+  color: var(--th-teal);
   font-size: 13px;
   letter-spacing: 4px;
   margin-bottom: 24px;
@@ -5791,7 +5790,7 @@ html.retro-fx .xterm-screen {
   transform: translateY(0);
 }
 .boot-ts   { color: #585b70; }
-.boot-info { color: #94e2d5; }
+.boot-info { color: var(--th-teal); }
 .boot-ok   { color: #a6e3a1; }
 .boot-warn { color: #f9e2af; }
 .boot-err  { color: #f38ba8; }
@@ -5991,40 +5990,40 @@ html.retro-fx .xterm-screen {
   z-index: 100;
 }
 .desktop-tile--portfolio {
-  border-color: rgba(245, 194, 231, 0.45);
+  border-color: rgba(var(--th-accent-rgb), 0.45);
 }
 .desktop-tile--portfolio:hover,
 .desktop-tile--portfolio:focus-visible {
-  border-color: rgba(245, 194, 231, 0.9);
+  border-color: rgba(var(--th-accent-rgb), 0.9);
 }
 .desktop-tile-glyph {
   display: block;
   font-size: 22px;
   font-weight: bold;
-  color: #f5c2e7;
+  color: var(--th-accent);
   margin-bottom: 3px;
   line-height: 1;
 }
 .desktop-tile--fun .desktop-tile-glyph {
-  color: #94e2d5;
+  color: var(--th-teal);
 }
 
-/* Folder tiles — base uses teal (apps/games); portfolio variant overrides to pink */
+/* Folder tiles — base uses teal (apps/games); portfolio variant overrides to accent (pink) */
 .desktop-tile--folder {
-  border-color: rgba(148, 226, 213, 0.45);
+  border-color: rgba(var(--th-teal-rgb), 0.45);
 }
 .desktop-tile--folder:hover,
 .desktop-tile--folder:focus-visible {
-  border-color: rgba(148, 226, 213, 0.9);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(148,226,213,0.12);
+  border-color: rgba(var(--th-teal-rgb), 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-teal-rgb), 0.12);
 }
 .desktop-tile--folder.desktop-tile--portfolio {
-  border-color: rgba(245, 194, 231, 0.45);
+  border-color: rgba(var(--th-accent-rgb), 0.45);
 }
 .desktop-tile--folder.desktop-tile--portfolio:hover,
 .desktop-tile--folder.desktop-tile--portfolio:focus-visible {
-  border-color: rgba(245, 194, 231, 0.9);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,194,231,0.12);
+  border-color: rgba(var(--th-accent-rgb), 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-accent-rgb), 0.12);
 }
 
 /* 2×2 mini-grid of game icons inside folder tile */
@@ -6043,7 +6042,11 @@ html.retro-fx .xterm-screen {
   justify-content: center;
   height: 18px;
   font-size: 8px;
-  color: #94e2d5;
+  color: var(--th-teal);
+}
+/* Portfolio folder preview icons use accent (pink) */
+.desktop-tile--portfolio .folder-tile-mini {
+  color: var(--th-accent);
 }
 
 /* ── Games folder popup ───────────────────────────────────── */
@@ -6096,15 +6099,23 @@ html.retro-fx .xterm-screen {
 }
 .games-folder-popup-item:hover,
 .games-folder-popup-item:focus-visible {
-  border-color: rgba(148, 226, 213, 0.7);
+  border-color: rgba(var(--th-teal-rgb), 0.7);
   background: rgba(49, 50, 68, 0.9);
   outline: none;
 }
 .games-folder-popup-item-glyph {
   font-size: 22px;
-  color: #94e2d5;
+  color: var(--th-teal);
   margin-bottom: 4px;
   line-height: 1;
+}
+/* Portfolio folder popup: glyphs and hover use accent (pink) */
+.games-folder-popup[data-opened-by="portfolio-folder"] .games-folder-popup-item-glyph {
+  color: var(--th-accent);
+}
+.games-folder-popup[data-opened-by="portfolio-folder"] .games-folder-popup-item:hover,
+.games-folder-popup[data-opened-by="portfolio-folder"] .games-folder-popup-item:focus-visible {
+  border-color: rgba(var(--th-accent-rgb), 0.7);
 }
 .games-folder-popup-item-label {
   font-size: 10px;

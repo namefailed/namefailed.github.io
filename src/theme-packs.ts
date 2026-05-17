@@ -94,6 +94,9 @@ const mochaCss: Record<string, string> = {
   '--th-badge-fg': '#1e1e2e',
   '--th-scroll-thumb': '#313244',
   '--th-scroll-thumb-hover': '#45475a',
+  /* Secondary/teal accent — matches terminal cyan */
+  '--th-teal-rgb': '148, 226, 213',
+  '--th-teal': '#94e2d5',
 }
 
 const draculaTerminal: ITheme = {
@@ -176,6 +179,8 @@ const draculaCss: Record<string, string> = {
   '--th-badge-fg': '#282a36',
   '--th-scroll-thumb': '#44475a',
   '--th-scroll-thumb-hover': '#6272a4',
+  '--th-teal-rgb': '139, 233, 253',
+  '--th-teal': '#8be9fd',
 }
 
 const nordTerminal: ITheme = {
@@ -258,6 +263,8 @@ const nordCss: Record<string, string> = {
   '--th-badge-fg': '#2e3440',
   '--th-scroll-thumb': '#434c5e',
   '--th-scroll-thumb-hover': '#4c566a',
+  '--th-teal-rgb': '136, 192, 208',
+  '--th-teal': '#88c0d0',
 }
 
 const gruvboxTerminal: ITheme = {
@@ -340,6 +347,8 @@ const gruvboxCss: Record<string, string> = {
   '--th-badge-fg': '#282828',
   '--th-scroll-thumb': '#504945',
   '--th-scroll-thumb-hover': '#665c54',
+  '--th-teal-rgb': '142, 192, 124',
+  '--th-teal': '#8ec07c',
 }
 
 const tokyoNightTerminal: ITheme = {
@@ -422,6 +431,8 @@ const tokyoNightCss: Record<string, string> = {
   '--th-badge-fg': '#1a1b26',
   '--th-scroll-thumb': '#414868',
   '--th-scroll-thumb-hover': '#565f89',
+  '--th-teal-rgb': '125, 207, 255',
+  '--th-teal': '#7dcfff',
 }
 
 const solarizedTerminal: ITheme = {
@@ -504,6 +515,8 @@ const solarizedCss: Record<string, string> = {
   '--th-badge-fg': '#002b36',
   '--th-scroll-thumb': '#073642',
   '--th-scroll-thumb-hover': '#586e75',
+  '--th-teal-rgb': '42, 161, 152',
+  '--th-teal': '#2aa198',
 }
 
 const oneDarkTerminal: ITheme = {
@@ -586,6 +599,8 @@ const oneDarkCss: Record<string, string> = {
   '--th-badge-fg': '#282c34',
   '--th-scroll-thumb': '#3e4451',
   '--th-scroll-thumb-hover': '#545862',
+  '--th-teal-rgb': '86, 182, 194',
+  '--th-teal': '#56b6c2',
 }
 
 export const THEME_PACKS: ThemePack[] = [

@@ -50,14 +50,18 @@ export function standaloneDesktopTiles(): readonly DesktopTile[] {
   return []
 }
 
-/** Tiles inside the Portfolio folder (résumé, projects, about, contact). */
+/** Tiles inside the Portfolio folder (résumé, projects, about, contact) — sorted A→Z. */
 export function portfolioFolderTiles(): readonly DesktopTile[] {
-  return TILES.filter(t => PORTFOLIO_CMDS.has(t.cmd))
+  return [...TILES.filter(t => PORTFOLIO_CMDS.has(t.cmd))].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  )
 }
 
-/** Tiles inside the Apps folder (tools + games — everything non-portfolio). */
+/** Tiles inside the Apps folder (tools + games — everything non-portfolio) — sorted A→Z. */
 export function appsFolderTiles(): readonly DesktopTile[] {
-  return TILES.filter(t => !PORTFOLIO_CMDS.has(t.cmd))
+  return [...TILES.filter(t => !PORTFOLIO_CMDS.has(t.cmd))].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  )
 }
 
 /** Games subset of the Apps folder (paint, snake, pong, p5). */
@@ -65,7 +69,9 @@ export function gameFolderTiles(): readonly DesktopTile[] {
   return TILES.filter(t => GAME_CMDS.has(t.cmd))
 }
 
-export const GRID_CELL = 80
+// GRID_CELL must equal the tile step (tile-width + gap) so that default positions
+// are exact multiples of GRID_CELL.  Tile width = 76px, gap ≈ 20px → step = 96px.
+export const GRID_CELL = 96
 
 export function snapToGrid(coord: number): number {
   if (coord <= 0) return 0
@@ -79,20 +85,19 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement — two folders side by side, top-left anchored. */
+/** Default desktop arrangement — two folders clear of the top bar.
+ *  Both positions are exact multiples of GRID_CELL so they survive snap-to-grid. */
 export function defaultTileLayout(): TileLayout {
-  const STEP     = GRID_CELL + 16   // 96 px per tile
-  const YASB_H   = 42
-  const MARGIN_X = 40               // gap from left edge
-  const MARGIN_Y = YASB_H + 20     // gap below YASB bar
-
+  // y = 2 × GRID_CELL (192 px) keeps icons off the very top edge.
+  // x starts at 1 × GRID_CELL (96 px margin from the left edge).
   return {
-    'portfolio-folder': { x: MARGIN_X,          y: MARGIN_Y },
-    'apps-folder':      { x: MARGIN_X + STEP,   y: MARGIN_Y },
+    'portfolio-folder': { x: GRID_CELL,     y: GRID_CELL * 2 },
+    'apps-folder':      { x: GRID_CELL * 2, y: GRID_CELL * 2 },
   }
 }
 
-export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions'
+// Key bumped to v4 so old saves don't override the updated default positions.
+export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions-v4'
 
 export function loadTileLayout(): TileLayout {
   const defaults = defaultTileLayout()
@@ -291,8 +296,16 @@ function attachTileDrag(
     dragging = false
 
     if (moved) {
-      const x = snapToGrid(parseFloat(el.style.left))
-      const y = snapToGrid(parseFloat(el.style.top))
+      let x = snapToGrid(parseFloat(el.style.left))
+      let y = snapToGrid(parseFloat(el.style.top))
+
+      // Clamp so the tile can never be placed off-screen.
+      const host = el.parentElement ?? document.documentElement
+      const maxX = Math.max(0, host.clientWidth  - (el.offsetWidth  || GRID_CELL))
+      const maxY = Math.max(0, host.clientHeight - (el.offsetHeight || GRID_CELL))
+      x = Math.max(0, Math.min(x, maxX))
+      y = Math.max(0, Math.min(y, maxY))
+
       el.style.left = `${x}px`
       el.style.top = `${y}px`
       el.classList.remove('desktop-tile--dragging')

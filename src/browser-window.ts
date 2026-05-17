@@ -85,7 +85,7 @@ export class BrowserWindow {
     bar.className = 'win-titlebar'
     bar.innerHTML = `
       <div class="win-title-left">
-        <span class="win-title">Browse</span>
+        <span class="win-title">browse</span>
       </div>
       <div class="win-traffic">
         <span class="dot dot-min" title="minimize (ctrl+m)"></span>

@@ -1293,7 +1293,16 @@ export class Desktop {
       btn.appendChild(lab)
 
       if (isTerminal) {
-        btn.addEventListener('click', () => this.focusTerminal())
+        btn.addEventListener('click', () => {
+          // focusedId === null means the terminal pane is the active focus.
+          // 'active' is never set on termWin, so we must use focusedId.
+          const closed    = this.termWin.classList.contains('terminal-closed')
+          const minimized = this.termWin.classList.contains('minimized')
+          const visible   = !closed && !minimized
+          const focused   = this.focusedId === null
+          if (visible && focused) this.minimizeTerminal()
+          else this.focusTerminal()
+        })
       } else {
         attachLazyPrefetchHandlers(btn, cmd)
         btn.addEventListener('click', () => void this.openWindow(this.specForCommand(cmd)))

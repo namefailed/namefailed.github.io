@@ -298,7 +298,7 @@ export class P5Window {
     let vfsPath = this.currentVfsPath
     if (!vfsPath) {
       // Sketch came from an Example or drag-drop — persist it before editing.
-      const dir = '/home/namefailed/sketches'
+      const dir = '/home/namefailed/p5.js sketches'
       vfsMkdir(dir)
       const label = this.currentLabel.endsWith('.js') ? this.currentLabel : `${this.currentLabel}.js`
       const fullPath = `${dir}/${label}`
@@ -381,7 +381,7 @@ export class P5Window {
     const input = document.createElement('input')
     input.type = 'text'
     input.className = 'p5-vfs-modal-input'
-    input.placeholder = '/home/namefailed/sketches/my-sketch.js'
+    input.placeholder = '/home/namefailed/p5.js sketches/my-sketch.js'
     input.value = this.currentVfsPath ?? ''
 
     const row = document.createElement('div')

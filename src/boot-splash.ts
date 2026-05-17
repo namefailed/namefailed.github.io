@@ -105,6 +105,14 @@ export interface BootSplashOptions {
 export async function runBootSplash(opts: BootSplashOptions = {}): Promise<void> {
   if (window.localStorage.getItem(STORAGE_KEY) === '1') return
 
+  // Explicitly load the exact JetBrains Mono variant used by the logo so the
+  // ASCII art aligns correctly before we build the DOM. document.fonts.load() is
+  // more targeted than fonts.ready and resolves as soon as that specific face is
+  // available. Both calls are optional-chained for test/SSR safety.
+  if (document.fonts?.load) {
+    try { await document.fonts.load('400 1em "JetBrains Mono"') } catch { /* use fallback */ }
+  }
+
   const lineInterval = opts.lineInterval ?? 180
   const holdMs       = opts.holdMs       ?? 700
   const fadeMs       = opts.fadeMs       ?? 320
