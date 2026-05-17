@@ -1950,8 +1950,8 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* Outer inset — text raster lives in .terminal-surface so FitAddon measures padded bounds */
-  padding: var(--ui-space-4);
+  /* Bottom: 0 — the status bar border-top is the separator; a bottom gap creates a black strip */
+  padding: var(--ui-space-4) var(--ui-space-4) 0;
   box-sizing: border-box;
 }
 
@@ -1971,7 +1971,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--ui-space-4);
+  padding: var(--ui-space-4) var(--ui-space-4) 0;
   box-sizing: border-box;
 }
 
