@@ -66,20 +66,14 @@ export interface TilePosition {
 
 export type TileLayout = Record<string, TilePosition>
 
-/** Default desktop arrangement on first visit. */
+/** Default desktop arrangement on first visit — top-left anchored. */
 export function defaultTileLayout(): TileLayout {
-  const w = (typeof window !== 'undefined' && window.innerWidth) || 1280
-  const STEP = GRID_CELL + 16          // tile width + gap (96 px)
-  const YASB_H = 42
-  const EDGE = 120                     // min gap from right edge
+  const STEP     = GRID_CELL + 16   // 96 px per tile
+  const YASB_H   = 42
+  const MARGIN_X = 40               // gap from left edge
+  const MARGIN_Y = YASB_H + 20     // gap below YASB bar
 
-  // Tools row is widest: 4 standalone tiles + 1 games folder = 5 columns
-  const MAX_COLS = 5
-  const gridWidth = MAX_COLS * STEP    // 480 px
-  // Right-anchor but keep at least EDGE px from both edges
-  const startX = Math.max(EDGE, w - gridWidth - EDGE)
-
-  const portfolioY = YASB_H + 24
+  const portfolioY = MARGIN_Y
   const toolsY     = portfolioY + STEP + 20
 
   const out: TileLayout = {}
@@ -88,16 +82,16 @@ export function defaultTileLayout(): TileLayout {
   let pi = 0, ti = 0
   for (const tile of standalone) {
     if (tile.zone === ZONE_PORTFOLIO) {
-      out[tile.cmd] = { x: startX + pi * STEP, y: portfolioY }
+      out[tile.cmd] = { x: MARGIN_X + pi * STEP, y: portfolioY }
       pi++
     } else {
-      out[tile.cmd] = { x: startX + ti * STEP, y: toolsY }
+      out[tile.cmd] = { x: MARGIN_X + ti * STEP, y: toolsY }
       ti++
     }
   }
 
   // Games folder sits after the standalone tool tiles
-  out['games-folder'] = { x: startX + ti * STEP, y: toolsY }
+  out['games-folder'] = { x: MARGIN_X + ti * STEP, y: toolsY }
 
   return out
 }

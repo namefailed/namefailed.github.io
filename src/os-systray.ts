@@ -239,6 +239,7 @@ export function initSystray(): void {
     const keysToWipe = [
       'mrgrey-boot-seen',
       'mrgrey-toasts-seen',
+      'mrgrey-guide-seen',
       'mrgrey-desktop-tile-positions',
     ]
     for (const key of keysToWipe) window.localStorage.removeItem(key)

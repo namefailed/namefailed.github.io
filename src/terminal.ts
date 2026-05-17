@@ -275,6 +275,9 @@ export class TerminalApp {
   private async execute(raw: string): Promise<void> {
     if (!raw) { this.prompt(); return }
 
+    // Notify welcome guide on first command
+    window.dispatchEvent(new CustomEvent('mrgrey-terminal-cmd'))
+
     this.isProcessing = true
     const [rawName, ...args] = raw.split(/\s+/)
     let name = rawName

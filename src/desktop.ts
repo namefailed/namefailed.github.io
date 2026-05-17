@@ -34,8 +34,7 @@ import {
 } from './launcher-catalog'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
-import { runIntroToasts } from './intro-toasts'
-import { pushToast } from './os-systray'
+import { mountWelcomeGuide } from './welcome-guide'
 import { mountDesktopTiles } from './desktop-tiles'
 
 // ── Launcher icon lookup ───────────────────────────────────────────────────────
@@ -189,8 +188,8 @@ export class Desktop {
     this.initYasbChrome()
     setDesktopRef(this)
 
-    // Fire welcome toasts on first visit (async, non-blocking)
-    void runIntroToasts({ push: pushToast })
+    // Mount first-visit welcome guide (non-blocking)
+    mountWelcomeGuide()
 
     // Wire auto-hide hover zone for the dock
     this.setupDockHoverZone()
@@ -635,6 +634,8 @@ export class Desktop {
   private appendToRightPane(el: HTMLElement): void {
     this.rightPane.appendChild(el)
     this.playMountAnim(el)
+    // Notify welcome guide on first window open
+    window.dispatchEvent(new CustomEvent('mrgrey-first-window'))
   }
 
   /** One-shot entrance (tiling pane or terminal restored from minimized). */
