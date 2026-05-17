@@ -232,4 +232,22 @@ export function initSystray(): void {
     resetTileLayout()
     pushToast('Desktop reset — reload to apply.', 3000)
   })
+
+  const resetExperienceBtn = document.getElementById('settings-reset-experience')
+  resetExperienceBtn?.addEventListener('click', () => {
+    // Wipe all first-visit flags so the full intro flow replays on next load
+    const keysToWipe = [
+      'mrgrey-boot-seen',
+      'mrgrey-toasts-seen',
+      'mrgrey-desktop-tile-positions',
+    ]
+    for (const key of keysToWipe) window.localStorage.removeItem(key)
+    // Sweep all per-hint dismissal flags
+    const prefix = 'mrgrey-hint-'
+    for (let i = window.localStorage.length - 1; i >= 0; i--) {
+      const k = window.localStorage.key(i)
+      if (k && k.startsWith(prefix)) window.localStorage.removeItem(k)
+    }
+    pushToast('Experience reset — reload to replay intro.', 3500)
+  })
 }
