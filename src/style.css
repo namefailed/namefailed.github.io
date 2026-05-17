@@ -954,6 +954,33 @@ html.retro-fx::before {
   border-color: rgba(166, 230, 161, 0.45);
 }
 
+.toast.toast--sticky {
+  cursor: pointer;
+  padding-right: 32px;
+  position: relative;
+}
+
+/* "×" dismiss hint rendered via pseudo-element */
+.toast.toast--sticky::after {
+  content: '×';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.45;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.toast.toast--sticky:hover::after {
+  opacity: 0.9;
+}
+
+.toast.toast--sticky:hover {
+  border-color: rgba(var(--th-accent-rgb), 0.55);
+}
+
 .toast.toast-out {
   opacity: 0;
   transform: translateX(14px) scale(0.97);

@@ -17,18 +17,16 @@ export interface IntroToastsOptions {
   push: (message: string, durationMs?: number) => void
   /** ms between toasts. Default 1200. */
   gapMs?: number
-  /** ms each toast stays visible. Default 4200. */
-  durationMs?: number
 }
 
 export async function runIntroToasts(opts: IntroToastsOptions): Promise<void> {
   if (window.localStorage.getItem(INTRO_TOASTS_KEY) === '1') return
 
   const gap = opts.gapMs ?? 1200
-  const dur = opts.durationMs ?? 4200
 
   for (let i = 0; i < INTRO_TOASTS.length; i++) {
-    opts.push(INTRO_TOASTS[i], dur)
+    // Pass 0 → sticky: toasts stay until the user clicks them
+    opts.push(INTRO_TOASTS[i], 0)
     if (i < INTRO_TOASTS.length - 1) await wait(gap)
   }
 

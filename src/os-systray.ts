@@ -88,13 +88,34 @@ export function pushToast(
   const el = document.createElement('div')
   el.className = extraClass ? `toast ${extraClass}` : 'toast'
   el.setAttribute('role', 'status')
-  el.textContent = message
+
+  const sticky = durationMs <= 0
+
+  if (sticky) {
+    // Sticky toast: stays until the user clicks it
+    el.classList.add('toast--sticky')
+    el.setAttribute('role', 'alert')
+    el.setAttribute('title', 'Click to dismiss')
+
+    const msgSpan = document.createElement('span')
+    msgSpan.textContent = message
+    el.appendChild(msgSpan)
+
+    const dismiss = (): void => {
+      el.classList.add('toast-out')
+      window.setTimeout(() => el.remove(), 360)
+    }
+    el.addEventListener('click', dismiss)
+  } else {
+    el.textContent = message
+    window.setTimeout(() => {
+      el.classList.add('toast-out')
+      window.setTimeout(() => el.remove(), 360)
+    }, durationMs)
+  }
+
   stack.appendChild(el)
   playOsSound('notify')
-  window.setTimeout(() => {
-    el.classList.add('toast-out')
-    window.setTimeout(() => el.remove(), 360)
-  }, durationMs)
 }
 
 export function initSystray(): void {
