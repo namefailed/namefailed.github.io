@@ -11,6 +11,7 @@ import type { EditorWindow } from './editor-window'
 import type { FileExplorerWindow } from './file-explorer-window'
 import type { PaintWindow } from './paint-window'
 import type { PongWindow } from './pong-window'
+import type { RubikWindow } from './rubik-window'
 import type { SnakeWindow } from './snake-window'
 import type { P5Window } from './p5-window'
 import type { TerminalWindow } from './terminal'
@@ -90,6 +91,7 @@ type TiledWin =
   | PaintWindow
   | SnakeWindow
   | PongWindow
+  | RubikWindow
   | P5Window
   | TerminalWindow
 
@@ -481,7 +483,8 @@ export class Desktop {
     const miniGameOpen = (
       spec.command === 'paint' ||
       spec.command === 'snake' ||
-      spec.command === 'pong'
+      spec.command === 'pong'  ||
+      spec.command === 'cube'
     )
     if (miniGameOpen) {
       const cmd = spec.command
@@ -526,6 +529,21 @@ export class Desktop {
         this.windows.push(sw)
         this.attachVerticalSplitters()
         this.focusWindow(sw)
+        return
+      }
+      if (cmd === 'cube') {
+        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
+        let rw!: RubikWindow
+        rw = new RubikWindowCtor({
+          onClose:    () => this.closeWindow(rw),
+          onMinimize: () => this.minimizeWindow(rw),
+          onMaximize: () => this.toggleMaximizeContent(rw),
+          onFocus:    () => this.focusWindow(rw),
+        })
+        this.appendToRightPane(rw)
+        this.windows.push(rw)
+        this.attachVerticalSplitters()
+        this.focusWindow(rw)
         return
       }
       const { PongWindow: PongWindowCtor } = await import('./pong-window')
@@ -1384,19 +1402,11 @@ export class Desktop {
       return
     }
 
-    // Ctrl+H → terminal (vim h = left), Ctrl+L → enter pane (vim l = right),
-    // Ctrl+K → previous window up in column (vim k = up), Ctrl+J → next window down (vim j = down)
-    if (key === 'h') { void this.openWindow({ command: 'terminal', title: 'terminal', content: [] }); return }
-    if (key === 'l') {
-      // From terminal or no focus → enter the right pane (first non-terminal window)
-      if (this.focusedId === null || this.focusedId === 'terminal') {
-        const firstContent = this.windows.find(w => w.command !== 'terminal')
-        if (firstContent) this.focusWindow(firstContent)
-      }
-      return
-    }
-    if (key === 'k') { this.focusLeft(); return }
-    if (key === 'j') { this.focusRight(); return }
+    // Ctrl+H/J/K/L — vim-style spatial focus (h=left, j=down, k=up, l=right)
+    if (key === 'h') { this.focusSpatial('h'); return }
+    if (key === 'l') { this.focusSpatial('l'); return }
+    if (key === 'k') { this.focusSpatial('k'); return }
+    if (key === 'j') { this.focusSpatial('j'); return }
 
     // Ctrl+Q → close focused content window, or terminal when it holds focus
     if (key === 'q') {
@@ -1427,21 +1437,59 @@ export class Desktop {
     if (key === 'd') { this.toggleShowDesktop(); return }
   }
 
-  private focusLeft(): void {
-    if (this.focusedId === null) return                      // nothing focused
-    const idx = this.windows.findIndex(w => w.command === this.focusedId)
-    if (idx <= 0) return                                     // already at first window
-    this.focusWindow(this.windows[idx - 1])
-  }
+  /**
+   * Spatial focus navigation: move focus to the nearest window in the given
+   * vim direction (h=left, j=down, k=up, l=right) using bounding-rect geometry.
+   * Pressing H with no window to the left of the current one falls back to
+   * opening / restoring the terminal (the permanent left anchor).
+   */
+  private focusSpatial(dir: 'h' | 'j' | 'k' | 'l'): void {
+    const focusedWin = this.focusedId
+      ? this.windows.find(w => w.command === this.focusedId)
+      : null
 
-  private focusRight(): void {
-    if (this.focusedId === null) {                           // nothing focused → first window
-      if (this.windows[0]) this.focusWindow(this.windows[0])
+    // Nothing focused: j/l enter the pane; h opens terminal; k is a no-op.
+    if (!focusedWin) {
+      if (dir === 'l' || dir === 'j') {
+        if (this.windows[0]) this.focusWindow(this.windows[0])
+      } else if (dir === 'h') {
+        void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+      }
       return
     }
-    const idx = this.windows.findIndex(w => w.command === this.focusedId)
-    if (idx >= 0 && idx < this.windows.length - 1) {
-      this.focusWindow(this.windows[idx + 1])
+
+    const cr = focusedWin.el.getBoundingClientRect()
+    const cx = cr.left + cr.width  / 2
+    const cy = cr.top  + cr.height / 2
+
+    let best: TiledWin | null = null
+    let bestDist = Infinity
+
+    for (const win of this.windows) {
+      if (win === focusedWin) continue
+      const r  = win.el.getBoundingClientRect()
+      const wx = r.left + r.width  / 2
+      const wy = r.top  + r.height / 2
+      const dx = wx - cx
+      const dy = wy - cy
+
+      // Require the centre to be clearly in the intended direction.
+      const valid =
+        (dir === 'h' && dx < -20) ||
+        (dir === 'l' && dx >  20) ||
+        (dir === 'k' && dy < -20) ||
+        (dir === 'j' && dy >  20)
+      if (!valid) continue
+
+      const dist = Math.hypot(dx, dy)
+      if (dist < bestDist) { bestDist = dist; best = win }
+    }
+
+    if (best) {
+      this.focusWindow(best)
+    } else if (dir === 'h' && this.focusedId !== 'terminal') {
+      // Nothing to the left of the current content window → jump to terminal.
+      void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
     }
   }
 }

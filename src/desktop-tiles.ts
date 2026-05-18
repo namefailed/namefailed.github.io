@@ -33,6 +33,7 @@ const TILES: DesktopTile[] = [
   { cmd: 'paint',    label: 'Paint',    glyph: '◐',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'snake',    label: 'Snake',    glyph: '≈',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'pong',     label: 'Pong',     glyph: '◎',  zone: ZONE_TOOLS, accent: 'fun' },
+  { cmd: 'cube',     label: 'Cube',     glyph: '⬡',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'p5',       label: 'p5.js',    glyph: 'p5', zone: ZONE_TOOLS, accent: 'fun' },
 ]
 
@@ -40,7 +41,7 @@ const TILES: DesktopTile[] = [
 export const PORTFOLIO_CMDS: ReadonlySet<string> = new Set(['resume', 'projects', 'whoami', 'links'])
 
 /** Games/fun tiles that live inside the Apps folder. */
-export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'p5'])
+export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'cube', 'p5'])
 
 /** All 12 tile definitions — used for persistence / tests. */
 export function visibleDesktopTiles(): readonly DesktopTile[] {

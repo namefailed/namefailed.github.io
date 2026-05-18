@@ -42,6 +42,7 @@ export const TILED_WINDOW_COMMANDS = new Set([
   'paint',
   'snake',
   'pong',
+  'cube',
   'p5',
 ])
 
@@ -62,6 +63,7 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   { kind: 'app', cmd: 'edit',     label: 'Editor',   glyph: 'E' },
   { kind: 'app', cmd: 'explorer', label: 'Files',    glyph: '▣' },
   { kind: 'app', cmd: 'p5',       label: 'p5.js',    glyph: 'p5' },
+  { kind: 'app', cmd: 'cube',     label: 'Cube',     glyph: '⬡' },
   { kind: 'app', cmd: 'paint',    label: 'Paint',    glyph: '◐' },
   { kind: 'app', cmd: 'pong',     label: 'Pong',     glyph: '◎' },
   { kind: 'app', cmd: 'projects', label: 'Projects', glyph: '{}' },
@@ -91,6 +93,9 @@ export function prefetchLazyWindowModule(invokedCmd: string): void {
       return
     case 'pong':
       void import('./pong-window')
+      return
+    case 'cube':
+      void import('./rubik-window')
       return
     case 'p5':
       void import('./p5-window')
