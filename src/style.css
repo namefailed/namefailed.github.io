@@ -1987,30 +1987,38 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 }
 
 /* ── xterm overrides ───────────────────────────────────────────────────────── */
+/*
+ * xterm's bundled CSS sets `.xterm .xterm-viewport { background-color: #000 }`.
+ * That rule has specificity 0-2-0 (two classes).  Our overrides must match or
+ * exceed that depth so the theme colour wins regardless of cascade order.
+ */
 
 .xterm { height: 100%; }
-.xterm-viewport {
+
+/* Match xterm's two-class specificity so theme colour wins over the #000 default. */
+.xterm .xterm-viewport {
   overflow-y: auto !important;
   scrollbar-gutter: stable;
   scrollbar-width: auto;
   scrollbar-color: var(--th-scroll-thumb) rgba(0, 0, 0, 0.2);
-  background-color: var(--th-surface1);
+  /* Fills any sub-row gap between the canvas bottom edge and the viewport edge. */
+  background-color: var(--th-base);
 }
 
-.xterm-viewport::-webkit-scrollbar {
+.xterm .xterm-viewport::-webkit-scrollbar {
   width: 8px;
 }
-.xterm-viewport::-webkit-scrollbar-track {
+.xterm .xterm-viewport::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.15);
   border-radius: 0 6px 6px 0;
 }
-.xterm-viewport::-webkit-scrollbar-thumb {
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
   background: var(--th-scroll-thumb);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-.xterm-viewport::-webkit-scrollbar-thumb:hover {
+.xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
   background: var(--th-scroll-thumb-hover);
   border: 2px solid transparent;
   background-clip: padding-box;
