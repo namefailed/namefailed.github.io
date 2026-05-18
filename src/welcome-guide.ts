@@ -16,7 +16,7 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
   {
     id: 'open',
     glyph: '◐',
-    html: 'Click <strong>Portfolio</strong> or <strong>Apps</strong> to open a tile',
+    html: 'Click <strong>Portfolio</strong>, <strong>Apps</strong>, or <strong>Games</strong> to open a tile',
   },
   {
     id: 'terminal',
