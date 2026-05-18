@@ -107,14 +107,19 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   let enabled = stored !== null ? stored : false
 
   // Use whatever wallpaper is currently set; fall back to the default asset.
+  // CSS gradient strings are valid wallpaper values but can't be used as img.src —
+  // fall back to the default photo when the saved value isn't a URL.
+  const isImgUrl = (v: string): boolean =>
+    v.startsWith('/') || v.startsWith('http') || v.startsWith('data:')
   const bgImg = new Image()
-  bgImg.src = window.localStorage?.getItem(WALLPAPER_KEY) ?? WALLPAPER_DEFAULT
+  const savedWp = window.localStorage?.getItem(WALLPAPER_KEY) ?? ''
+  bgImg.src = savedWp && isImgUrl(savedWp) ? savedWp : WALLPAPER_DEFAULT
   bgImg.decoding = 'async'
 
   /** Keep backdrop in sync when the user changes the wallpaper. */
   const onWallpaperChange = (e: Event): void => {
     const url = (e as CustomEvent<string | null>).detail
-    bgImg.src = url ?? WALLPAPER_DEFAULT
+    bgImg.src = url && isImgUrl(url) ? url : WALLPAPER_DEFAULT
   }
   window.addEventListener('mrgrey-wallpaper-change', onWallpaperChange)
 

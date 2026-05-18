@@ -262,7 +262,7 @@ html.retro-fx::before {
   display: flex;
   flex-direction: column;
   background-color: var(--th-desktop-bg);
-  background-image: url('/wallpaper.jpg');
+  background-image: radial-gradient(ellipse at 50% 55%, #1e1e2e 0%, #181825 60%, #11111b 100%);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

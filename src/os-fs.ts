@@ -131,6 +131,7 @@ function windowResized() { resizeCanvas(windowWidth, windowHeight); }
   // "set as wallpaper" instead of "open in editor" for these files.
   const walls = mkEmptyDir()
   const wp = (url: string): FsFile => ({ t: 'f', body: url })
+  walls.c['mrgrey.jpg']       = wp('/wallpaper.jpg')
   walls.c['mocha.jpg']        = wp('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920&q=80')
   walls.c['dracula.jpg']      = wp('https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920&q=80')
   walls.c['nord.jpg']         = wp('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80')
