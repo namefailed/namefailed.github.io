@@ -262,7 +262,7 @@ html.retro-fx::before {
   display: flex;
   flex-direction: column;
   background-color: var(--th-desktop-bg);
-  background-image: radial-gradient(ellipse at 50% 55%, #1e1e2e 0%, #181825 60%, #11111b 100%);
+  background-image: radial-gradient(ellipse at 50% 55%, var(--th-base) 0%, var(--th-mantle) 60%, var(--th-crust) 100%);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -5788,15 +5788,19 @@ html.retro-fx .xterm-screen {
   padding: 32px 48px 16px;
 }
 .boot-logo {
+  /* display:table + margin:auto centres the block without per-line centering.
+     white-space:pre preserves the ASCII art structure; text-align:left keeps
+     each line anchored to the left of the block so column widths stay intact. */
+  display: table;
+  margin: 0 auto 12px;
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   font-size: clamp(10px, 1.6vw, 18px);
   line-height: 1.15;
   white-space: pre;
   color: #f5c2e7;
-  text-align: center;
+  text-align: left;
   font-weight: 400;
   text-shadow: 0 0 12px rgba(245, 194, 231, 0.18);
-  margin-bottom: 12px;
 }
 .boot-logo-sub {
   text-align: center;
