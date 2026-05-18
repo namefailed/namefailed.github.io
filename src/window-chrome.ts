@@ -83,8 +83,8 @@ export function createWindowChrome(opts: WindowChromeOptions): WindowChromeEleme
   return { el, titlebar, titleEl, btnClose, btnMin, btnMax }
 }
 
-/** Escape HTML special characters to prevent XSS. */
-function escapeHtml(s: string): string {
+/** Escape HTML special characters to prevent XSS. Shared across all modules. */
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -92,7 +92,5 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** Escape HTML special characters (shared utility). */
-export function escapeHtmlShared(s: string): string {
-  return escapeHtml(s)
-}
+/** @deprecated Use {@link escapeHtml} directly. */
+export const escapeHtmlShared = escapeHtml

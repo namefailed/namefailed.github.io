@@ -12,6 +12,7 @@ import { getMatrixBgHandle } from './matrix-bg'
 import { applyTheme, getThemeId, listThemeSummaries } from './theme'
 import { resetTileLayout } from './desktop-tiles'
 import { clearWallpaper } from './wallpaper'
+import { clearFirstVisitFlags } from './first-visit-flags'
 
 function syncSettingsSwitch(btn: HTMLElement, on: boolean): void {
   btn.setAttribute('aria-pressed', on ? 'true' : 'false')
@@ -223,23 +224,10 @@ export function initSystray(): void {
 
   const fullResetBtn = document.getElementById('settings-full-reset')
   fullResetBtn?.addEventListener('click', () => {
-    // Reset tile positions and wallpaper immediately
+    // Reset tile positions, wallpaper, and all first-visit flags
     resetTileLayout()
     clearWallpaper()
-    // Wipe all first-visit flags so the full intro flow replays on next load
-    const keysToWipe = [
-      'mrgrey-boot-seen',
-      'mrgrey-toasts-seen',
-      'mrgrey-guide-seen',
-      'mrgrey-desktop-tile-positions',
-    ]
-    for (const key of keysToWipe) window.localStorage.removeItem(key)
-    // Sweep all per-hint dismissal flags
-    const prefix = 'mrgrey-hint-'
-    for (let i = window.localStorage.length - 1; i >= 0; i--) {
-      const k = window.localStorage.key(i)
-      if (k && k.startsWith(prefix)) window.localStorage.removeItem(k)
-    }
+    clearFirstVisitFlags()
     pushToast('Resetting experience — reloading…', 1500)
     window.setTimeout(() => window.location.reload(), 1500)
   })

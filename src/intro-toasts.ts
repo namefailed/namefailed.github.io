@@ -3,6 +3,8 @@
  * Gated by localStorage["mrgrey-toasts-seen"]. Replayed by `cookies clear`.
  */
 
+import { storageGet, storageSet } from './storage'
+
 export const INTRO_TOASTS_KEY = 'mrgrey-toasts-seen'
 
 export const INTRO_TOASTS: ReadonlyArray<string> = [
@@ -20,7 +22,7 @@ export interface IntroToastsOptions {
 }
 
 export async function runIntroToasts(opts: IntroToastsOptions): Promise<void> {
-  if (window.localStorage.getItem(INTRO_TOASTS_KEY) === '1') return
+  if (storageGet(INTRO_TOASTS_KEY) === '1') return
 
   const gap = opts.gapMs ?? 1200
 
@@ -30,7 +32,7 @@ export async function runIntroToasts(opts: IntroToastsOptions): Promise<void> {
     if (i < INTRO_TOASTS.length - 1) await wait(gap)
   }
 
-  window.localStorage.setItem(INTRO_TOASTS_KEY, '1')
+  storageSet(INTRO_TOASTS_KEY, '1')
 }
 
 function wait(ms: number): Promise<void> {

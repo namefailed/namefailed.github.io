@@ -15,6 +15,8 @@ import { getDesktopRef } from '../os-registry'
 import { runApt } from '../os-apt'
 import { cowsayFormat } from '../os-packages'
 import { pushToast } from '../os-systray'
+import { clearFirstVisitFlags } from '../first-visit-flags'
+import { resetTileLayout } from '../desktop-tiles'
 
 import type { Command } from './types'
 
@@ -27,22 +29,11 @@ export const systemCommands: Record<string, Command> = {
       const sub = args[0]?.toLowerCase()
       if (sub === 'clear') {
         vfsReset()
-        // Wipe desktop-experience flags so the full first-visit flow replays on next load
-        const keysToWipe = [
-          'mrgrey-boot-seen',
-          'mrgrey-toasts-seen',
-          'mrgrey-desktop-tile-positions',
-        ]
-        for (const key of keysToWipe) window.localStorage.removeItem(key)
-        // Sweep all hint-bubble flags (namespaced under mrgrey-hint-)
-        const prefix = 'mrgrey-hint-'
-        for (let i = window.localStorage.length - 1; i >= 0; i--) {
-          const k = window.localStorage.key(i)
-          if (k && k.startsWith(prefix)) window.localStorage.removeItem(k)
-        }
+        clearFirstVisitFlags()
+        resetTileLayout()
         return [
           `  ${c.green}Virtual home cleared.${c.reset}  ${c.dim}Factory default tree written to storage.${c.reset}`,
-          `  ${c.dim}First-visit flags wiped — boot splash, toasts, hints, tile positions reset.${c.reset}`,
+          `  ${c.dim}First-visit flags wiped — boot splash, guide, toasts, hints, tile positions reset.${c.reset}`,
           `  ${c.dim}Theme, CRT, matrix, apt package markers, etc. unchanged.${c.reset}`,
         ]
       }

@@ -3,6 +3,9 @@
  * Persistent until clicked or until "Show hints again" is invoked.
  */
 
+import { escapeHtml } from './window-chrome'
+import { storageGet, storageSet, storageRemove } from './storage'
+
 export interface Hint {
   targetCmd: string
   text: string
@@ -22,16 +25,16 @@ export function hintKey(targetCmd: string): string {
 }
 
 export function isHintDismissed(targetCmd: string): boolean {
-  return window.localStorage.getItem(hintKey(targetCmd)) === '1'
+  return storageGet(hintKey(targetCmd)) === '1'
 }
 
 export function dismissHint(targetCmd: string): void {
-  window.localStorage.setItem(hintKey(targetCmd), '1')
+  storageSet(hintKey(targetCmd), '1')
 }
 
 export function resetAllHints(): void {
   for (const hint of HINTS) {
-    window.localStorage.removeItem(hintKey(hint.targetCmd))
+    storageRemove(hintKey(hint.targetCmd))
   }
 }
 
@@ -92,6 +95,3 @@ function positionBubble(
   el.style.top = `${rect.top + rect.height / 2 - el.offsetHeight / 2}px`
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}

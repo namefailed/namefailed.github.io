@@ -1,6 +1,7 @@
 /** Read-only tiled window chrome; `.win-body` renders ANSI-ish lines as HTML (editing → EditorWindow / terminal). */
 
 import { ansiToHtmlWithLinks } from './ansi'
+import { escapeHtml } from './window-chrome'
 import type { PortfolioProjectEntry } from './content/portfolio'
 import {
   RESUME_SKILL_MATRIX_SECTIONS,
@@ -10,14 +11,6 @@ import {
 /** WordPress mShots — slow first load but real page pixels for project cards */
 function liveSiteScreenshotUrl(web: string): string {
   return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }
 
 /** Portrait photo with MG initials fallback — shared by contact and résumé. */
@@ -141,7 +134,7 @@ export class AppWindow {
     bar.className = 'win-titlebar'
     bar.innerHTML = `
       <div class="win-title-left">
-        <span class="win-title">${opts.title}</span>
+        <span class="win-title">${escapeHtml(opts.title)}</span>
       </div>
       <div class="win-traffic">
         <span class="dot dot-min"   title="minimize (ctrl+m)"></span>

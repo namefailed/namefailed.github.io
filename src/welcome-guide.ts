@@ -10,6 +10,8 @@
  * Replay via the "Reset experience" button in the system menu.
  */
 
+import { storageGet, storageSet } from './storage'
+
 export const GUIDE_KEY = 'mrgrey-guide-seen'
 
 const TIPS: Array<{ id: string; glyph: string; html: string }> = [
@@ -37,7 +39,7 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
 
 export function mountWelcomeGuide(): void {
   if (typeof window === 'undefined') return
-  if (window.localStorage.getItem(GUIDE_KEY) === '1') return
+  if (storageGet(GUIDE_KEY) === '1') return
 
   // ── Build card ────────────────────────────────────────────────────────────
 
@@ -106,7 +108,7 @@ export function mountWelcomeGuide(): void {
   const dismiss = (delay = 0): void => {
     if (dismissed) return
     dismissed = true
-    window.localStorage.setItem(GUIDE_KEY, '1')
+    storageSet(GUIDE_KEY, '1')
     const go = (): void => {
       card.classList.add('welcome-guide--out')
       window.setTimeout(() => card.remove(), 380)

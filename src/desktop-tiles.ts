@@ -4,6 +4,8 @@
  * Game tiles (paint, snake, pong, cube, p5) live inside a "Games" folder tile.
  */
 
+import { storageGet, storageSet, storageRemove } from './storage'
+
 export const ZONE_PORTFOLIO = 'portfolio' as const
 export const ZONE_TOOLS = 'tools' as const
 export type TileZone = typeof ZONE_PORTFOLIO | typeof ZONE_TOOLS
@@ -103,7 +105,7 @@ export const TILE_POSITIONS_KEY = 'mrgrey-desktop-tile-positions-v6'
 
 export function loadTileLayout(): TileLayout {
   const defaults = defaultTileLayout()
-  const raw = window.localStorage.getItem(TILE_POSITIONS_KEY)
+  const raw = storageGet(TILE_POSITIONS_KEY)
   if (!raw) return defaults
   try {
     const parsed = JSON.parse(raw) as Record<string, TilePosition>
@@ -118,11 +120,11 @@ export function loadTileLayout(): TileLayout {
 }
 
 export function saveTileLayout(layout: TileLayout): void {
-  window.localStorage.setItem(TILE_POSITIONS_KEY, JSON.stringify(layout))
+  storageSet(TILE_POSITIONS_KEY, JSON.stringify(layout))
 }
 
 export function resetTileLayout(): void {
-  window.localStorage.removeItem(TILE_POSITIONS_KEY)
+  storageRemove(TILE_POSITIONS_KEY)
 }
 
 export interface MountTilesOptions {
@@ -155,10 +157,10 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
 
   // Close popup when clicking outside any folder tile
   document.addEventListener('pointerdown', (e) => {
-    const popup = document.body.querySelector<HTMLElement>('.games-folder-popup')
+    const popup = document.body.querySelector<HTMLElement>('.folder-popup')
     if (!popup) return
     const inFolder = folderEls.some(f => f.contains(e.target as Node))
-    if (!inFolder && !popup.contains(e.target as Node)) popup.remove()
+    if (!inFolder && !popup.contains(e.target as Node)) closeActivePopup()
   }, { capture: true })
 }
 
@@ -195,49 +197,59 @@ function createFolderTile(pos: TilePosition, def: FolderDef): HTMLButtonElement 
   return el
 }
 
+// One popup is open at a time.  Track its keyboard-close controller so the
+// listener is always removed regardless of which code path closes the popup.
+let popupKeyController: AbortController | null = null
+
+function closeActivePopup(): void {
+  document.body.querySelector<HTMLElement>('.folder-popup')?.remove()
+  popupKeyController?.abort()
+  popupKeyController = null
+}
+
 function toggleFolderPopup(
   anchor: HTMLElement,
   def: FolderDef,
   onActivate: (cmd: string) => void,
 ): void {
-  const existing = document.body.querySelector<HTMLElement>('.games-folder-popup')
+  const existing = document.body.querySelector<HTMLElement>('.folder-popup')
   if (existing) {
     const sameFolder = existing.dataset.openedBy === def.cmd
-    existing.remove()
+    closeActivePopup()
     if (sameFolder) return   // clicking the same folder again → just close
   }
 
   const popup = document.createElement('div')
-  popup.className = 'games-folder-popup'
+  popup.className = 'folder-popup'
   popup.dataset.openedBy = def.cmd
   popup.setAttribute('role', 'dialog')
   popup.setAttribute('aria-label', def.label)
 
   const title = document.createElement('div')
-  title.className = 'games-folder-popup-title'
+  title.className = 'folder-popup-title'
   title.textContent = def.label
   popup.appendChild(title)
 
   const grid = document.createElement('div')
-  grid.className = 'games-folder-popup-grid'
+  grid.className = 'folder-popup-grid'
 
   for (const tile of def.tiles) {
     const item = document.createElement('button')
     item.type = 'button'
-    item.className = 'games-folder-popup-item'
+    item.className = 'folder-popup-item'
 
     const glyph = document.createElement('span')
-    glyph.className = 'games-folder-popup-item-glyph'
+    glyph.className = 'folder-popup-item-glyph'
     glyph.textContent = tile.glyph
     item.appendChild(glyph)
 
     const lbl = document.createElement('span')
-    lbl.className = 'games-folder-popup-item-label'
+    lbl.className = 'folder-popup-item-label'
     lbl.textContent = tile.label
     item.appendChild(lbl)
 
     item.addEventListener('click', () => {
-      popup.remove()
+      closeActivePopup()
       onActivate(tile.cmd)
     })
     grid.appendChild(item)
@@ -259,11 +271,11 @@ function toggleFolderPopup(
   popup.style.left = `${left}px`
   popup.style.top  = `${top}px`
 
-  // Keyboard close
-  const onKey = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape') { popup.remove(); document.removeEventListener('keydown', onKey) }
-  }
-  document.addEventListener('keydown', onKey)
+  // Keyboard close — AbortController ensures cleanup via any close path
+  popupKeyController = new AbortController()
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closeActivePopup()
+  }, { signal: popupKeyController.signal })
 }
 
 // ── Drag logic ───────────────────────────────────────────────────────────────

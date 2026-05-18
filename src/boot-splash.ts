@@ -1,7 +1,10 @@
 /**
  * Boot splash: ASCII logo + dmesg-style line reveal on first visit.
- * Gated by localStorage["mrgrey-boot-seen"]. Replayed by `cookies clear`.
+ * Gated by localStorage[BOOT_SPLASH_KEY]. Replayed by `cookies clear`.
  */
+
+import { escapeHtml } from './window-chrome'
+import { storageGet, storageSet } from './storage'
 
 export type BootLineKind = 'info' | 'ok' | 'warn' | 'err'
 
@@ -61,10 +64,6 @@ function labelFor(kind: BootLineKind): string {
   return 'init'
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
 /** Build DOM rows for each boot line plus section dividers. */
 export function buildBootLines(): HTMLElement[] {
   const out: HTMLElement[] = []
@@ -90,7 +89,8 @@ export function buildBootLines(): HTMLElement[] {
 
 // ─── mount + animate ──────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'mrgrey-boot-seen'
+/** localStorage key gating the boot splash. Exported so the reset helpers can clear it. */
+export const BOOT_SPLASH_KEY = 'mrgrey-boot-seen'
 
 export interface BootSplashOptions {
   /** Reveal interval per line, ms. Default 180. */
@@ -103,7 +103,7 @@ export interface BootSplashOptions {
 
 /** Render the splash, animate, resolve when fully dismissed. Skips on return visits. */
 export async function runBootSplash(opts: BootSplashOptions = {}): Promise<void> {
-  if (window.localStorage.getItem(STORAGE_KEY) === '1') return
+  if (storageGet(BOOT_SPLASH_KEY) === '1') return
 
   // Explicitly load the exact JetBrains Mono variant used by the logo so the
   // ASCII art aligns correctly before we build the DOM. document.fonts.load() is
@@ -159,7 +159,7 @@ export async function runBootSplash(opts: BootSplashOptions = {}): Promise<void>
   await wait(fadeMs)
   root.remove()
 
-  window.localStorage.setItem(STORAGE_KEY, '1')
+  storageSet(BOOT_SPLASH_KEY, '1')
 }
 
 function wait(ms: number): Promise<void> {

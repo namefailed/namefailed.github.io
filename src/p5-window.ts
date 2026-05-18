@@ -18,6 +18,7 @@
 import type { WindowSpec } from './appwindow'
 import { P5_EXAMPLES } from './p5-sketches'
 import { vfsReadRaw, vfsMkdir, vfsWrite } from './os-fs'
+import { storageGet, storageSet } from './storage'
 
 export interface P5WindowOptions {
   initialVfsPath?: string | null
@@ -148,7 +149,7 @@ export class P5Window {
     }
 
     // Show a one-time tip explaining the player on first ever open.
-    if (typeof window !== 'undefined' && !window.localStorage.getItem(P5_TIP_KEY)) {
+    if (typeof window !== 'undefined' && !storageGet(P5_TIP_KEY)) {
       window.setTimeout(() => this.mountP5Tip(), 900)
     }
   }
@@ -398,7 +399,7 @@ export class P5Window {
       if (!this.tipEl) return
       const el = this.tipEl
       this.tipEl = null
-      window.localStorage.setItem(P5_TIP_KEY, '1')
+      storageSet(P5_TIP_KEY, '1')
       el.classList.add('p5-tip--out')
       window.setTimeout(() => el.remove(), 320)
     }

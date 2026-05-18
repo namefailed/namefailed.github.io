@@ -9,6 +9,8 @@
  * string as their body.  The file-explorer reads that body and passes it here.
  */
 
+import { storageGet, storageSet, storageRemove } from './storage'
+
 export const WALLPAPER_KEY = 'mrgrey-wallpaper'
 /** Default wallpaper path — mirrors the CSS background-image on #desktop. */
 export const WALLPAPER_DEFAULT = '/wallpaper.jpg'
@@ -41,7 +43,7 @@ export function applyWallpaper(value: string): void {
 export function setWallpaper(value: string): void {
   applyWallpaper(value)
   const trimmed = value.trim()
-  window.localStorage.setItem(WALLPAPER_KEY, trimmed)
+  storageSet(WALLPAPER_KEY, trimmed)
   window.dispatchEvent(new CustomEvent<string>('mrgrey-wallpaper-change', { detail: trimmed }))
 }
 
@@ -54,12 +56,12 @@ export function clearWallpaper(): void {
     el.style.backgroundPosition = ''
     el.style.backgroundRepeat   = ''
   }
-  window.localStorage.removeItem(WALLPAPER_KEY)
+  storageRemove(WALLPAPER_KEY)
   window.dispatchEvent(new CustomEvent<null>('mrgrey-wallpaper-change', { detail: null }))
 }
 
 /** Read any saved wallpaper from localStorage and apply it on startup. */
 export function loadSavedWallpaper(): void {
-  const saved = window.localStorage.getItem(WALLPAPER_KEY)
+  const saved = storageGet(WALLPAPER_KEY)
   if (saved) applyWallpaper(saved)
 }

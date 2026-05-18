@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { createWindowChrome, escapeHtmlShared } from './window-chrome'
+import { createWindowChrome, escapeHtml } from './window-chrome'
 
 // Mock DOM for Node test environment
 globalThis.document = {
@@ -34,31 +34,31 @@ globalThis.document = {
   }),
 } as unknown as Document
 
-describe('escapeHtmlShared', () => {
+describe('escapeHtml', () => {
   it('escapes & to &amp;', () => {
-    expect(escapeHtmlShared('foo & bar')).toBe('foo &amp; bar')
+    expect(escapeHtml('foo & bar')).toBe('foo &amp; bar')
   })
 
   it('escapes < to &lt;', () => {
-    expect(escapeHtmlShared('foo < bar')).toBe('foo &lt; bar')
+    expect(escapeHtml('foo < bar')).toBe('foo &lt; bar')
   })
 
   it('escapes > to &gt;', () => {
-    expect(escapeHtmlShared('foo > bar')).toBe('foo &gt; bar')
+    expect(escapeHtml('foo > bar')).toBe('foo &gt; bar')
   })
 
   it('escapes " to &quot;', () => {
-    expect(escapeHtmlShared('foo "bar"')).toBe('foo &quot;bar&quot;')
+    expect(escapeHtml('foo "bar"')).toBe('foo &quot;bar&quot;')
   })
 
   it('escapes multiple characters', () => {
-    expect(escapeHtmlShared('<script>alert("xss")</script>')).toBe(
+    expect(escapeHtml('<script>alert("xss")</script>')).toBe(
       '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
     )
   })
 
   it('leaves plain text unchanged', () => {
-    expect(escapeHtmlShared('hello world')).toBe('hello world')
+    expect(escapeHtml('hello world')).toBe('hello world')
   })
 })
 
