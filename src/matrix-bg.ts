@@ -2,6 +2,7 @@
 
 import { getMatrixRainPalette } from './theme-control'
 import { storageGet, storageSet } from './storage'
+import { WALLPAPER_KEY, WALLPAPER_DEFAULT } from './wallpaper'
 
 const STORAGE_KEY = 'mrgrey-matrix-bg'
 
@@ -48,9 +49,6 @@ function readCssVar(name: string, fallback: string): string {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
   return v || fallback
 }
-
-/** Same asset as `#desktop` in CSS — redrawn each frame under the rain */
-const WALLPAPER_SRC = '/wallpaper.jpg'
 
 function drawBackdrop(
   ctx: CanvasRenderingContext2D,
@@ -108,9 +106,17 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   // Default OFF — wallpaper provides the backdrop; user opts in via settings
   let enabled = stored !== null ? stored : false
 
+  // Use whatever wallpaper is currently set; fall back to the default asset.
   const bgImg = new Image()
-  bgImg.src = WALLPAPER_SRC
+  bgImg.src = window.localStorage?.getItem(WALLPAPER_KEY) ?? WALLPAPER_DEFAULT
   bgImg.decoding = 'async'
+
+  /** Keep backdrop in sync when the user changes the wallpaper. */
+  const onWallpaperChange = (e: Event): void => {
+    const url = (e as CustomEvent<string | null>).detail
+    bgImg.src = url ?? WALLPAPER_DEFAULT
+  }
+  window.addEventListener('mrgrey-wallpaper-change', onWallpaperChange)
 
   let width = 0
   let height = 0
@@ -271,6 +277,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
       ro.disconnect()
       window.removeEventListener('resize', onWinResize)
       window.removeEventListener('mrgrey-theme-change', onThemeChange)
+      window.removeEventListener('mrgrey-wallpaper-change', onWallpaperChange)
       document.removeEventListener('visibilitychange', onVisibilityChange)
       if (registeredHandle === handle) registeredHandle = null
     },

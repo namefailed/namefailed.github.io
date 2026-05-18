@@ -1,12 +1,17 @@
 /**
- * Desktop wallpaper — apply a URL or CSS gradient string to #desktop-workspace
+ * Desktop wallpaper — apply a URL or CSS gradient string to #desktop
  * and persist the choice to localStorage so it survives page reloads.
  *
- * Wallpaper files in the VFS (e.g. ~/wallpapers/mocha.jpg) store a plain URL
+ * Dispatches 'mrgrey-wallpaper-change' (CustomEvent<string | null>) so that
+ * matrix-bg.ts can keep its canvas backdrop in sync without a direct import.
+ *
+ * Wallpaper files in the VFS (e.g. ~/Wallpapers/mocha.jpg) store a plain URL
  * string as their body.  The file-explorer reads that body and passes it here.
  */
 
-const WALLPAPER_KEY = 'mrgrey-wallpaper'
+export const WALLPAPER_KEY = 'mrgrey-wallpaper'
+/** Default wallpaper path — mirrors the CSS background-image on #desktop. */
+export const WALLPAPER_DEFAULT = '/wallpaper.jpg'
 
 /** Apply a wallpaper value to the #desktop element (the wallpaper layer).
  *  Targets #desktop rather than #desktop-workspace so the matrix canvas and
@@ -32,10 +37,12 @@ export function applyWallpaper(value: string): void {
   el.style.backgroundRepeat   = 'no-repeat'
 }
 
-/** Apply a wallpaper and persist it to localStorage. */
+/** Apply a wallpaper, persist it, and notify listeners (e.g. matrix-bg). */
 export function setWallpaper(value: string): void {
   applyWallpaper(value)
-  window.localStorage.setItem(WALLPAPER_KEY, value.trim())
+  const trimmed = value.trim()
+  window.localStorage.setItem(WALLPAPER_KEY, trimmed)
+  window.dispatchEvent(new CustomEvent<string>('mrgrey-wallpaper-change', { detail: trimmed }))
 }
 
 /** Remove the wallpaper (revert #desktop to its stylesheet background-image). */
@@ -48,6 +55,7 @@ export function clearWallpaper(): void {
     el.style.backgroundRepeat   = ''
   }
   window.localStorage.removeItem(WALLPAPER_KEY)
+  window.dispatchEvent(new CustomEvent<null>('mrgrey-wallpaper-change', { detail: null }))
 }
 
 /** Read any saved wallpaper from localStorage and apply it on startup. */
