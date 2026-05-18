@@ -3817,13 +3817,13 @@ html.retro-fx .xterm-screen {
   font: inherit;
   font-size: var(--ui-text-md);
   color: var(--th-text);
-  background: transparent;
+  /* Solid base prevents GPU-compositing flash (transparent → semi-opaque transition
+     briefly shows the pink accent behind the window during layer promotion). */
+  background: var(--th-base, #1e1e2e);
   border: 1px solid transparent;
   border-radius: var(--ui-radius-sm);
   cursor: pointer;
-  transition:
-    background var(--ui-duration-med) var(--ui-easing-smooth),
-    border-color var(--ui-duration-med) var(--ui-easing-smooth);
+  transition: border-color var(--ui-duration-med) var(--ui-easing-smooth);
 }
 
 .file-explorer-app .fe-row:focus {

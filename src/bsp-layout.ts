@@ -1,8 +1,19 @@
 /**
  * Binary-space-partition tiling layout.
  *
- * Two-column layout: even-indexed windows go to col-a (left), odd-indexed
- * windows go to col-b (right), with up to 2 windows stacked per column.
+ * Two-column layout.  Windows fill columns using a "shorter column first,
+ * prefer right on tie" rule so that the open sequence is:
+ *
+ *   W1 → left   W2 → right   W3 → right   W4 → left   W5 → right   W6 → left …
+ *
+ * Visually for four windows:
+ *
+ *   ┌─────────┬─────────┐
+ *   │   W1    │   W2    │
+ *   ├─────────┼─────────┤
+ *   │   W4    │   W3    │
+ *   └─────────┴─────────┘
+ *
  * Within-column windows are separated by a drag handle that lets the user
  * adjust the vertical split ratio.
  *
@@ -42,7 +53,8 @@ export class BspLayout implements WindowLayout {
    * Place `el` in the correct BSP column.
    *
    * `alreadyTiled` is `windows.length` **before** the caller pushes the new
-   * window — an even count means this is a col-a window, odd means col-b.
+   * window.  Column routing is delegated to `resolveCol` which uses a
+   * "shorter column first, prefer right on tie" rule.
    * A within-column drag handle is inserted between the existing window and
    * the new one when the column already contains a window.
    */
@@ -160,15 +172,40 @@ export class BspLayout implements WindowLayout {
   }
 
   /**
-   * Lazily create and return the column for the window at position `alreadyTiled`.
-   * Even index → col-a, odd index → col-b.
+   * Route the incoming window to the correct column using a
+   * "shorter column first, prefer col-b on tie" rule.
+   *
+   * This produces the open sequence L R R L R L … so that:
+   *  - The first window anchors the left column.
+   *  - Each subsequent window fills whichever column is shorter.
+   *  - When both columns are equal length the right column is preferred,
+   *    so new rows fill right-first then left (matching the user's expectation).
    */
   private resolveCol(alreadyTiled: number): HTMLElement {
-    if (alreadyTiled % 2 === 0) {
+    // First window always anchors the left column.
+    if (alreadyTiled === 0) {
       if (!this.colA) {
         this.colA = document.createElement('div')
         this.colA.className = 'bsp-col'
-        // Insert before col-b / inter-column splitter if they already exist
+        this.rightPane.prepend(this.colA)
+      }
+      return this.colA
+    }
+
+    // Count live content windows in each column.
+    const aCount = this.colA
+      ? this.colA.querySelectorAll<HTMLElement>(':scope > .content-window').length
+      : 0
+    const bCount = this.colB
+      ? this.colB.querySelectorAll<HTMLElement>(':scope > .content-window').length
+      : 0
+
+    // Left column wins only when it is strictly shorter.
+    // Equal or right-shorter → right column (col-b wins ties).
+    if (aCount < bCount) {
+      if (!this.colA) {
+        this.colA = document.createElement('div')
+        this.colA.className = 'bsp-col'
         if (this.colSplitter) {
           this.rightPane.insertBefore(this.colA, this.colSplitter)
         } else {
