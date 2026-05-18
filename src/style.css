@@ -4639,7 +4639,7 @@ html.retro-fx .xterm-screen {
 
 .rubik-canvas-host {
   flex: 1;
-  min-height: 220px;
+  min-height: 80px;
   min-width: 0;
   border-radius: var(--ui-radius-md);
   overflow: hidden;

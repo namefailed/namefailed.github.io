@@ -155,19 +155,21 @@ export function moveLi(cube: CubeFaces): void {
 /** F clockwise (look from front) */
 export function moveF(cube: CubeFaces): void {
   rotFaceCW(cube.F)
+  // Front layer cycle (z=+1 face): L front-col → U front-row → R front-col → D front-row → L
+  // Physical slots at z≈+⅔: U[6,7,8], R[2,5,8], D[0,1,2], L[0,3,6]
   const saved = [cube.U[6], cube.U[7], cube.U[8]]
-  cube.U[6] = cube.L[8]
-  cube.U[7] = cube.L[5]
-  cube.U[8] = cube.L[2]
-  cube.L[2] = cube.D[0]
-  cube.L[5] = cube.D[1]
-  cube.L[8] = cube.D[2]
-  cube.D[0] = cube.R[6]
-  cube.D[1] = cube.R[3]
-  cube.D[2] = cube.R[0]
-  cube.R[0] = saved[0]
-  cube.R[3] = saved[1]
-  cube.R[6] = saved[2]
+  cube.U[6] = cube.L[6]   // L[6] → U[6]
+  cube.U[7] = cube.L[3]   // L[3] → U[7]
+  cube.U[8] = cube.L[0]   // L[0] → U[8]
+  cube.L[0] = cube.D[0]   // D[0] → L[0]
+  cube.L[3] = cube.D[1]   // D[1] → L[3]
+  cube.L[6] = cube.D[2]   // D[2] → L[6]
+  cube.D[0] = cube.R[8]   // R[8] → D[0]
+  cube.D[1] = cube.R[5]   // R[5] → D[1]
+  cube.D[2] = cube.R[2]   // R[2] → D[2]
+  cube.R[2] = saved[0]    // U[6] → R[2]
+  cube.R[5] = saved[1]    // U[7] → R[5]
+  cube.R[8] = saved[2]    // U[8] → R[8]
 }
 
 /** F counter-clockwise */
@@ -178,19 +180,21 @@ export function moveFi(cube: CubeFaces): void {
 /** B clockwise (look from back toward front) */
 export function moveB(cube: CubeFaces): void {
   rotFaceCW(cube.B)
+  // Back layer cycle (z=-1 face): R back-col → U back-row → L back-col → D back-row → R
+  // Physical slots at z≈-⅔: U[0,1,2], R[0,3,6], D[6,7,8], L[2,5,8]
   const saved = [cube.U[0], cube.U[1], cube.U[2]]
-  cube.U[0] = cube.R[2]
-  cube.U[1] = cube.R[5]
-  cube.U[2] = cube.R[8]
-  cube.R[8] = cube.D[8]
-  cube.R[5] = cube.D[7]
-  cube.R[2] = cube.D[6]
-  cube.D[8] = cube.L[0]
-  cube.D[7] = cube.L[3]
-  cube.D[6] = cube.L[6]
-  cube.L[6] = saved[0]
-  cube.L[3] = saved[1]
-  cube.L[0] = saved[2]
+  cube.U[0] = cube.R[0]   // R[0] → U[0]
+  cube.U[1] = cube.R[3]   // R[3] → U[1]
+  cube.U[2] = cube.R[6]   // R[6] → U[2]
+  cube.R[0] = cube.D[8]   // D[8] → R[0]
+  cube.R[3] = cube.D[7]   // D[7] → R[3]
+  cube.R[6] = cube.D[6]   // D[6] → R[6]
+  cube.D[8] = cube.L[8]   // L[8] → D[8]
+  cube.D[7] = cube.L[5]   // L[5] → D[7]
+  cube.D[6] = cube.L[2]   // L[2] → D[6]
+  cube.L[8] = saved[0]    // U[0] → L[8]
+  cube.L[5] = saved[1]    // U[1] → L[5]
+  cube.L[2] = saved[2]    // U[2] → L[2]
 }
 
 /** B counter-clockwise */

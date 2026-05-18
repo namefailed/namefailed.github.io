@@ -78,6 +78,110 @@ describe('isSolved', () => {
   })
 })
 
+// ── F and B physical cycle correctness ────────────────────────────────────────
+// These tests verify that the correct PHYSICAL sticker slots move, not just
+// that the permutation is internally consistent (4× = id doesn't catch swapped cols).
+
+describe('moveF physical sticker cycles', () => {
+  it('F on solved: U front-row (U[6,7,8]) becomes L-color (4)', () => {
+    const cube = solvedCube()
+    moveF(cube)
+    expect(cube.U[6]).toBe(4)
+    expect(cube.U[7]).toBe(4)
+    expect(cube.U[8]).toBe(4)
+  })
+
+  it('F on solved: R front-col (R[2,5,8]) becomes U-color (0)', () => {
+    const cube = solvedCube()
+    moveF(cube)
+    expect(cube.R[2]).toBe(0)
+    expect(cube.R[5]).toBe(0)
+    expect(cube.R[8]).toBe(0)
+  })
+
+  it('F on solved: D front-row (D[0,1,2]) becomes R-color (1)', () => {
+    const cube = solvedCube()
+    moveF(cube)
+    expect(cube.D[0]).toBe(1)
+    expect(cube.D[1]).toBe(1)
+    expect(cube.D[2]).toBe(1)
+  })
+
+  it('F on solved: L front-col (L[0,3,6]) becomes D-color (3)', () => {
+    const cube = solvedCube()
+    moveF(cube)
+    expect(cube.L[0]).toBe(3)
+    expect(cube.L[3]).toBe(3)
+    expect(cube.L[6]).toBe(3)
+  })
+
+  it('F on solved: R back-col (R[0,3,6]) unchanged', () => {
+    const cube = solvedCube()
+    moveF(cube)
+    expect(cube.R[0]).toBe(1)
+    expect(cube.R[3]).toBe(1)
+    expect(cube.R[6]).toBe(1)
+  })
+
+  it('F on solved: L back-col (L[2,5,8]) unchanged', () => {
+    const cube = solvedCube()
+    moveF(cube)
+    expect(cube.L[2]).toBe(4)
+    expect(cube.L[5]).toBe(4)
+    expect(cube.L[8]).toBe(4)
+  })
+})
+
+describe('moveB physical sticker cycles', () => {
+  it('B on solved: U back-row (U[0,1,2]) becomes R-color (1)', () => {
+    const cube = solvedCube()
+    moveB(cube)
+    expect(cube.U[0]).toBe(1)
+    expect(cube.U[1]).toBe(1)
+    expect(cube.U[2]).toBe(1)
+  })
+
+  it('B on solved: R back-col (R[0,3,6]) becomes D-color (3)', () => {
+    const cube = solvedCube()
+    moveB(cube)
+    expect(cube.R[0]).toBe(3)
+    expect(cube.R[3]).toBe(3)
+    expect(cube.R[6]).toBe(3)
+  })
+
+  it('B on solved: D back-row (D[6,7,8]) becomes L-color (4)', () => {
+    const cube = solvedCube()
+    moveB(cube)
+    expect(cube.D[6]).toBe(4)
+    expect(cube.D[7]).toBe(4)
+    expect(cube.D[8]).toBe(4)
+  })
+
+  it('B on solved: L back-col (L[2,5,8]) becomes U-color (0)', () => {
+    const cube = solvedCube()
+    moveB(cube)
+    expect(cube.L[2]).toBe(0)
+    expect(cube.L[5]).toBe(0)
+    expect(cube.L[8]).toBe(0)
+  })
+
+  it('B on solved: R front-col (R[2,5,8]) unchanged', () => {
+    const cube = solvedCube()
+    moveB(cube)
+    expect(cube.R[2]).toBe(1)
+    expect(cube.R[5]).toBe(1)
+    expect(cube.R[8]).toBe(1)
+  })
+
+  it('B on solved: L front-col (L[0,3,6]) unchanged', () => {
+    const cube = solvedCube()
+    moveB(cube)
+    expect(cube.L[0]).toBe(4)
+    expect(cube.L[3]).toBe(4)
+    expect(cube.L[6]).toBe(4)
+  })
+})
+
 // ── Move inverses: X followed by X' returns to solved ─────────────────────────
 
 describe('move inverses', () => {
