@@ -1965,8 +1965,9 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   min-height: 0;
   min-width: 0;
   position: relative;
-  /* Match terminal theme backdrop so FitAddon “unused” viewport height isn’t raw black */
-  background-color: var(--th-surface1);
+  overflow: hidden;
+  /* Use --th-base (= xterm theme.background) so any FitAddon remainder strip is invisible */
+  background-color: var(--th-base);
 }
 
 /* Lazy TerminalWindow tile — mirrors #terminal layout so FitAddon gets correct dimensions */
@@ -1985,7 +1986,8 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   min-height: 0;
   min-width: 0;
   position: relative;
-  background-color: var(--th-surface1);
+  overflow: hidden;
+  background-color: var(--th-base);
 }
 
 /* ── xterm overrides ───────────────────────────────────────────────────────── */
@@ -6338,7 +6340,7 @@ html.retro-fx .xterm-screen {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   width: 100%;
-  text-align: left;
+  text-align: center;
 }
 .yasb-settings-action:hover { border-color: #f5c2e7; }
 .yasb-settings-action--danger {
