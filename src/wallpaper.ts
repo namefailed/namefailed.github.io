@@ -8,10 +8,12 @@
 
 const WALLPAPER_KEY = 'mrgrey-wallpaper'
 
-/** Apply a wallpaper value to the desktop workspace element.
+/** Apply a wallpaper value to the #desktop element (the wallpaper layer).
+ *  Targets #desktop rather than #desktop-workspace so the matrix canvas and
+ *  yasb-bar are not covered, and the new image replaces the existing background.
  *  Accepts a full URL (http / data:) or any CSS <image> value (gradient). */
 export function applyWallpaper(value: string): void {
-  const el = document.getElementById('desktop-workspace')
+  const el = document.getElementById('desktop')
   if (!el) return
   const trimmed = value.trim()
   if (
@@ -36,9 +38,9 @@ export function setWallpaper(value: string): void {
   window.localStorage.setItem(WALLPAPER_KEY, value.trim())
 }
 
-/** Remove the wallpaper (revert to the CSS background-color from the theme). */
+/** Remove the wallpaper (revert #desktop to its stylesheet background-image). */
 export function clearWallpaper(): void {
-  const el = document.getElementById('desktop-workspace')
+  const el = document.getElementById('desktop')
   if (el) {
     el.style.backgroundImage    = ''
     el.style.backgroundSize     = ''
