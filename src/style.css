@@ -287,8 +287,9 @@ html.retro-fx::before {
   z-index: var(--ui-z-base);
   display: flex;
   flex-direction: column;
-  /* Matches dock slab height (see `--ui-reserve-dock`). Window ↔ dock clearance = `.wm-stack` bottom padding (--ui-gap-wm). */
-  --workspace-dock-reserve: var(--ui-reserve-dock);
+  /* Reserve = dock slab height + the gap-wm offset used by the taskbar's `bottom` property,
+     so the content floor aligns exactly with the top of the floating pill. */
+  --workspace-dock-reserve: calc(var(--ui-reserve-dock) + var(--ui-gap-wm));
   padding-bottom: var(--workspace-dock-reserve);
   box-sizing: border-box;
   transition: padding-bottom var(--ui-duration-slower) var(--ui-easing-emph);
