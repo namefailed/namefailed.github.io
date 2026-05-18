@@ -30,6 +30,8 @@ export interface P5WindowOptions {
 
 const P5_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.0/p5.min.js'
 
+const P5_TIP_KEY = 'mrgrey-p5-tip-seen'
+
 /** Random nonce identifies postMessage events from this tile's iframe. */
 function makeNonce(): string {
   return `p5${Math.random().toString(36).slice(2, 10)}`
@@ -89,6 +91,7 @@ export class P5Window {
   private iframeNonce = makeNonce()
 
   private dropdown: HTMLElement | null = null
+  private tipEl: HTMLElement | null = null
 
   private labelEl!: HTMLElement
   private runBtn!: HTMLButtonElement
@@ -142,6 +145,11 @@ export class P5Window {
     } else {
       const first = P5_EXAMPLES[0]
       if (first) this.runExample(first.label, first.code)
+    }
+
+    // Show a one-time tip explaining the player on first ever open.
+    if (typeof window !== 'undefined' && !window.localStorage.getItem(P5_TIP_KEY)) {
+      window.setTimeout(() => this.mountP5Tip(), 900)
     }
   }
 
@@ -298,7 +306,7 @@ export class P5Window {
     let vfsPath = this.currentVfsPath
     if (!vfsPath) {
       // Sketch came from an Example or drag-drop — persist it before editing.
-      const dir = '/home/namefailed/p5.js sketches'
+      const dir = '/home/namefailed/p5.js'
       vfsMkdir(dir)
       const label = this.currentLabel.endsWith('.js') ? this.currentLabel : `${this.currentLabel}.js`
       const fullPath = `${dir}/${label}`
@@ -317,6 +325,89 @@ export class P5Window {
       content: [],
       editorPath: vfsPath,
     })
+  }
+
+  // ── First-open tip ──────────────────────────────────────────────────────────
+
+  private mountP5Tip(): void {
+    if (this.tipEl || !this.el.isConnected) return
+
+    const tip = document.createElement('div')
+    tip.className = 'p5-tip'
+
+    // Header
+    const hdr = document.createElement('div')
+    hdr.className = 'p5-tip-header'
+
+    const titleEl = document.createElement('span')
+    titleEl.className = 'p5-tip-title'
+    titleEl.innerHTML = `<span aria-hidden="true" class="p5-tip-glyph">◈</span> p5.js`
+
+    const closeBtn = document.createElement('button')
+    closeBtn.type = 'button'
+    closeBtn.className = 'p5-tip-close'
+    closeBtn.setAttribute('aria-label', 'Dismiss tip')
+    closeBtn.textContent = '✕'
+
+    hdr.appendChild(titleEl)
+    hdr.appendChild(closeBtn)
+
+    // Body
+    const body = document.createElement('div')
+    body.className = 'p5-tip-body'
+
+    const intro = document.createElement('p')
+    intro.className = 'p5-tip-intro'
+    intro.textContent = 'A live creative coding sandbox.'
+
+    const list = document.createElement('ul')
+    list.className = 'p5-tip-list'
+    const items: [string, string][] = [
+      ['▶ Run', 'reload the sketch anytime'],
+      ['Edit', 'open in the mini-editor & save to VFS'],
+      ['Examples ▾', 'try built-in demos or drop a .js file'],
+    ]
+    for (const [key, val] of items) {
+      const li = document.createElement('li')
+      li.innerHTML = `<strong>${key}</strong> — ${val}`
+      list.appendChild(li)
+    }
+
+    body.appendChild(intro)
+    body.appendChild(list)
+
+    // Footer
+    const footer = document.createElement('div')
+    footer.className = 'p5-tip-footer'
+    const gotItBtn = document.createElement('button')
+    gotItBtn.type = 'button'
+    gotItBtn.className = 'p5-tip-gotit'
+    gotItBtn.textContent = 'Got it →'
+    footer.appendChild(gotItBtn)
+
+    tip.appendChild(hdr)
+    tip.appendChild(body)
+    tip.appendChild(footer)
+
+    const host = this.el.querySelector<HTMLElement>('.p5-iframe-host')
+    if (!host) return
+    host.appendChild(tip)
+    this.tipEl = tip
+
+    const dismiss = (): void => {
+      if (!this.tipEl) return
+      const el = this.tipEl
+      this.tipEl = null
+      window.localStorage.setItem(P5_TIP_KEY, '1')
+      el.classList.add('p5-tip--out')
+      window.setTimeout(() => el.remove(), 320)
+    }
+
+    closeBtn.addEventListener('click', dismiss)
+    gotItBtn.addEventListener('click', dismiss)
+    // Dismiss automatically when user first interacts with the toolbar
+    this.runBtn.addEventListener('click', dismiss, { once: true })
+    this.editBtn.addEventListener('click', dismiss, { once: true })
   }
 
   // ── Error banner ────────────────────────────────────────────────────────────
@@ -381,7 +472,7 @@ export class P5Window {
     const input = document.createElement('input')
     input.type = 'text'
     input.className = 'p5-vfs-modal-input'
-    input.placeholder = '/home/namefailed/p5.js sketches/my-sketch.js'
+    input.placeholder = '/home/namefailed/p5.js/my-sketch.js'
     input.value = this.currentVfsPath ?? ''
 
     const row = document.createElement('div')

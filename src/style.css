@@ -1168,7 +1168,11 @@ html.retro-fx::before {
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
   border: 1px solid rgba(var(--th-accent-rgb), 0.14);
-  border-radius: var(--ui-radius-lg);
+  /* Match the desktop corner radius so the panel corners look nested, not sharp.
+     overflow: clip prevents backdrop-filter from bleeding outside the radius. */
+  border-radius: var(--ui-radius-md-inner);
+  overflow: clip;
+  overflow-y: auto;
   box-shadow:
     0 12px 48px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -6176,14 +6180,15 @@ html.retro-fx .xterm-screen {
 /* ─── hint bubbles ────────────────────────────────────────── */
 .hint-bubble {
   position: absolute;
-  background: #f5c2e7;
-  color: #1e1e2e;
-  padding: 4px 10px 4px 12px;
-  border-radius: 14px;
+  background: var(--th-base, #1e1e2e);
+  border: 1px solid rgba(var(--th-accent-rgb, 203,166,247), 0.35);
+  color: var(--th-text, #cdd6f4);
+  padding: 5px 10px 5px 12px;
+  border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -6193,18 +6198,132 @@ html.retro-fx .xterm-screen {
 .hint-bubble-close {
   background: transparent;
   border: 0;
-  color: #1e1e2e;
-  font-size: 14px;
+  color: var(--th-subtext0, #a6adc8);
+  font-size: 13px;
   line-height: 1;
   cursor: pointer;
   padding: 0 0 0 4px;
-  opacity: 0.55;
+  opacity: 0.7;
+  transition: opacity var(--ui-duration-fast), color var(--ui-duration-fast);
 }
-.hint-bubble-close:hover { opacity: 1; }
+.hint-bubble-close:hover { opacity: 1; color: var(--th-text, #cdd6f4); }
 
 @keyframes hint-pop {
   from { transform: translateY(4px) scale(0.95); opacity: 0; }
   to   { transform: translateY(0)   scale(1);    opacity: 1; }
+}
+
+/* ─── p5.js first-open tip card ──────────────────────────────── */
+.p5-tip {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  width: 238px;
+  z-index: 20;
+  background: var(--th-base, #1e1e2e);
+  border: 1px solid var(--th-surface2, #585b70);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--th-accent-rgb, 203,166,247), 0.06);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  animation: wg-in 0.28s var(--ui-easing-smooth) both;
+  pointer-events: auto;
+}
+
+.p5-tip--out {
+  animation: wg-out 0.28s var(--ui-easing-smooth) forwards !important;
+}
+
+.p5-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--th-surface1, #45475a);
+}
+
+.p5-tip-glyph {
+  color: var(--th-accent, #cba6f7);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.p5-tip-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--th-text, #cdd6f4);
+}
+
+.p5-tip-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--th-subtext0, #a6adc8);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color var(--ui-duration-fast), background var(--ui-duration-fast);
+}
+.p5-tip-close:hover {
+  color: var(--th-text, #cdd6f4);
+  background: rgba(var(--th-overlay-rgb), 0.15);
+}
+
+.p5-tip-body {
+  padding: 10px 14px 8px;
+}
+
+.p5-tip-intro {
+  margin: 0 0 8px;
+  color: var(--th-subtext1, #bac2de);
+  line-height: 1.5;
+  font-size: 11px;
+}
+
+.p5-tip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p5-tip-list li {
+  color: var(--th-text, #cdd6f4);
+  line-height: 1.4;
+  font-size: 11px;
+}
+
+.p5-tip-list strong {
+  color: var(--th-accent, #cba6f7);
+  font-weight: 600;
+}
+
+.p5-tip-footer {
+  padding: 6px 14px 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.p5-tip-gotit {
+  background: rgba(var(--th-accent-rgb, 203,166,247), 0.12);
+  border: 1px solid rgba(var(--th-accent-rgb, 203,166,247), 0.3);
+  color: var(--th-accent, #cba6f7);
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background var(--ui-duration-fast), border-color var(--ui-duration-fast);
+}
+.p5-tip-gotit:hover {
+  background: rgba(var(--th-accent-rgb, 203,166,247), 0.2);
+  border-color: rgba(var(--th-accent-rgb, 203,166,247), 0.5);
 }
 
 /* ─── settings panel action buttons ──────────────────────────── */

@@ -24,8 +24,9 @@ import { P5_EXAMPLES, sketchFilename } from './p5-sketches'
  *   v5 — renamed sketches/ → p5.js sketches/
  *   v6 — added wallpapers/ folder with theme-matched Unsplash URLs
  *   v7 — added midnight.jpg wallpaper
+ *   v8 — renamed p5.js sketches/ → p5.js/  and  wallpapers/ → Wallpapers/
  */
-const STORAGE_KEY = 'portfolio-vfs-v7-namefailed-home'
+const STORAGE_KEY = 'portfolio-vfs-v8-namefailed-home'
 
 /** Debounce delay for VFS saves to reduce localStorage writes during rapid operations. */
 const SAVE_DEBOUNCE_MS = 150
@@ -123,7 +124,7 @@ function windowResized() { resizeCanvas(windowWidth, windowHeight); }
   for (const ex of P5_EXAMPLES) {
     sketches.c[sketchFilename(ex.label)] = { t: 'f', body: ex.code }
   }
-  user.c['p5.js sketches'] = sketches
+  user.c['p5.js'] = sketches
 
   // Wallpapers — each file body is a plain image URL.
   // The file-explorer treats any .jpg/.png/.webp as an image and shows
@@ -139,7 +140,7 @@ function windowResized() { resizeCanvas(windowWidth, windowHeight); }
   walls.c['one-dark.jpg']     = wp('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80')
   walls.c['cherry-blossom.jpg'] = wp('https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1920&q=80')
   walls.c['midnight.jpg']       = wp('https://images.unsplash.com/photo-1632230997264-b2bfc65cb8b4?w=1920&q=80')
-  user.c['wallpapers'] = walls
+  user.c['Wallpapers'] = walls
 
   const cfg = mkEmptyDir()
   cfg.c['user-dirs.dirs'] = {

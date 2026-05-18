@@ -70,7 +70,7 @@ export function mountWelcomeGuide(): void {
 
   const intro = document.createElement('p')
   intro.className = 'welcome-guide-intro'
-  intro.textContent = 'Portfolio as a tiling window manager. Here\'s how it works:'
+  intro.textContent = 'This portfolio is a tiling window manager. Here\'s how it works:'
   body.appendChild(intro)
 
   const list = document.createElement('ul')
