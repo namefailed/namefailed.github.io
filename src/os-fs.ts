@@ -129,18 +129,36 @@ function windowResized() { resizeCanvas(windowWidth, windowHeight); }
   // Wallpapers — each file body is a plain image URL.
   // The file-explorer treats any .jpg/.png/.webp as an image and shows
   // "set as wallpaper" instead of "open in editor" for these files.
+  // All wallpapers are sourced from github.com/zhichaoh/catppuccin-wallpapers.
   const walls = mkEmptyDir()
   const wp = (url: string): FsFile => ({ t: 'f', body: url })
-  walls.c['mrgrey.jpg']       = wp('/wallpaper.jpg')
-  walls.c['mocha.jpg']        = wp('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920&q=80')
-  walls.c['dracula.jpg']      = wp('https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920&q=80')
-  walls.c['nord.jpg']         = wp('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80')
-  walls.c['gruvbox.jpg']      = wp('https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80')
-  walls.c['tokyo-night.jpg']  = wp('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80')
-  walls.c['solarized.jpg']    = wp('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80')
-  walls.c['one-dark.jpg']     = wp('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80')
-  walls.c['cherry-blossom.jpg'] = wp('https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1920&q=80')
-  walls.c['midnight.jpg']       = wp('https://images.unsplash.com/photo-1632230997264-b2bfc65cb8b4?w=1920&q=80')
+  const CP = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main'
+
+  // minimalistic
+  walls.c['cats.png']                = wp(`${CP}/minimalistic/cats.png`)
+  walls.c['unicat.png']              = wp(`${CP}/minimalistic/unicat.png`)
+  walls.c['flamingo-unicat.png']     = wp(`${CP}/minimalistic/flamingo_unicat.png`)
+  walls.c['blue-unicat.png']         = wp(`${CP}/minimalistic/blue_unicat.png`)
+  walls.c['pink-unicat.png']         = wp(`${CP}/minimalistic/pink_unicat.png`)
+  walls.c['teal-unicat.png']         = wp(`${CP}/minimalistic/teal_unicat.png`)
+  walls.c['dark-cat.png']            = wp(`${CP}/minimalistic/dark-cat.png`)
+  walls.c['gradient-synth-cat.png']  = wp(`${CP}/minimalistic/gradient-synth-cat.png`)
+  // landscapes
+  walls.c['clearnight.jpg']          = wp(`${CP}/landscapes/Clearnight.jpg`)
+  walls.c['yosemite.png']            = wp(`${CP}/landscapes/yosemite.png`)
+  walls.c['evening-sky.png']         = wp(`${CP}/landscapes/evening-sky.png`)
+  // gradients
+  walls.c['blue-green.png']          = wp(`${CP}/gradients/blue_green.png`)
+  walls.c['magenta-pink.png']        = wp(`${CP}/gradients/magenta_pink.png`)
+  walls.c['flamingo-peach.png']      = wp(`${CP}/gradients/flamingo_peach.png`)
+  // waves
+  walls.c['cat-waves.png']           = wp(`${CP}/waves/cat-waves.png`)
+  // mandelbrot
+  walls.c['mandelbrot-lavender.png'] = wp(`${CP}/mandelbrot/mandelbrot_full_lavender.png`)
+  walls.c['mandelbrot-pink.png']     = wp(`${CP}/mandelbrot/mandelbrot_full_pink.png`)
+  // misc
+  walls.c['lonely-fish.png']         = wp(`${CP}/misc/lonely-fish.png`)
+  walls.c['comfy-home.png']          = wp(`${CP}/misc/comfy-home.png`)
   user.c['Wallpapers'] = walls
 
   const cfg = mkEmptyDir()

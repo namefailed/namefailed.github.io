@@ -43,8 +43,10 @@ describe('WALLPAPER_KEY', () => {
     expect(WALLPAPER_KEY).toBe('mrgrey-wallpaper')
   })
 
-  it('WALLPAPER_DEFAULT is the jpg path', () => {
-    expect(WALLPAPER_DEFAULT).toBe('/wallpaper.jpg')
+  it('WALLPAPER_DEFAULT is a Catppuccin wallpaper URL', () => {
+    expect(WALLPAPER_DEFAULT).toBe(
+      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/cats.png',
+    )
   })
 })
 

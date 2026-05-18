@@ -12,8 +12,8 @@
 import { storageGet, storageSet, storageRemove } from './storage'
 
 export const WALLPAPER_KEY = 'mrgrey-wallpaper'
-/** Default wallpaper path — mirrors the CSS background-image on #desktop. */
-export const WALLPAPER_DEFAULT = '/wallpaper.jpg'
+/** Default wallpaper — Catppuccin Mocha cats (matches the default theme). */
+export const WALLPAPER_DEFAULT = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/cats.png'
 
 /** Apply a wallpaper value to the #desktop element (the wallpaper layer).
  *  Targets #desktop rather than #desktop-workspace so the matrix canvas and
