@@ -262,7 +262,7 @@ html.retro-fx::before {
   display: flex;
   flex-direction: column;
   background-color: var(--th-desktop-bg);
-  background-image: radial-gradient(ellipse at 50% 55%, var(--th-base) 0%, var(--th-mantle) 60%, var(--th-crust) 100%);
+  background-image: radial-gradient(ellipse at 50% 55%, var(--th-surface1) 0%, var(--th-mantle) 60%, var(--th-desktop-bg) 100%);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1962,8 +1962,8 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   min-width: 0;
   position: relative;
   overflow: hidden;
-  /* Use --th-base (= xterm theme.background) so any FitAddon remainder strip is invisible */
-  background-color: var(--th-base);
+  /* Use --th-surface1 (= xterm theme.background) so any FitAddon remainder strip is invisible */
+  background-color: var(--th-surface1);
 }
 
 /* Lazy TerminalWindow tile — mirrors #terminal layout so FitAddon gets correct dimensions */
@@ -1983,7 +1983,7 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
   min-width: 0;
   position: relative;
   overflow: hidden;
-  background-color: var(--th-base);
+  background-color: var(--th-surface1);
 }
 
 /* ── xterm overrides ───────────────────────────────────────────────────────── */
@@ -1995,14 +1995,15 @@ body.resizing-v, body.resizing-v * { cursor: row-resize !important; }
 
 .xterm { height: 100%; }
 
-/* Match xterm's two-class specificity so theme colour wins over the #000 default. */
+/* xterm injects its stylesheet at runtime (appended <style> tag), so even equal-specificity
+ * rules in our static CSS lose to it in cascade order. !important is the correct override. */
 .xterm .xterm-viewport {
   overflow-y: auto !important;
   scrollbar-gutter: stable;
   scrollbar-width: auto;
   scrollbar-color: var(--th-scroll-thumb) rgba(0, 0, 0, 0.2);
   /* Fills any sub-row gap between the canvas bottom edge and the viewport edge. */
-  background-color: var(--th-base);
+  background-color: var(--th-surface1) !important;
 }
 
 .xterm .xterm-viewport::-webkit-scrollbar {
@@ -3827,7 +3828,7 @@ html.retro-fx .xterm-screen {
   color: var(--th-text);
   /* Solid base prevents GPU-compositing flash (transparent → semi-opaque transition
      briefly shows the pink accent behind the window during layer promotion). */
-  background: var(--th-base, #1e1e2e);
+  background: var(--th-surface1);
   border: 1px solid transparent;
   border-radius: var(--ui-radius-sm);
   cursor: pointer;
@@ -4125,7 +4126,7 @@ html.retro-fx .xterm-screen {
   min-height: 0;
   border: none;
   border-radius: 0 0 var(--ui-radius-sm) var(--ui-radius-sm);
-  background: var(--th-base);
+  background: var(--th-surface1);
 }
 
 /* Full-screen tip when focusing the browser URL bar */
@@ -4236,7 +4237,7 @@ html.retro-fx .xterm-screen {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--th-base);
+  color: var(--th-surface1);
   background: rgba(var(--th-accent-rgb), 0.92);
   border: none;
   border-radius: 8px;
@@ -6191,7 +6192,7 @@ html.retro-fx .xterm-screen {
 /* ─── hint bubbles ────────────────────────────────────────── */
 .hint-bubble {
   position: absolute;
-  background: var(--th-base, #1e1e2e);
+  background: var(--th-surface1);
   border: 1px solid rgba(var(--th-accent-rgb, 203,166,247), 0.35);
   color: var(--th-text, #cdd6f4);
   padding: 5px 10px 5px 12px;
@@ -6231,7 +6232,7 @@ html.retro-fx .xterm-screen {
   left: 14px;
   width: 238px;
   z-index: 20;
-  background: var(--th-base, #1e1e2e);
+  background: var(--th-surface1);
   border: 1px solid var(--th-surface2, #585b70);
   border-radius: 10px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--th-accent-rgb, 203,166,247), 0.06);
