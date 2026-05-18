@@ -6195,7 +6195,7 @@ html.retro-fx .xterm-screen {
   background: var(--th-surface1);
   border: 1px solid rgba(var(--th-accent-rgb, 203,166,247), 0.35);
   color: var(--th-text, #cdd6f4);
-  padding: 5px 10px 5px 12px;
+  padding: 5px 10px;
   border-radius: 8px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;

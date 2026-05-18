@@ -1388,7 +1388,11 @@ export class Desktop {
     // Ctrl+K → previous window up in column (vim k = up), Ctrl+J → next window down (vim j = down)
     if (key === 'h') { void this.openWindow({ command: 'terminal', title: 'terminal', content: [] }); return }
     if (key === 'l') {
-      if (!this.focusedId && this.windows[0]) this.focusWindow(this.windows[0])
+      // From terminal or no focus → enter the right pane (first non-terminal window)
+      if (this.focusedId === null || this.focusedId === 'terminal') {
+        const firstContent = this.windows.find(w => w.command !== 'terminal')
+        if (firstContent) this.focusWindow(firstContent)
+      }
       return
     }
     if (key === 'k') { this.focusLeft(); return }
