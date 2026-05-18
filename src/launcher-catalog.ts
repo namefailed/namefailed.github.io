@@ -56,18 +56,18 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   | { kind: 'terminal'; label: string; glyph: string }
   | { kind: 'app'; cmd: string; label: string; glyph: string }
 > = [
-  { kind: 'terminal', label: 'Terminal', glyph: '~' },
-  { kind: 'app', cmd: 'browse', label: 'Browse', glyph: 'w' },
-  { kind: 'app', cmd: 'explorer', label: 'Files', glyph: '▣' },
-  { kind: 'app', cmd: 'edit', label: 'Editor', glyph: 'E' },
-  { kind: 'app', cmd: 'resume', label: 'Resume', glyph: 'R' },
+  { kind: 'app', cmd: 'whoami',   label: 'About me', glyph: '☺' },
+  { kind: 'app', cmd: 'browse',   label: 'Browse',   glyph: 'w' },
+  { kind: 'app', cmd: 'links',    label: 'Contact',  glyph: '✉' },
+  { kind: 'app', cmd: 'edit',     label: 'Editor',   glyph: 'E' },
+  { kind: 'app', cmd: 'explorer', label: 'Files',    glyph: '▣' },
+  { kind: 'app', cmd: 'p5',       label: 'p5.js',    glyph: 'p5' },
+  { kind: 'app', cmd: 'paint',    label: 'Paint',    glyph: '◐' },
+  { kind: 'app', cmd: 'pong',     label: 'Pong',     glyph: '◎' },
   { kind: 'app', cmd: 'projects', label: 'Projects', glyph: '{}' },
-  { kind: 'app', cmd: 'whoami', label: 'About me', glyph: '☺' },
-  { kind: 'app', cmd: 'links', label: 'Contact', glyph: '✉' },
-  { kind: 'app', cmd: 'paint', label: 'Paint', glyph: '◐' },
-  { kind: 'app', cmd: 'snake', label: 'Snake', glyph: '≈' },
-  { kind: 'app', cmd: 'pong', label: 'Pong', glyph: '◎' },
-  { kind: 'app', cmd: 'p5', label: 'p5.js', glyph: 'p5' },
+  { kind: 'app', cmd: 'resume',   label: 'Resume',   glyph: 'R' },
+  { kind: 'app', cmd: 'snake',    label: 'Snake',    glyph: '≈' },
+  { kind: 'terminal',             label: 'Terminal', glyph: '~' },
 ]
 
 /** Hover/focus on launcher row → kick dynamic import before click */

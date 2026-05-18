@@ -64,9 +64,11 @@ export function appsFolderTiles(): readonly DesktopTile[] {
   )
 }
 
-/** Games subset of the Apps folder (paint, snake, pong, p5). */
+/** Games subset of the Apps folder (paint, snake, pong, p5) — sorted A→Z. */
 export function gameFolderTiles(): readonly DesktopTile[] {
-  return TILES.filter(t => GAME_CMDS.has(t.cmd))
+  return [...TILES.filter(t => GAME_CMDS.has(t.cmd))].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  )
 }
 
 // GRID_CELL must equal the tile step (tile-width + gap) so that default positions
