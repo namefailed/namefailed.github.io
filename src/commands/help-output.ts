@@ -125,7 +125,7 @@ export function renderHelpVerboseRoster(registry: CommandRegistry): string[] {
     `  ${c.dim}For ${c.bold}one${c.reset}${c.dim} item only, skip this list and run ${c.blue}help resume${c.reset}${c.dim}-style.${c.reset}`,
   )
   lines.push(
-    `  ${c.dim}${c.bold}Shortcuts:${c.reset} ${c.blue}Ctrl+T${c.reset}${c.dim}/${c.blue}Ctrl+D${c.reset}${c.dim}: command bar ↔ launcher · ${c.blue}Ctrl+H/L${c.reset}${c.dim}: terminal ↔ pane · ${c.blue}Ctrl+K/J${c.reset}${c.dim}: prev/next window · ${c.blue}Ctrl+1–9${c.reset}${c.dim}: dock slots · ${c.blue}Ctrl+Q/M/F${c.reset}${c.dim}: close/shrink/enlarge.${c.reset}`,
+    `  ${c.dim}${c.bold}Shortcuts:${c.reset} ${c.blue}Ctrl+T${c.reset}${c.dim}/${c.blue}Ctrl+D${c.reset}${c.dim}: command bar ↔ launcher · ${c.blue}Ctrl+H/L${c.reset}${c.dim}: focus window ←/→ · ${c.blue}Ctrl+K/J${c.reset}${c.dim}: prev/next window · ${c.blue}Ctrl+1–9${c.reset}${c.dim}: dock slots · ${c.blue}Ctrl+Q/M/F${c.reset}${c.dim}: close/shrink/enlarge.${c.reset}`,
   )
   lines.push('')
 
@@ -219,7 +219,7 @@ export function renderHelpCompactRoster(registry: CommandRegistry): string[] {
     `  ${c.pink}Portfolio OS${c.reset}  ${c.dim}${c.bold}Résumé and work samples${c.reset}${c.dim} staged like a workstation you already recognise.${c.reset}`,
   )
   lines.push(
-    `  ${c.blue}Ctrl+T${c.reset}${c.dim}/${c.blue}Ctrl+D${c.reset}${c.dim}: command bar ↔ launcher · ${c.blue}Ctrl+H/L${c.reset}${c.dim}: terminal ↔ pane · ${c.blue}Ctrl+K/J${c.reset}${c.dim}: prev/next window · ${c.blue}Ctrl+Q/M/F${c.reset}${c.dim}: close/shrink/enlarge.${c.reset}`,
+    `  ${c.blue}Ctrl+T${c.reset}${c.dim}/${c.blue}Ctrl+D${c.reset}${c.dim}: command bar ↔ launcher · ${c.blue}Ctrl+H/L${c.reset}${c.dim}: focus window ←/→ · ${c.blue}Ctrl+K/J${c.reset}${c.dim}: prev/next window · ${c.blue}Ctrl+Q/M/F${c.reset}${c.dim}: close/shrink/enlarge.${c.reset}`,
   )
   lines.push('')
   lines.push(
@@ -273,11 +273,11 @@ export function renderKeybindsLegend(): string[] {
     "",
     sec("Window manager  (global, always active)"),
     "",
-    kbRow("Ctrl+T",    "open / focus terminal app",  "Ctrl+D",    "toggle app launcher"),
-    kbRow("Ctrl+1-9",  "focus Nth open window",       "Ctrl+H",    "focus terminal (← left)"),
-    kbRow("Ctrl+Q",    "close focused window",        "Ctrl+L",    "enter pane (→ right)"),
-    kbRow("Ctrl+M",    "minimize focused window",     "Ctrl+K",    "previous window (↑ up)"),
-    kbRow("Ctrl+F",    "maximize / restore",          "Ctrl+J",    "next window (↓ down)"),
+    kbRow("Ctrl+T",    "focus terminal",              "Ctrl+D",    "toggle app launcher"),
+    kbRow("Ctrl+1-9",  "focus Nth open window",       "Ctrl+H",    "focus window ←"),
+    kbRow("Ctrl+Q",    "close focused window",        "Ctrl+L",    "focus window →"),
+    kbRow("Ctrl+M",    "minimize focused window",     "Ctrl+K",    "focus window ↑"),
+    kbRow("Ctrl+F",    "maximize / restore",          "Ctrl+J",    "focus window ↓"),
     kbRow("Escape",    "close launcher overlay"),
     "",
     sec("Terminal  (vim-style input layer)"),

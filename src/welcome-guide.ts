@@ -16,22 +16,22 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
   {
     id: 'open',
     glyph: '◐',
-    html: 'Click <strong>Portfolio</strong> or <strong>Apps</strong> to open an app',
+    html: 'Click <strong>Portfolio</strong> or <strong>Apps</strong> to open a tile',
   },
   {
     id: 'terminal',
     glyph: '~',
-    html: 'Type in the terminal — try <code>help</code> or <code>resume</code>',
+    html: 'Try the terminal — type <code>help</code> or <code>resume</code>',
   },
   {
     id: 'drag',
     glyph: '⠿',
-    html: 'Drag folders to rearrange &nbsp;·&nbsp; <kbd>Ctrl+D</kbd> for all apps',
+    html: 'Drag the folder icons to rearrange the desktop',
   },
   {
     id: 'keys',
     glyph: '⌨',
-    html: '<kbd>Ctrl+T</kbd> terminal &nbsp;·&nbsp; <kbd>Ctrl+D</kbd> launcher',
+    html: '<kbd>Ctrl+T</kbd> focuses terminal &nbsp;·&nbsp; <kbd>Ctrl+D</kbd> opens launcher',
   },
 ]
 
