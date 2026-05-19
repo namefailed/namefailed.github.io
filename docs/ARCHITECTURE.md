@@ -9,7 +9,7 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 | `index.html` | Desktop shell — CRT monitor frame, YASB status bar, launcher overlay, tiling panes, floating dock |
 | `static/index.html` | Brochure page — same portfolio content, no OS chrome. Mobile auto-redirects here (viewport ≤ 768px) |
 | `src/main.ts` | Vite entry: imports CSS, calls `bootstrapShellUi()` |
-| `src/bootstrap-shell.ts` | Startup sequence: theme → sound → Desktop → TerminalApp → Matrix rain. Order matters |
+| `src/bootstrap-shell.ts` | Startup sequence: boot splash → theme → retro-fx → sound → Desktop → matrix rain. Terminal is a lazy tile, not pre-mounted. |
 | `src/static/main.ts` | Brochure entry: mounts banner, hero, sections, scroll-spy, animations |
 
 ## Module Layers

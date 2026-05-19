@@ -61,7 +61,7 @@ Pre-loaded in `~/sketches/` (VFS):
 | `Ctrl+Q` | Close focused window |
 | `Ctrl+M` | Minimise focused window |
 | `Ctrl+F` | Maximise / restore |
-| `Ctrl+1–9` | Activate dock slot N |
+| `Ctrl+1–9` | Focus Nth open window |
 
 ## Scripts
 
@@ -87,7 +87,7 @@ The deploy publishes `dist/`, not the repo root. `index.html` at the root only w
 
 ## Testing
 
-297 tests across 18 test files:
+414 tests across 25 test files:
 - `npm test` — run Vitest suite
 - Tests co-located with source: `module.ts` → `module.test.ts`
-- Coverage: VFS, vim input, storage, ANSI, CLI tools, window chrome, matrix rain, boot splash, rubik model, p5 sketches, launcher catalog, desktop tiles, intro toasts, hint bubbles
+- Coverage: VFS, vim input, storage, ANSI, CLI tools, window chrome, matrix rain, boot splash, rubik model, p5 sketches, launcher catalog, desktop tiles, intro toasts, hint bubbles, wallpaper, first-visit flags, BSP layout, theme control
