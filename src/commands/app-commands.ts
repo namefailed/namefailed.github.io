@@ -103,6 +103,11 @@ export const appCommands: Record<string, Command> = {
     run: () => [],
   },
 
+  cube: {
+    description: 'Rubik\'s cube — drag to spin; U/D/L/R/F/B keys; scramble / solve; algorithm picker',
+    run: () => [],
+  },
+
   // ── UI toggles (handled by terminal.ts command interceptor) ─────────────────
 
   retro: {
