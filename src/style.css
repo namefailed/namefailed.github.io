@@ -5871,7 +5871,7 @@ html.retro-fx .xterm-screen {
   position: fixed;
   /* Align with desktop content edge: monitor inset + monitor padding + dock height + wm gap */
   bottom: calc(1vh + var(--ui-monitor-pad) + var(--ui-gap-wm) + var(--ui-reserve-dock) + var(--ui-gap-wm));
-  left: calc(1vw + var(--ui-monitor-pad) + var(--ui-gap-wm));
+  left: calc(1vw + var(--ui-monitor-pad) + var(--ui-gap-wm) + var(--ui-reserve-dock));
   width: 272px;
   background: var(--th-surface0, #313244);
   border: 1px solid var(--th-surface1, #45475a);
