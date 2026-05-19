@@ -6003,6 +6003,19 @@ html.retro-fx .xterm-screen {
   color: var(--th-green, #a6e3a1);
 }
 
+@keyframes desktop-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 .desktop-tile {
   position: absolute;
   width: 76px;
@@ -6020,7 +6033,13 @@ html.retro-fx .xterm-screen {
   z-index: 1; /* behind tiling panes (z-index: 2), above matrix (z-index: 0) */
   transition: transform 90ms ease, border-color 130ms ease, box-shadow 130ms ease,
     background 130ms ease;
+  animation: desktop-tile-in 0.55s var(--ui-easing-out-back) both;
 }
+
+/* Stagger left-to-right: Portfolio → Apps → Games */
+.desktop-tile--folder.desktop-tile--portfolio { animation-delay: 0.12s; }
+.desktop-tile--folder.desktop-tile--fun       { animation-delay: 0.20s; }
+.desktop-tile--folder.desktop-tile--games     { animation-delay: 0.28s; }
 .desktop-tile:hover,
 .desktop-tile:focus-visible {
   background: rgba(49, 50, 68, 0.92);
