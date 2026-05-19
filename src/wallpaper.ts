@@ -12,8 +12,8 @@
 import { storageGet, storageSet, storageRemove } from './storage'
 
 export const WALLPAPER_KEY = 'mrgrey-wallpaper'
-/** Default wallpaper — Catppuccin Mocha cats (matches the default theme). */
-export const WALLPAPER_DEFAULT = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/cats.png'
+/** Default wallpaper — Mandelbrot lavender (shown on first boot). */
+export const WALLPAPER_DEFAULT = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/mandelbrot/mandelbrot_full_lavender.png'
 
 /** Apply a wallpaper value to the #desktop element (the wallpaper layer).
  *  Targets #desktop rather than #desktop-workspace so the matrix canvas and
@@ -60,8 +60,9 @@ export function clearWallpaper(): void {
   window.dispatchEvent(new CustomEvent<null>('mrgrey-wallpaper-change', { detail: null }))
 }
 
-/** Read any saved wallpaper from localStorage and apply it on startup. */
+/** Read any saved wallpaper from localStorage and apply it on startup.
+ *  Falls back to WALLPAPER_DEFAULT when no preference has been saved. */
 export function loadSavedWallpaper(): void {
   const saved = storageGet(WALLPAPER_KEY)
-  if (saved) applyWallpaper(saved)
+  applyWallpaper(saved || WALLPAPER_DEFAULT)
 }

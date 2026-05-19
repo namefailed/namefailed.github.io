@@ -43,9 +43,9 @@ describe('WALLPAPER_KEY', () => {
     expect(WALLPAPER_KEY).toBe('mrgrey-wallpaper')
   })
 
-  it('WALLPAPER_DEFAULT is a Catppuccin wallpaper URL', () => {
+  it('WALLPAPER_DEFAULT is the Mandelbrot lavender wallpaper URL', () => {
     expect(WALLPAPER_DEFAULT).toBe(
-      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/cats.png',
+      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/mandelbrot/mandelbrot_full_lavender.png',
     )
   })
 })
@@ -136,8 +136,8 @@ describe('loadSavedWallpaper', () => {
     expect(mockEl.style.backgroundImage).toBe('url("/wallpaper.jpg")')
   })
 
-  it('does nothing when no wallpaper is stored', () => {
+  it('applies the default wallpaper when no wallpaper is stored', () => {
     loadSavedWallpaper()
-    expect(mockEl.style.backgroundImage).toBeUndefined()
+    expect(mockEl.style.backgroundImage).toBe(`url("${WALLPAPER_DEFAULT}")`)
   })
 })
