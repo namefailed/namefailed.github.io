@@ -5,38 +5,15 @@
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
-import {
-  getActiveTerminalTheme,
-  getActivePack,
-  getThemeId,
-  listThemeSummaries,
-  applyTheme,
-  c,
-} from './theme'
 import { commands } from './commands/index'
-import { PORTFOLIO_PROJECTS, resumeWindowSplitPayload } from './content/portfolio'
 import { BANNER } from './ascii'
 import { VimInput } from './vim'
 import type { VimMode } from './vim'
 import type { WindowSpec } from './desktop'
-import { getRetroFx, setRetroFx, toggleRetroFx } from './retro-fx'
-import { getMatrixBgHandle } from './matrix-bg'
-import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
-import { vfsNormalize, vfsPromptPath, vfsPwd } from './os-fs'
-import {
-  playOsSound,
-  resumeAudioIfNeeded,
-  setSoundEnabled,
-  isSoundEnabled,
-  toggleSound,
-  getSoundVolume,
-} from './os-sound'
-import { syncSettingsSoundToggle } from './os-systray'
-import { windowSpawnEcho } from './cli-window-echo'
-import { randomPick } from './random-pick'
-import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog'
+import { dispatchTerminalCommand } from './terminal-command-router'
+import { getActiveTerminalTheme, c } from './theme'
+import { vfsPromptPath } from './os-fs'
 import { createWindowChrome } from './window-chrome'
-import { resolveStaticPortfolioHref } from './static-portfolio-href'
 import { prefersReducedMotion } from './prefers-reduced-motion'
 
 /**
@@ -280,12 +257,11 @@ export class TerminalApp {
   private async execute(raw: string): Promise<void> {
     if (!raw) { this.prompt(); return }
 
-    // Notify welcome guide on first command
     window.dispatchEvent(new CustomEvent('mrgrey-terminal-cmd'))
 
     this.isProcessing = true
     const [rawName, ...args] = raw.split(/\s+/)
-    let name = rawName
+    const name = rawName
     const cmd = commands[name]
 
     if (!cmd) {
@@ -299,280 +275,24 @@ export class TerminalApp {
     } else {
       if (cmd.loadMs) await this.showSpinner(name, cmd.loadMs)
 
-      if (name === 'static' || name === 'plain' || name === 'x') {
-        const target = resolveStaticPortfolioHref()
-        this.writeln('')
-        this.writeln(`  ${c.dim}Opening the static portfolio…${c.reset}`)
-        this.writeln(`  ${c.green}→${c.reset} ${c.blue}${target}${c.reset}`)
-        this.writeln('')
-        this.history.push(raw)
-        this.historyIndex = -1
-        this.isProcessing = false
-        window.location.assign(target)
-        return
+      const host = {
+        writeln: (line: string) => this.writeln(line),
+        writeLines: (lines: string[]) => this.writeLines(lines),
+        clearTerminal: () => this.xterm.clear(),
+        onOpenWindow: (spec: WindowSpec) => this.onOpenWindow(spec),
+        showSpinner: (label: string, ms: number) => this.showSpinner(label, ms),
+        refreshTerminalTheme: () => this.refreshTerminalTheme(),
+        showMotd: () => this.showMotd(),
+        recordHistory: (entry: string) => {
+          this.history.push(entry)
+          this.historyIndex = -1
+        },
       }
 
-      if (name === 'clear') {
-        const sub = args[0]?.toLowerCase()
-        if (sub === '--help' || sub === '-h') {
-          this.writeln('')
-          this.writeln(
-            `  ${c.blue}clear${c.reset} ${c.dim}— blank scrollback; prompt stays thematic.${c.reset}`,
-          )
-          this.writeln(
-            `  ${c.blue}clear --cow${c.reset} ${c.dim}— clear, then microscopic cow haiku.${c.reset}`,
-          )
-          this.writeln('')
-        } else {
-          this.xterm.clear()
-          if (sub === '--cow') {
-            this.writeln('')
-            this.writeln(`  ${c.dim}< moo.${c.reset}`)
-            this.writeln(`   ${c.dim}\\${c.green}‾${c.reset}${c.dim}—— now you see nothing.${c.reset}`)
-            this.writeln('')
-          }
-        }
-      } else if (name === 'retro') {
-        const sub = args[0]?.toLowerCase()
-        if (sub === 'status') {
-          const on = getRetroFx()
-          this.writeln(
-            `  ${c.green}crt profile:${c.reset} ${on ? 'warped phosphor nostalgia' : 'flat modern cowardice'}`,
-          )
-          this.writeln(`  ${c.dim}${randomPick([
-            'vignette strength: bureaucracy × 3',
-            'grain budget: confiscated Super 8 crumbs',
-            'scanline pitch: ethically questionable',
-          ])}${c.reset}`)
-        } else if (sub === '--help' || sub === '-h') {
-          this.writeln('')
-          this.writeln(
-            `  ${c.blue}retro${c.reset}${c.dim} · ${c.blue}on${c.dim} │ ${c.blue}off${c.dim} │ bare word toggles · ${c.blue}status${c.reset}`,
-          )
-          this.writeln('')
-        } else if (sub === 'on') setRetroFx(true)
-        else if (sub === 'off') setRetroFx(false)
-        else toggleRetroFx()
-        if (!sub || sub === 'on' || sub === 'off' || (sub !== 'status' && sub !== '--help' && sub !== '-h')) {
-          const on = getRetroFx()
-          if (sub !== 'status' && sub !== '--help' && sub !== '-h') {
-            this.writeln(
-              on
-                ? `  ${c.green}retro on${c.reset}  ${c.dim}(grain · scanlines · guilty nostalgia)${c.reset}`
-                : `  ${c.dim}retro off — pixels unpunished.${c.reset}`,
-            )
-          }
-        }
-      } else if (name === 'matrix') {
-        const api = getMatrixBgHandle()
-        if (!api) {
-          this.writeln(`  ${c.dim}matrix backdrop not wired in this route${c.reset}`)
-        } else {
-          const sub = args[0]?.toLowerCase()
-          if (sub === 'status') {
-            const on = api.isEnabled()
-            this.writeln(
-              `  ${c.green}matrix:${c.reset} ${on ? 'Glyphs falling — recruiter emails decoded as poetry.' : 'Idle — Wallpaper drinks tea.'}`,
-            )
-            if (on) {
-              this.writeln(
-                `  ${c.dim}throughput illusion: ~${randomPick(['9021', '1337', '4096'])} green chars / conceptual second${c.reset}`,
-              )
-            }
-          } else if (sub === '--help' || sub === '-h') {
-            this.writeln('')
-            this.writeln(
-              `  ${c.blue}matrix${c.reset}${c.dim} · ${c.blue}on${c.dim} │ ${c.blue}off${c.dim} │ ${c.blue}status${c.reset}`,
-            )
-            this.writeln('')
-          } else if (sub === 'on') {
-            api.setEnabled(true)
-            this.writeln(`  ${c.green}matrix rain armed${c.reset}`)
-          } else if (sub === 'off') {
-            api.setEnabled(false)
-            this.writeln(
-              `  ${c.dim}matrix drizzle cancelled${c.reset}  ${c.dim}— gradient wallpaper only.${c.reset}`,
-            )
-          } else if (!api.isEnabled()) {
-            this.writeln(
-              `  ${c.dim}matrix idle — wake with ${c.blue}matrix on${c.reset}${c.dim} · ${c.blue}matrix status${c.reset}${c.dim} gossips.${c.reset}`,
-            )
-          } else {
-            this.writeln(
-              `  ${c.dim}usage:${c.reset} ${c.blue}matrix on${c.reset}${c.dim} │ ${c.reset}${c.blue}off${c.reset}${c.dim} │ ${c.reset}${c.blue}status${c.reset}`,
-            )
-          }
-        }
-      } else if (name === 'theme') {
-        const raw = args[0]?.toLowerCase()
-        const sub = raw?.replace(/_/g, '-')
-        if (!sub || sub === 'current') {
-          const p = getActivePack()
-          this.writeln(
-            `  ${c.green}theme:${c.reset} ${p.label} ${c.dim}(${getThemeId()})${c.reset}`,
-          )
-        } else if (sub === 'list') {
-          this.writeln('')
-          for (const { id, label } of listThemeSummaries()) {
-            const mark = id === getThemeId() ? ` ${c.dim}←${c.reset}` : ''
-            this.writeln(
-              `  ${c.blue}${id.padEnd(14)}${c.reset} ${c.dim}${label}${c.reset}${mark}`,
-            )
-          }
-          this.writeln('')
-          this.writeln(
-            `  ${c.dim}usage:${c.reset} ${c.blue}theme${c.reset} ${c.dim}<id>${c.reset} · ${c.blue}theme random${c.reset}`,
-          )
-        } else if (sub === 'random' || sub === 'shuffle') {
-          const pool = listThemeSummaries().filter(t => t.id !== getThemeId())
-          const pick = pool.length
-            ? pool[Math.floor(Math.random() * pool.length)]!
-            : listThemeSummaries()[0]!
-          if (applyTheme(pick.id)) {
-            this.refreshTerminalTheme()
-            const p = getActivePack()
-            this.writeln(
-              `  ${c.green}theme roulette →${c.reset} ${p.label} ${c.dim}(${getThemeId()})${c.reset}`,
-            )
-          }
-        } else if (sub && applyTheme(sub)) {
-          this.refreshTerminalTheme()
-          const p = getActivePack()
-          this.writeln(
-            `  ${c.green}theme applied:${c.reset} ${p.label} ${c.dim}(${getThemeId()})${c.reset}`,
-          )
-        } else {
-          this.writeln(
-            `  ${c.red}unknown theme:${c.reset} ${raw ?? ''}  ${c.dim}(theme list · theme random)${c.reset}`,
-          )
-        }
-      } else if (name === 'sound') {
-        const sub = args[0]?.toLowerCase()
-        if (sub === 'status' || sub === '?') {
-          const pct = Math.round(getSoundVolume() * 100)
-          this.writeln(
-            `  ${c.green}sound:${c.reset} ${isSoundEnabled() ? 'on (blessed)' : 'off (silent film mode)'}  ${c.dim}· panel volume ≈ ${pct}%${c.reset}`,
-          )
-        } else if (sub === '--help' || sub === '-h') {
-          this.writeln('')
-          this.writeln(
-            `  ${c.blue}sound${c.reset}${c.dim} · ${c.blue}on${c.dim} │ ${c.blue}off${c.dim} │ bare ⇒ toggle · ${c.blue}status${c.reset}`,
-          )
-          this.writeln('')
-        } else {
-          if (sub === 'off') setSoundEnabled(false)
-          else if (sub === 'on') setSoundEnabled(true)
-          else toggleSound()
-          await resumeAudioIfNeeded()
-          syncSettingsSoundToggle()
-          this.writeln(
-            isSoundEnabled()
-              ? `  ${c.green}UI sounds:${c.reset} audible · master ${Math.round(getSoundVolume() * 100)}%.`
-              : `  ${c.dim}UI sounds muted — clock slider still adjusts gain.${c.reset}`,
-          )
-        }
-      } else if (name === 'reboot') {
-        this.history.push(raw)
-        this.historyIndex = -1
-        this.xterm.clear()
-        await this.showMotd()
+      const outcome = await dispatchTerminalCommand(host, name, args, raw, cmd)
+      if (outcome === 'exit') {
         this.isProcessing = false
         return
-      } else if (name === 'skills' || name === 'contact') {
-        const canonical = name === 'skills' ? 'resume' : 'links'
-        const canonCmd = commands[canonical]
-        if (!canonCmd) return
-        const ack = (): void => this.writeLines(windowSpawnEcho(canonical, args))
-        if (canonical === 'resume') {
-          this.onOpenWindow({
-            command: 'resume',
-            title: 'résumé · skills',
-            ...resumeWindowSplitPayload(),
-          })
-        } else {
-          const content = canonCmd.run(args)
-          this.onOpenWindow({
-            command: canonical,
-            title: 'contact · outbound',
-            content,
-          })
-        }
-        ack()
-        playOsSound('click')
-      } else if (TILED_WINDOW_COMMANDS.has(name)) {
-        const ack = (): void => this.writeLines(windowSpawnEcho(name, args))
-
-        if (EDITOR_LAUNCH_ALIASES.has(name)) {
-          const path = args[0] ?? 'notes.txt'
-          const heading = name === 'vim' ? 'vim' : name === 'editor' ? 'editor' : 'edit'
-          this.onOpenWindow({
-            command: 'edit',
-            title: `${heading} — ${path}`,
-            content: [],
-            editorPath: path,
-          })
-          ack()
-        } else if (name === 'explorer') {
-          const pathArg = args[0] ? vfsNormalize(args[0]) : vfsPwd()
-          this.onOpenWindow({
-            command: 'explorer',
-            title: 'Files',
-            content: [],
-            explorerPath: pathArg,
-          })
-          ack()
-        } else if (name === 'browse') {
-          const rawUrl = args.join(' ').trim()
-          const browserUrl = rawUrl ? normalizeBrowserUrl(rawUrl) : DEFAULT_BROWSER_URL
-          this.onOpenWindow({
-            command: 'browse',
-            title: 'Browse',
-            content: [],
-            browserUrl,
-          })
-          ack()
-        } else if (name === 'p5') {
-          const pathArg = args[0] ?? undefined
-          this.onOpenWindow({
-            command: 'p5',
-            title: pathArg ? (pathArg.split('/').pop() ?? 'p5.js') : 'p5.js',
-            content: [],
-            p5SketchPath: pathArg,
-          })
-          ack()
-        } else {
-          const title =
-            name === 'resume'
-              ? 'résumé · skills'
-              : name === 'links'
-                ? 'contact · outbound'
-                : name === 'projects'
-                  ? 'work & roadmap'
-                  : name === 'whoami'
-                    ? 'about me · personal'
-                    : name
-          if (name === 'resume') {
-            this.onOpenWindow({
-              command: name,
-              title,
-              ...resumeWindowSplitPayload(),
-            })
-          } else if (name === 'projects') {
-            this.onOpenWindow({
-              command: 'projects',
-              title,
-              content: [],
-              projectCards: PORTFOLIO_PROJECTS,
-            })
-          } else {
-            const content = cmd.run(args)
-            this.onOpenWindow({ command: name, title, content })
-          }
-          ack()
-        }
-        playOsSound('click')
-      } else {
-        this.writeLines(cmd.run(args))
       }
 
       this.history.push(raw)
