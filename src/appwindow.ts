@@ -275,19 +275,8 @@ export class AppWindow {
     col?.appendChild(mountContactForm('wm'))
   }
 
-  /** About me — fencing banner across the top, text column below. */
+  /** About me — fencing banner across the top, status + text column below. */
   private renderAboutMe(lines: string[]): void {
-    const statusRow = document.createElement('div')
-    statusRow.className = 'about-status-row'
-    const badge = document.createElement('span')
-    badge.className = 'about-open-badge'
-    badge.textContent = 'Open to work'
-    const hint = document.createElement('p')
-    hint.className = 'about-status-hint'
-    hint.textContent = 'Remote / hybrid · US Central'
-    statusRow.append(badge, hint)
-    this.bodyEl.appendChild(statusRow)
-
     const banner = document.createElement('div')
     banner.className = 'about-banner'
     const bannerImg = document.createElement('img')
@@ -298,6 +287,17 @@ export class AppWindow {
     bannerImg.decoding = 'async'
     banner.appendChild(bannerImg)
     this.bodyEl.appendChild(banner)
+
+    const statusRow = document.createElement('div')
+    statusRow.className = 'about-status-row'
+    const badge = document.createElement('span')
+    badge.className = 'about-open-badge'
+    badge.textContent = 'Open to work'
+    const hint = document.createElement('p')
+    hint.className = 'about-status-hint'
+    hint.textContent = 'Remote / hybrid · US Central'
+    statusRow.append(badge, hint)
+    this.bodyEl.appendChild(statusRow)
 
     const col = document.createElement('div')
     col.className = 'about-text-col'

@@ -222,8 +222,10 @@
 .about-status-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  padding: 10px 14px 0;
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .about-open-badge {
@@ -244,10 +246,6 @@
   margin: 0;
   font-size: 11px;
   color: var(--th-subtext1);
-}
-
-.whoami-window .about-banner {
-  margin-top: 0;
 }
 
 .contact-window .contact-text-col .win-line:first-child {

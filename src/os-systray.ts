@@ -9,7 +9,6 @@ import {
 } from './os-sound'
 import { getRetroFx, setRetroFx } from './retro-fx'
 import { getMatrixBgHandle } from './matrix-bg'
-import { applyTheme, getThemeId, listThemeSummaries } from './theme'
 import { resetTileLayout } from './desktop-tiles'
 import { clearWallpaper } from './wallpaper'
 import { clearFirstVisitFlags } from './first-visit-flags'
@@ -52,32 +51,13 @@ function syncVolumeSlider(panelSlider: HTMLInputElement | null): void {
     panelSlider.value = String(pct)
 }
 
-function buildThemeSelect(select: HTMLSelectElement): void {
-  select.replaceChildren()
-  for (const { id, label } of listThemeSummaries()) {
-    const opt = document.createElement('option')
-    opt.value = id
-    opt.textContent = label
-    select.appendChild(opt)
-  }
-  syncThemeSelect(select)
-}
-
-function syncThemeSelect(select?: HTMLSelectElement | null): void {
-  const el = select ?? (document.getElementById('settings-theme-select') as HTMLSelectElement | null)
-  if (!el) return
-  const cur = getThemeId()
-  if ([...el.options].some(o => o.value === cur)) el.value = cur
-}
-
-/** Refresh menu toggles (sound, CRT, matrix, theme) — call after terminal `sound` and related commands. */
+/** Refresh menu toggles (sound, CRT, matrix) — call after terminal `sound` and related commands. */
 export function syncSettingsSoundToggle(): void {
   const sw = document.getElementById('settings-sound-toggle')
   if (sw) syncSoundSwitch(sw)
   syncVolumeSlider(document.getElementById('settings-volume-slider') as HTMLInputElement | null)
   syncRetroSwitch(document.getElementById('settings-retro-toggle'))
   syncMatrixSwitch(document.getElementById('settings-matrix-toggle'))
-  syncThemeSelect()
 }
 
 export function pushToast(
@@ -123,14 +103,12 @@ export function pushToast(
 export function initSystray(): void {
   const clockBtn = document.getElementById('btn-yasb-clock') as HTMLButtonElement | null
   const panel = document.getElementById('yasb-settings') as HTMLElement | null
-  const themeSelect = document.getElementById('settings-theme-select') as HTMLSelectElement | null
+  const personalizeBtn = document.getElementById('settings-personalize') as HTMLButtonElement | null
   const soundToggle = document.getElementById('settings-sound-toggle') as HTMLButtonElement | null
   const retroToggle = document.getElementById('settings-retro-toggle') as HTMLButtonElement | null
   const matrixToggle = document.getElementById('settings-matrix-toggle') as HTMLButtonElement | null
 
   if (!clockBtn || !panel) return
-
-  if (themeSelect) buildThemeSelect(themeSelect)
 
   let panelOpen = false
 
@@ -142,31 +120,19 @@ export function initSystray(): void {
     if (next) {
       syncRetroSwitch(retroToggle)
       syncMatrixSwitch(matrixToggle)
-      syncThemeSelect(themeSelect)
     }
   }
-
-  window.addEventListener('mrgrey-theme-change', () => {
-    syncThemeSelect(themeSelect)
-  })
 
   clockBtn.addEventListener('click', e => {
     e.stopPropagation()
     setPanelOpen(!panelOpen)
   })
 
-  themeSelect?.addEventListener('change', e => {
+  personalizeBtn?.addEventListener('click', e => {
     e.stopPropagation()
-    const id = themeSelect.value
-    if (!id || id === getThemeId()) return
-    if (!applyTheme(id)) {
-      syncThemeSelect(themeSelect)
-      return
-    }
-    playOsSound('click')
+    setPanelOpen(false)
+    window.dispatchEvent(new CustomEvent('mrgrey-open-personalize'))
   })
-
-  themeSelect?.addEventListener('click', e => e.stopPropagation())
 
   const applySoundToggle = async (): Promise<void> => {
     await resumeAudioIfNeeded()
