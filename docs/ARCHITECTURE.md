@@ -17,7 +17,8 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 ### Core Shell
 | Module | Responsibility |
 |--------|----------------|
-| `desktop.ts` | WM orchestrator (~510 lines) — wires host contexts, constructor, public API |
+| `desktop.ts` | WM orchestrator (~430 lines) — constructor, `wm()` delegate, public API |
+| `desktop-wm-hosts.ts` | Host/context bindings into extracted WM modules |
 | `desktop-open-window.ts` | Lazy tile open dispatch (editor, games, portfolio, terminal tile) |
 | `desktop-taskbar.ts` | Dock rendering, YASB title, auto-hide hover zone |
 | `desktop-wm-lifecycle.ts` | Tiled close / minimize / restore animations |
@@ -124,7 +125,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-520 tests across 41 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+522 tests across 42 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|

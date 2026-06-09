@@ -3,7 +3,22 @@
  */
 
 import type { MinimizedEntry, TiledWin } from './desktop-open-window'
-import { animateWmThenRemove } from './desktop-wm-animations'
+import { animateWmThenRemove, playWmMountAnim } from './desktop-wm-animations'
+
+export interface TiledLayoutMount {
+  mount(el: HTMLElement, index: number): void
+}
+
+/** Place a new tile in the layout and play mount animation. */
+export function mountTiledWindow(
+  layout: TiledLayoutMount,
+  win: TiledWin,
+  openCount: number,
+): void {
+  layout.mount(win.el, openCount)
+  playWmMountAnim(win.el)
+  window.dispatchEvent(new CustomEvent('mrgrey-first-window'))
+}
 
 export interface WmLifecycleContext {
   readonly windows: TiledWin[]
