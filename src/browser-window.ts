@@ -189,6 +189,13 @@ export class BrowserWindow {
     this.frame.title = 'Browser content'
     // `allow-same-origin` lets the framed document use its real origin (cookies, APIs).
     // Without it, the iframe is an opaque origin — most SPAs show a blank screen.
+    //
+    // `allow-popups-to-escape-sandbox` is intentionally omitted: combined with
+    // `allow-scripts` it would let an embedded (and potentially hostile) page spawn
+    // a fully unsandboxed top-level window — a tab-napping / popup-escape vector.
+    // We keep `allow-popups` so legitimate `target=_blank` links still open, but any
+    // popup they create inherits this sandbox instead of escaping it. Framing
+    // Wikipedia / example.com only needs scripts + same-origin, so this is safe.
     this.frame.setAttribute(
       'sandbox',
       [
@@ -198,7 +205,6 @@ export class BrowserWindow {
         'allow-orientation-lock',
         'allow-pointer-lock',
         'allow-popups',
-        'allow-popups-to-escape-sandbox',
         'allow-presentation',
         'allow-same-origin',
         'allow-scripts',

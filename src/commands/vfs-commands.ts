@@ -162,7 +162,7 @@ export const vfsCommands: Record<string, Command> = {
   },
 
   rm: {
-    description: 'Remove file or empty directory tree node',
+    description: 'Remove a file or directory — directories are deleted recursively (no -r needed)',
     run: (args) => {
       if (!args[0]) return [`  ${c.red}usage:${c.reset} rm <path>`]
       const err = vfsRm(args[0])

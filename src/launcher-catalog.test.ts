@@ -3,7 +3,6 @@ import {
   tileTitleForPortfolioCommand,
   TILED_WINDOW_COMMANDS,
   EDITOR_LAUNCH_ALIASES,
-  TERMINAL_TILE_SENTINEL,
   LAUNCHER_ICON_ROWS,
 } from './launcher-catalog'
 
@@ -72,15 +71,6 @@ describe('EDITOR_LAUNCH_ALIASES', () => {
   it('does not include unrelated commands', () => {
     expect(EDITOR_LAUNCH_ALIASES.has('browse')).toBe(false)
     expect(EDITOR_LAUNCH_ALIASES.has('paint')).toBe(false)
-  })
-})
-
-// ── TERMINAL_TILE_SENTINEL ────────────────────────────────────────────────────
-
-describe('TERMINAL_TILE_SENTINEL', () => {
-  it('is a non-empty string', () => {
-    expect(typeof TERMINAL_TILE_SENTINEL).toBe('string')
-    expect(TERMINAL_TILE_SENTINEL.length).toBeGreaterThan(0)
   })
 })
 

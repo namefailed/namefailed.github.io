@@ -111,13 +111,19 @@ a:hover { color: var(--plain-accent); }
 
 /* ── Skip link ───────────────────────────────────────────────────────────── */
 
-.skip {
+.skip:not(:focus-visible) {
   position: absolute;
-  left: -9999px;
-  top: auto;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.skip:focus {
+.skip:focus-visible {
   left: clamp(12px, 3vw, 24px);
   top: clamp(12px, 3vw, 24px);
   padding: 0.5rem 0.85rem;
@@ -231,6 +237,13 @@ a:hover { color: var(--plain-accent); }
   align-items: center;
   text-align: center;
   padding-top: 0.5rem;
+}
+
+.plain-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 /* ── Avatar ──────────────────────────────────────────────────────────────── */
@@ -823,7 +836,17 @@ a:hover { color: var(--plain-accent); }
     opacity: 1;
     transform: none;
     transition: none;
+    will-change: auto;
   }
+
+  .plain-progress-bar { transition: none; box-shadow: none; }
+  .plain-cursor        { animation: none; opacity: 1; }
+  .plain-scroll-cue    { animation: none; }
+  .plain-stat-num      { transition: none; transform: none !important; }
+  .plain-nav-dot,
+  .plain-nav-dot--active { transform: none !important; box-shadow: none !important; }
+  .plain-project-thumb { transition: none; will-change: auto; }
+  .plain-project:hover .plain-project-thumb { transform: none; filter: none; }
 
   .plain-exp-card:hover,
   .plain-project:hover,
@@ -872,6 +895,11 @@ a:hover { color: var(--plain-accent); }
   }
 
   .plain-hero {
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .plain-section {
     align-items: stretch;
     text-align: left;
   }
@@ -1233,25 +1261,4 @@ a:hover { color: var(--plain-accent); }
 /* Hide on very narrow screens — this page is already phone-first */
 @media (max-width: 440px) {
   .plain-section-nav { display: none; }
-}
-
-/* ── Reduced-motion additions ─────────────────────────────────────────────── */
-
-@media (prefers-reduced-motion: reduce) {
-  .plain-progress-bar { transition: none; box-shadow: none; }
-  .plain-cursor        { animation: none; opacity: 1; }
-  .plain-scroll-cue    { animation: none; }
-  .plain-stat-num      { transition: none; transform: none !important; }
-  .plain-nav-dot,
-  .plain-nav-dot--active { transform: none !important; box-shadow: none !important; }
-  /* Suppress thumbnail scale + brightness on hover */
-  .plain-project-thumb { transition: none; will-change: auto; }
-  .plain-project:hover .plain-project-thumb { transform: none; filter: none; }
-  /* Remove entrance animations */
-  [data-anim] {
-    opacity: 1;
-    transform: none;
-    transition: none;
-    will-change: auto;
-  }
 }

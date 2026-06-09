@@ -22,9 +22,9 @@ Build and maintain an in-browser fake desktop portfolio. Primary constraints:
 index.html
   └─ src/main.ts
        └─ bootstrap-shell.ts
-            ├─ boot-splash.ts
             ├─ theme-control.ts (initThemeFromStorage)
             ├─ retro-fx.ts, os-sound.ts, os-systray.ts
+            ├─ boot-splash.ts (runBootSplash, before Desktop)
             ├─ matrix-bg.ts (idle)
             └─ new Desktop(#desktop)
                  ├─ bsp-layout.ts (#right-pane)
@@ -73,7 +73,6 @@ static/index.html
 |-----------|-----|
 | `app-commands` handlers return `[]` | Desktop opens tiles; terminal must not print fake output |
 | `setDesktopRef(this)` in Desktop ctor | Terminal `openWindow` routing |
-| `TERMINAL_TILE_SENTINEL = '__terminal__'` | Dock/focus id for terminal tile |
 | `focusedId === null` | No right-pane tile focused (not “legacy terminal focused”) |
 | `#panes` contains only `#right-pane` | Terminal is a tile, not static HTML column |
 | BSP `maxVisible = 4` | Fifth tile bumps oldest to dock |

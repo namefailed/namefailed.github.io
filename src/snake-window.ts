@@ -1,6 +1,7 @@
 /** Full-tile Snake with adaptive difficulty, pickups, HUD. */
 
 import { createWindowChrome } from './window-chrome'
+import { createCssVarCache, type CssVarCache } from './css-var-cache'
 
 export interface SnakeWindowOptions {
   onClose: () => void
@@ -52,6 +53,7 @@ export class SnakeWindow {
   private growDebt = 0
 
   private ro: ResizeObserver | null = null
+  private cssVars: CssVarCache
 
   private onClose: () => void
   private onMinimize: () => void
@@ -62,6 +64,7 @@ export class SnakeWindow {
     this.onMinimize = opts.onMinimize
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
+    this.cssVars = createCssVarCache(() => this.canvas)
 
     const chrome = createWindowChrome({
       title: 'snake',
@@ -445,8 +448,7 @@ export class SnakeWindow {
   }
 
   private cssColor(key: string, fallback: string): string {
-    const v = getComputedStyle(this.canvas).getPropertyValue(key).trim()
-    return v || fallback
+    return this.cssVars.get(key, fallback)
   }
 
   private draw(): void {
@@ -721,5 +723,6 @@ export class SnakeWindow {
     this.stopLoop()
     this.ro?.disconnect()
     this.ro = null
+    this.cssVars.destroy()
   }
 }

@@ -17,7 +17,8 @@ sequenceDiagram
 
   HTML->>Main: load
   Main->>Boot: bootstrapShellUi()
-  Boot->>Boot: theme, splash, sound, systray
+  Boot->>Boot: theme, wallpaper, sound, systray
+  Boot->>Boot: runBootSplash()
   Boot->>Desk: new Desktop(#desktop)
   Note over Desk: BSP layout, dock, keyboard chords
   Term->>Desk: openWindow(spec) via os-registry
@@ -33,7 +34,7 @@ sequenceDiagram
 | `index.html` | Desktop shell — monitor frame, YASB bar, launcher, `#panes` → `#right-pane` |
 | `static/index.html` | Brochure — no OS chrome; mobile redirect target |
 | `src/main.ts` | Imports CSS, calls `bootstrapShellUi()` |
-| `src/bootstrap-shell.ts` | Boot splash → theme → wallpaper → retro FX → sound → systray → `Desktop` → matrix rain (idle) |
+| `src/bootstrap-shell.ts` | Theme → wallpaper → retro FX → sound → systray → boot splash → `Desktop` → matrix rain (idle) |
 | `src/static/main.ts` | Brochure: hero, sections, scroll-spy, motion |
 
 **Terminal is not in static HTML.** It opens as a lazy tile (`Ctrl+T`, dock, or `terminal` command).
@@ -42,13 +43,14 @@ sequenceDiagram
 
 ## Bootstrap order
 
-1. `runBootSplash()` — skippable after first visit (`mrgrey-boot-seen`)
+1. `dismissLegacyOnboardingUi()` — silence removed onboarding layers
 2. `initThemeFromStorage()` — apply `--th-*` tokens + xterm palette
 3. `loadSavedWallpaper()`
 4. `initRetroFxFromStorage()`
 5. `initOsSound()` + `initSystray()`
-6. `new Desktop(desktopEl)` — WM, dock, folder tiles, keyboard listener
-7. `initMatrixBg()` — deferred via `requestIdleCallback`
+6. Schedule `initMatrixBg()` — deferred via `requestIdleCallback`
+7. `runBootSplash()` — skippable after first visit (`mrgrey-boot-seen`)
+8. `new Desktop(desktopEl)` — WM, dock, folder tiles, keyboard listener
 
 ---
 

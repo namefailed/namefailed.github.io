@@ -11,7 +11,7 @@ import type { PongWindow } from './pong-window'
 import type { SnakeWindow } from './snake-window'
 import type { TerminalWindow } from './terminal'
 
-/** Focus visible terminal tile or clear WM focus when none is open. */
+/** Focus terminal if open, else the topmost remaining tile, else clear WM focus. */
 export function focusTerminalTileIfVisible(
   windows: readonly TiledWin[],
   host: {
@@ -22,6 +22,11 @@ export function focusTerminalTileIfVisible(
   const termTile = windows.find(w => w.command === 'terminal')
   if (termTile) {
     host.focusWindow(termTile)
+    return
+  }
+  const fallback = windows[windows.length - 1]
+  if (fallback) {
+    host.focusWindow(fallback)
     return
   }
   host.clearUnfocused()

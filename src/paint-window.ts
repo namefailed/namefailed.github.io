@@ -32,6 +32,9 @@ export class PaintWindow {
   private onMinimize: () => void
   private onMaximize: () => void
 
+  /** Canvas-wrap ResizeObserver — disconnected in dispose() to avoid leaks. */
+  private resizeObserver: ResizeObserver | null = null
+
   constructor(opts: PaintWindowOptions) {
     this.onClose = opts.onClose
     this.onMinimize = opts.onMinimize
@@ -187,6 +190,7 @@ export class PaintWindow {
 
     const ro = new ResizeObserver(() => resize())
     ro.observe(this.wrap)
+    this.resizeObserver = ro
     requestAnimationFrame(resize)
 
     const pos = (ev: PointerEvent): { x: number; y: number } => {
@@ -347,6 +351,12 @@ export class PaintWindow {
     } catch {
       /* ignore */
     }
+  }
+
+  /** WM closed the tile — stop observing the canvas wrap so the closed tile leaks nothing. */
+  dispose(): void {
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
   }
 
   focusCanvas(): void {

@@ -58,8 +58,8 @@ export class BspLayout implements WindowLayout {
    * Place `el` in the correct BSP column.
    *
    * `alreadyTiled` is `windows.length` **before** the caller pushes the new
-   * window.  Column routing is delegated to `resolveCol` which uses a
-   * "shorter column first, prefer right on tie" rule.
+   * window.  Column routing uses strict open-index alternation (left/right)
+   * with spillover when a column hits {@link BSP_MAX_PER_COLUMN}.
    * A within-column drag handle is inserted between the existing window and
    * the new one when the column already contains a window.
    */

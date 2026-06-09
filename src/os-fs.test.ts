@@ -236,6 +236,16 @@ describe('vfsRm', () => {
     expect(vfsLs(FS_HOME)).not.toContain('emptydir')
   })
 
+  it('removes a non-empty directory recursively', () => {
+    vfsMkdir(`${FS_HOME}/fulldir`)
+    vfsTouch(`${FS_HOME}/fulldir/inside.txt`)
+    const err = vfsRm(`${FS_HOME}/fulldir`)
+    expect(err).toBeNull()
+    expect(vfsLs(FS_HOME)).not.toContain('fulldir')
+    // The subtree is gone — listing the removed path now errors.
+    expect(vfsLs(`${FS_HOME}/fulldir`)[0]).toMatch(/No such file/)
+  })
+
   it('returns an error for a nonexistent path', () => {
     const err = vfsRm(`${FS_HOME}/ghost.txt`)
     expect(err).toMatch(/No such file/)

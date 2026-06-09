@@ -3,6 +3,7 @@
  */
 
 import { liveSiteScreenshotUrl } from './live-site-screenshot'
+import { escapeHtml } from './window-chrome'
 
 export type ProjectPreviewKind = 'website' | 'app' | 'portfolio' | 'client'
 
@@ -202,7 +203,7 @@ export function buildProjectPreviewFigure(
   chrome.className = `${classPrefix}-chrome`
   chrome.innerHTML =
     `<span class="${classPrefix}-dots" aria-hidden="true"></span>` +
-    `<span class="${classPrefix}-chrome-title">${input.title}</span>`
+    `<span class="${classPrefix}-chrome-title">${escapeHtml(input.title)}</span>`
 
   const viewport = document.createElement('div')
   viewport.className = `${classPrefix}-viewport`

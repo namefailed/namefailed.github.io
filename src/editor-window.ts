@@ -79,6 +79,10 @@ export class EditorWindow {
   private titleEl: HTMLElement
   private measureCanvas: HTMLCanvasElement | null = null
 
+  /** Long-lived listeners/observers torn down in dispose() to avoid leaks. */
+  private resizeObserver: ResizeObserver | null = null
+  private selectionChangeHandler: (() => void) | null = null
+
   /** `f` / `F` / `t` / `T` awaiting the target character */
   private findAwait: null | 'f' | 'F' | 't' | 'T' = null
   private lastFind: null | { kind: 'f' | 'F' | 't' | 'T'; ch: string } = null
@@ -162,6 +166,7 @@ export class EditorWindow {
     this.textarea.addEventListener('blur', () => this.syncBlockCaret())
     const ro = new ResizeObserver(() => this.syncBlockCaret())
     ro.observe(this.textareaWrap)
+    this.resizeObserver = ro
 
     this.el.appendChild(stack)
 
@@ -196,12 +201,29 @@ export class EditorWindow {
       }
     })
 
-    document.addEventListener('selectionchange', () => {
+    this.selectionChangeHandler = () => {
       const ae = document.activeElement
       if (ae !== this.textarea && ae !== this.cmdInput) return
       this.refreshModeMeta()
       this.syncBlockCaret()
-    })
+    }
+    document.addEventListener('selectionchange', this.selectionChangeHandler)
+  }
+
+  /**
+   * WM closed the tile — release the document-level selectionchange listener,
+   * the ResizeObserver, and any pending chord timers so a closed editor doesn't
+   * keep firing callbacks against detached DOM.
+   */
+  dispose(): void {
+    if (this.selectionChangeHandler) {
+      document.removeEventListener('selectionchange', this.selectionChangeHandler)
+      this.selectionChangeHandler = null
+    }
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    this.clearPendingDy()
+    this.clearShiftChordArms()
   }
 
   /** Clear motion / chord / count state (buffers + pending operators). */

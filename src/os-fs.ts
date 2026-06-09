@@ -548,6 +548,14 @@ export function vfsMkdir(path: string): string | null {
   return null
 }
 
+/**
+ * Remove a file or directory.
+ *
+ * Directories are removed **recursively** — deleting a directory node drops its
+ * entire subtree in one shot (equivalent to `rm -r`), with no `-r` flag required.
+ * This matches the file-explorer's "delete folder and everything inside?" flow
+ * and the documented behaviour of the `rm` shell command.
+ */
 export function vfsRm(path: string): string | null {
   const abs = vfsNormalize(path)
   const hit = walk(abs)

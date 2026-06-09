@@ -8,6 +8,5 @@ export function syncShellDataset(
   maximized: boolean,
 ): void {
   desktop.dataset.contentCount = String(windowCount)
-  desktop.dataset.terminalClosed = '1'
   desktop.dataset.maximized = maximized ? '1' : '0'
 }

@@ -87,6 +87,21 @@ export interface OpenWindowHost {
   openWindow(spec: WindowSpec): Promise<void>
 }
 
+/**
+ * Run a lazy `import()` for a window chunk, surfacing a toast (instead of an
+ * unhandled rejection / silent no-op) when the network or chunk load fails.
+ * Returns `null` on failure so callers can abort the open cleanly.
+ */
+async function lazyImportModule<T>(loader: () => Promise<T>, label: string): Promise<T | null> {
+  try {
+    return await loader()
+  } catch (err) {
+    console.error(`Failed to load ${label} module`, err)
+    pushToast(`Couldn't load ${label} — check your connection and try again.`, 2800)
+    return null
+  }
+}
+
 function mountContentWindow(host: OpenWindowHost, win: TiledWin): void {
   host.enforceTileLimit()
   host.appendToRightPane(win)
@@ -119,7 +134,7 @@ async function openPathKeyedWindow<T extends PathKeyedWin>(
   command: string,
   pathArg: string,
   applyPath: (win: T, path: string) => void,
-  create: () => Promise<T>,
+  create: () => Promise<T | null>,
 ): Promise<void> {
   const existingOpen = host.windows.find(w => w.command === command)
   if (existingOpen) {
@@ -146,6 +161,7 @@ async function openPathKeyedWindow<T extends PathKeyedWin>(
   }
 
   const win = await create()
+  if (!win) return
   mountContentWindow(host, win)
 }
 
@@ -163,7 +179,9 @@ export async function dispatchOpenWindow(
       pathArg,
       (ed, path) => ed.loadFile(path),
       async () => {
-        const { EditorWindow: EditorWindowCtor } = await import('./editor-window')
+        const mod = await lazyImportModule(() => import('./editor-window'), 'editor')
+        if (!mod) return null
+        const { EditorWindow: EditorWindowCtor } = mod
         let ed!: EditorWindow
         ed = new EditorWindowCtor({
           initialPath: pathArg,
@@ -184,7 +202,9 @@ export async function dispatchOpenWindow(
       pathArg,
       (ex, path) => ex.navigateTo(path),
       async () => {
-        const { FileExplorerWindow: FileExplorerWindowCtor } = await import('./file-explorer-window')
+        const mod = await lazyImportModule(() => import('./file-explorer-window'), 'file explorer')
+        if (!mod) return null
+        const { FileExplorerWindow: FileExplorerWindowCtor } = mod
         let ex!: FileExplorerWindow
         ex = new FileExplorerWindowCtor({
           initialPath: pathArg,
@@ -205,7 +225,9 @@ export async function dispatchOpenWindow(
       urlArg,
       (br, url) => br.navigateTo(url),
       async () => {
-        const { BrowserWindow: BrowserWindowCtor } = await import('./browser-window')
+        const mod = await lazyImportModule(() => import('./browser-window'), 'browser')
+        if (!mod) return null
+        const { BrowserWindow: BrowserWindowCtor } = mod
         let br!: BrowserWindow
         br = new BrowserWindowCtor({
           initialUrl: urlArg,
@@ -234,7 +256,9 @@ export async function dispatchOpenWindow(
       return
     }
 
-    const { P5Window: P5WindowCtor } = await import('./p5-window')
+    const p5mod = await lazyImportModule(() => import('./p5-window'), 'p5.js')
+    if (!p5mod) return
+    const { P5Window: P5WindowCtor } = p5mod
     let pw!: P5Window
     pw = new P5WindowCtor({
       initialVfsPath: pathArg,
@@ -259,7 +283,9 @@ export async function dispatchOpenWindow(
     }
 
     pushToast('Loading terminal…', 1400)
-    const { TerminalWindow: TerminalWindowCtor } = await import('./terminal')
+    const termMod = await lazyImportModule(() => import('./terminal'), 'terminal')
+    if (!termMod) return
+    const { TerminalWindow: TerminalWindowCtor } = termMod
     let tw!: TerminalWindow
     tw = new TerminalWindowCtor({
       ...windowChromeCallbacks(host, () => tw),
@@ -291,7 +317,9 @@ export async function dispatchOpenWindow(
     host.enforceTileLimit()
 
     if (cmd === 'paint') {
-      const { PaintWindow: PaintWindowCtor } = await import('./paint-window')
+      const mod = await lazyImportModule(() => import('./paint-window'), 'paint')
+      if (!mod) return
+      const { PaintWindow: PaintWindowCtor } = mod
       let pw!: PaintWindow
       pw = new PaintWindowCtor(windowChromeCallbacks(host, () => pw))
       host.appendToRightPane(pw)
@@ -301,7 +329,9 @@ export async function dispatchOpenWindow(
       return
     }
     if (cmd === 'snake') {
-      const { SnakeWindow: SnakeWindowCtor } = await import('./snake-window')
+      const mod = await lazyImportModule(() => import('./snake-window'), 'snake')
+      if (!mod) return
+      const { SnakeWindow: SnakeWindowCtor } = mod
       let sw!: SnakeWindow
       sw = new SnakeWindowCtor(windowChromeCallbacks(host, () => sw))
       host.appendToRightPane(sw)
@@ -310,7 +340,9 @@ export async function dispatchOpenWindow(
       host.focusWindow(sw)
       return
     }
-    const { PongWindow: PongWindowCtor } = await import('./pong-window')
+    const pongMod = await lazyImportModule(() => import('./pong-window'), 'pong')
+    if (!pongMod) return
+    const { PongWindow: PongWindowCtor } = pongMod
     let pong!: PongWindow
     pong = new PongWindowCtor(windowChromeCallbacks(host, () => pong))
     host.appendToRightPane(pong)

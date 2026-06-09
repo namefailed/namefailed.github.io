@@ -12,6 +12,7 @@ export async function skipDesktopOnboarding(page: Page): Promise<void> {
       'mrgrey-hint-apps-folder',
       'mrgrey-hint-games-folder',
       'mrgrey-p5-tip-seen',
+      'mrgrey-empty-hint-seen',
     ]
     for (const key of keys) localStorage.setItem(key, '1')
   })

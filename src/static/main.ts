@@ -314,6 +314,7 @@ function mount(): void {
     { id: 'sec-experience', label: 'Experience' },
     { id: 'sec-projects',   label: 'Projects'   },
     { id: 'sec-education',  label: 'Education'  },
+    { id: 'sec-certs',      label: 'Certifications' },
     { id: 'sec-contact',    label: 'Contact'    },
   ]
 
@@ -367,7 +368,9 @@ function mount(): void {
   mountScrollCue(hero)
 
   // ── Skills ─────────────────────────────────────────────────────────────
-  hero.appendChild(sectionHeading('Skills', 'sec-skills'))
+  const skillsSection = el('section', 'plain-section')
+  skillsSection.setAttribute('aria-labelledby', 'sec-skills')
+  skillsSection.appendChild(sectionHeading('Skills', 'sec-skills'))
 
   const skillWrap = anim(el('div', 'plain-skills'), 60)
   SKILLS_PRIMARY.forEach((s, i) => {
@@ -375,43 +378,53 @@ function mount(): void {
     chip.style.transitionDelay = `${i * 40}ms`
     skillWrap.appendChild(chip)
   })
-  hero.appendChild(skillWrap)
+  skillsSection.appendChild(skillWrap)
 
   // ── Experience ─────────────────────────────────────────────────────────
-  hero.appendChild(sectionHeading('Experience', 'sec-experience'))
+  const experienceSection = el('section', 'plain-section')
+  experienceSection.setAttribute('aria-labelledby', 'sec-experience')
+  experienceSection.appendChild(sectionHeading('Experience', 'sec-experience'))
 
   const expList = el('div', 'plain-exp-list')
   EXPERIENCE.forEach((entry, i) => expList.appendChild(experienceCard(entry, i * 65)))
-  hero.appendChild(expList)
+  experienceSection.appendChild(expList)
 
   // ── Projects ───────────────────────────────────────────────────────────
-  hero.appendChild(sectionHeading('Selected projects', 'sec-projects'))
+  const projectsSection = el('section', 'plain-section')
+  projectsSection.setAttribute('aria-labelledby', 'sec-projects')
+  projectsSection.appendChild(sectionHeading('Selected projects', 'sec-projects'))
 
   const grid = el('div', 'plain-project-grid')
   plainProjectsFromPortfolio().forEach((p, i) => grid.appendChild(projectCard(p, i * 55)))
-  hero.appendChild(grid)
+  projectsSection.appendChild(grid)
 
   // ── Education ──────────────────────────────────────────────────────────
-  hero.appendChild(sectionHeading('Education', 'sec-education'))
+  const educationSection = el('section', 'plain-section')
+  educationSection.setAttribute('aria-labelledby', 'sec-education')
+  educationSection.appendChild(sectionHeading('Education', 'sec-education'))
 
   const eduList = anim(el('ul', 'plain-ul'), 60)
   for (const tx of EDUCATION) eduList.appendChild(el('li', undefined, tx))
-  hero.appendChild(eduList)
+  educationSection.appendChild(eduList)
 
   // ── Certifications ─────────────────────────────────────────────────────
-  hero.appendChild(sectionHeading('Certifications', 'sec-certs'))
+  const certsSection = el('section', 'plain-section')
+  certsSection.setAttribute('aria-labelledby', 'sec-certs')
+  certsSection.appendChild(sectionHeading('Certifications', 'sec-certs'))
 
   const certList = anim(el('ul', 'plain-ul'), 60)
   for (const tx of CERTIFICATIONS) certList.appendChild(el('li', undefined, tx))
-  hero.appendChild(certList)
+  certsSection.appendChild(certList)
 
   // ── Contact ────────────────────────────────────────────────────────────
-  hero.appendChild(sectionHeading('Contact', 'sec-contact'))
+  const contactSection = el('section', 'plain-section')
+  contactSection.setAttribute('aria-labelledby', 'sec-contact')
+  contactSection.appendChild(sectionHeading('Contact', 'sec-contact'))
 
   const contactBlock = anim(el('div', 'plain-contact-block'), 60)
   for (const item of CONTACT) contactBlock.appendChild(linkRow(item.label, item.href, item.text))
   contactBlock.appendChild(mountContactForm('plain'))
-  hero.appendChild(contactBlock)
+  contactSection.appendChild(contactBlock)
 
   // ── Footer ─────────────────────────────────────────────────────────────
   const footer = el('footer', 'plain-footer')
@@ -423,7 +436,16 @@ function mount(): void {
   const main = el('main', 'plain-main')
   main.id = 'content'
   main.setAttribute('role', 'main')
-  main.append(hero, footer)
+  main.append(
+    hero,
+    skillsSection,
+    experienceSection,
+    projectsSection,
+    educationSection,
+    certsSection,
+    contactSection,
+    footer,
+  )
 
   root.replaceChildren(banner, main, sectionNav)
 

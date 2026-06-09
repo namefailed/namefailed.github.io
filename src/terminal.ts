@@ -72,6 +72,8 @@ export class TerminalApp {
   private history: string[] = []
   private historyIndex = -1
   private isProcessing = false
+  /** Aborts the window-resize listener wired in mount() when the tile closes. */
+  private resizeAbort = new AbortController()
 
   constructor(
     container: HTMLElement,
@@ -110,7 +112,9 @@ export class TerminalApp {
   async mount(): Promise<void> {
     this.xterm.open(this.surface)
     this.fitAddon.fit()
-    window.addEventListener('resize', () => this.fitAddon.fit())
+    window.addEventListener('resize', () => this.fitAddon.fit(), {
+      signal: this.resizeAbort.signal,
+    })
     this.xterm.onKey(({ domEvent }) => this.handleKey(domEvent))
     this.onModeChange('insert')
     await this.showMotd()
@@ -126,8 +130,9 @@ export class TerminalApp {
     this.xterm.focus()
   }
 
-  /** Release xterm resources when the terminal tile is closed. */
+  /** Release xterm resources + the window-resize listener when the tile closes. */
   dispose(): void {
+    this.resizeAbort.abort()
     this.xterm.dispose()
   }
 

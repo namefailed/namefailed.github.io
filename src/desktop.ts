@@ -84,6 +84,8 @@ export class Desktop {
 
   private layout: WindowLayout
   private maximizedId: string | null = null
+  /** Memoized WM host facade — built once so hot paths (per-keydown) don't reallocate it. */
+  private wmSelf: DesktopWmSelf | null = null
 
   constructor(desktop: HTMLElement) {
     this.desktop = desktop
@@ -129,8 +131,9 @@ export class Desktop {
   }
 
   private wm(): DesktopWmSelf {
+    if (this.wmSelf) return this.wmSelf
     const s = this
-    return {
+    this.wmSelf = {
       get windows() { return s.windows },
       get minimized() { return s.minimized },
       get launcherOverlay() { return s.launcherOverlay },
@@ -161,6 +164,7 @@ export class Desktop {
       toggleShowDesktop: () => s.toggleShowDesktop(),
       focusTerminalIfAlreadyVisible: () => s.focusTerminalIfAlreadyVisible(),
     }
+    return this.wmSelf
   }
 
   async openWindow(spec: WindowSpec): Promise<void> {

@@ -1,6 +1,7 @@
 /** Local Pong vs CPU or P2 — W/S vs arrows; fixed step on requestAnimationFrame. */
 
 import { createWindowChrome } from './window-chrome'
+import { createCssVarCache, type CssVarCache } from './css-var-cache'
 
 export interface PongWindowOptions {
   onClose: () => void
@@ -61,6 +62,7 @@ export class PongWindow {
   private keys = new Set<string>()
   private scoreL = 0
   private scoreR = 0
+  private cssVars: CssVarCache
 
   private keyNorm(ev: KeyboardEvent): string | null {
     switch (ev.code) {
@@ -168,6 +170,7 @@ export class PongWindow {
     const g = this.canvas.getContext('2d')
     if (!g) throw new Error('2d')
     this.ctx = g
+    this.cssVars = createCssVarCache(() => this.canvas)
 
     this.wrap.appendChild(this.canvas)
 
@@ -449,19 +452,16 @@ export class PongWindow {
     }
 
     const accent =
-      getComputedStyle(this.canvas).getPropertyValue('--pong-accent').trim() ||
-      getComputedStyle(this.canvas).getPropertyValue('--th-accent').trim() ||
-      '#cba6f7'
+      this.cssVars.get('--pong-accent', '') ||
+      this.cssVars.get('--th-accent', '#cba6f7')
 
     const dim =
-      getComputedStyle(this.canvas).getPropertyValue('--pong-muted').trim() ||
-      getComputedStyle(this.canvas).getPropertyValue('--th-text-muted').trim() ||
-      '#6c7086'
+      this.cssVars.get('--pong-muted', '') ||
+      this.cssVars.get('--th-text-muted', '#6c7086')
 
     const bg =
-      getComputedStyle(this.canvas).getPropertyValue('--pong-field').trim() ||
-      getComputedStyle(this.canvas).getPropertyValue('--th-base').trim() ||
-      '#11111b'
+      this.cssVars.get('--pong-field', '') ||
+      this.cssVars.get('--th-base', '#11111b')
 
     const ctx = this.ctx
     ctx.fillStyle = bg
@@ -527,6 +527,7 @@ export class PongWindow {
   dispose(): void {
     this.alive = false
     this.ro.disconnect()
+    this.cssVars.destroy()
     if (this.raf != null) cancelAnimationFrame(this.raf)
     this.raf = null
   }

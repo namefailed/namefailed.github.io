@@ -11,10 +11,20 @@ describe('focusTerminalTileIfVisible', () => {
     expect(clearUnfocused).not.toHaveBeenCalled()
   })
 
-  it('clears focus when no terminal tile is visible', () => {
+  it('focuses the last remaining tile when terminal is not open', () => {
     const focusWindow = vi.fn()
     const clearUnfocused = vi.fn()
-    focusTerminalTileIfVisible([{ command: 'whoami' }] as never, { focusWindow, clearUnfocused })
+    const whoami = { command: 'whoami' }
+    const resume = { command: 'resume' }
+    focusTerminalTileIfVisible([whoami, resume] as never, { focusWindow, clearUnfocused })
+    expect(focusWindow).toHaveBeenCalledWith(resume)
+    expect(clearUnfocused).not.toHaveBeenCalled()
+  })
+
+  it('clears focus when no tiles remain', () => {
+    const focusWindow = vi.fn()
+    const clearUnfocused = vi.fn()
+    focusTerminalTileIfVisible([] as never, { focusWindow, clearUnfocused })
     expect(clearUnfocused).toHaveBeenCalledOnce()
   })
 })

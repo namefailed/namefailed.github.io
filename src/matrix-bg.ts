@@ -1,6 +1,7 @@
 /** Full-viewport canvas rain behind `#desktop`; glyph colors follow the active theme pack. */
 
 import { getMatrixRainPalette } from './theme-control'
+import { createCssVarCache, type CssVarCache } from './css-var-cache'
 import { storageGet, storageSet } from './storage'
 import { WALLPAPER_KEY, WALLPAPER_DEFAULT } from './wallpaper'
 import { prefersReducedMotion } from './prefers-reduced-motion'
@@ -46,16 +47,12 @@ function rgba(hex: string, a: number): string {
   return `rgba(${r},${g},${b},${a})`
 }
 
-function readCssVar(name: string, fallback: string): string {
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return v || fallback
-}
-
 function drawBackdrop(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
   bgImg: HTMLImageElement,
+  readCssVar: (name: string, fallback: string) => string,
 ): void {
   if (bgImg.complete && bgImg.naturalWidth > 0 && bgImg.naturalHeight > 0) {
     const iw = bgImg.naturalWidth
@@ -102,6 +99,8 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
     return noop
   }
   const ctx: CanvasRenderingContext2D = ctxMaybe
+  const cssVars: CssVarCache = createCssVarCache(() => document.documentElement)
+  const readCssVar = (name: string, fallback: string): string => cssVars.get(name, fallback)
 
   const stored = readStoredMatrix()
   // Default OFF — wallpaper provides the backdrop; user opts in via settings
@@ -147,7 +146,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
 
   function paintStaticBackdrop(): void {
     if (width < 2 || height < 2) return
-    drawBackdrop(ctx, width, height, bgImg)
+    drawBackdrop(ctx, width, height, bgImg, readCssVar)
     ctx.fillStyle = readCssVar('--th-matrix-fade', 'rgba(17, 17, 27, 0.11)')
     ctx.fillRect(0, 0, width, height)
   }
@@ -192,7 +191,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
 
     frame++
 
-    drawBackdrop(ctx, width, height, bgImg)
+    drawBackdrop(ctx, width, height, bgImg, readCssVar)
     ctx.fillStyle = readCssVar('--th-matrix-fade', 'rgba(17, 17, 27, 0.11)')
     ctx.fillRect(0, 0, width, height)
 
@@ -268,6 +267,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   window.addEventListener('resize', onWinResize)
 
   const onThemeChange = (): void => {
+    cssVars.refresh()
     layout()
   }
   window.addEventListener('mrgrey-theme-change', onThemeChange)
@@ -295,6 +295,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
     destroy: () => {
       stopLoop()
       ro.disconnect()
+      cssVars.destroy()
       window.removeEventListener('resize', onWinResize)
       window.removeEventListener('mrgrey-theme-change', onThemeChange)
       window.removeEventListener('mrgrey-wallpaper-change', onWallpaperChange)

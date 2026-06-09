@@ -278,4 +278,14 @@ export function wireDockHoverZone(
       scheduleHide()
     }
   })
+
+  // Keyboard users can't trigger pointerenter — reveal when focus lands inside the
+  // dock (e.g. tabbing to a dock button while a window is maximized) and re-hide
+  // once focus leaves the taskbar entirely.
+  taskbar.addEventListener('focusin', reveal)
+  taskbar.addEventListener('focusout', e => {
+    if (!(e.relatedTarget instanceof Node) || !taskbar.contains(e.relatedTarget as Node)) {
+      scheduleHide()
+    }
+  })
 }

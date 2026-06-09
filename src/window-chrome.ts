@@ -91,6 +91,3 @@ export function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 }
-
-/** @deprecated Use {@link escapeHtml} directly. */
-export const escapeHtmlShared = escapeHtml

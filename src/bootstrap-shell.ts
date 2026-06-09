@@ -8,6 +8,7 @@ import { initMatrixBg } from './matrix-bg'
 import { initOsSound } from './os-sound'
 import { initSystray, syncSettingsSoundToggle } from './os-systray'
 import { loadSavedWallpaper } from './wallpaper'
+import { runBootSplash } from './boot-splash'
 import { dismissLegacyOnboardingUi } from './first-visit-flags'
 import { Desktop } from './desktop'
 
@@ -42,6 +43,8 @@ export async function bootstrapShellUi(): Promise<void> {
     }
   }
   scheduleMatrixInit()
+
+  await runBootSplash()
 
   new Desktop(desktopEl)
 }
