@@ -1,9 +1,7 @@
 /** Motion helpers for the /static/ brochure — respect prefers-reduced-motion. */
 
-export function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
+export { prefersReducedMotion } from '../prefers-reduced-motion'
+import { prefersReducedMotion } from '../prefers-reduced-motion'
 
 export function animateCounter(
   numEl: { textContent: string | null },

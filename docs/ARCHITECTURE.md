@@ -49,7 +49,7 @@ Three.js ships exclusively in the `rubik-window` lazy chunk (~139 kB gzipped). I
 | `ansi.ts` | ANSI-to-HTML conversion for rendering terminal output |
 | `ascii.ts` | ASCII art strings used in boot splash and neofetch |
 | `boot-splash.ts` | Scripted boot animation lines |
-| `hint-bubbles.ts` | Dismissable first-visit hint overlays |
+| `hint-bubbles.ts` | Dismissable first-visit hints on desktop folder tiles |
 | `intro-toasts.ts` | Auto-dismiss toast notifications on first visit |
 | `matrix-bg.ts` | Canvas matrix rain animation with visibility pause optimization |
 | `random-pick.ts` | Seeded random / weighted pick utilities |
@@ -110,7 +110,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-465 tests across 31 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+467 tests across 32 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|
@@ -126,6 +126,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `desktop.test.ts` | Window manager: focus, keyboard chords, tile limit |
 | `folder-popup-layout.test.ts` | Folder popup placement vs viewport edges |
 | `live-site-screenshot.test.ts` | mShots preview URL builder |
+| `prefers-reduced-motion.test.ts` | Reduced-motion media query probe |
 | `static/static-motion.test.ts` | Brochure typewriter/counter + reduced motion |
 | `static-portfolio-href.test.ts` | Classic portfolio path resolution |
 | `first-visit-flags.test.ts` | First-visit onboarding flags |

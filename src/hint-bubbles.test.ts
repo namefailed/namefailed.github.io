@@ -29,30 +29,30 @@ beforeAll(() => {
 describe('hint catalog', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('has 4 first-visit bubbles', () => {
-    expect(HINTS.length).toBe(4)
+  it('has 3 first-visit folder bubbles', () => {
+    expect(HINTS.length).toBe(3)
   })
 
-  it('every hint targets a portfolio tile', () => {
+  it('every hint targets a desktop folder tile', () => {
     const cmds = HINTS.map(h => h.targetCmd).sort()
-    expect(cmds).toEqual(['links', 'projects', 'resume', 'whoami'])
+    expect(cmds).toEqual(['apps-folder', 'games-folder', 'portfolio-folder'])
   })
 
   it('hintKey uses mrgrey-hint-<id> namespace', () => {
-    expect(hintKey('resume')).toBe('mrgrey-hint-resume')
+    expect(hintKey('portfolio-folder')).toBe('mrgrey-hint-portfolio-folder')
   })
 
   it('dismiss + check round-trips', () => {
-    expect(isHintDismissed('resume')).toBe(false)
-    dismissHint('resume')
-    expect(isHintDismissed('resume')).toBe(true)
+    expect(isHintDismissed('portfolio-folder')).toBe(false)
+    dismissHint('portfolio-folder')
+    expect(isHintDismissed('portfolio-folder')).toBe(true)
   })
 
   it('resetAllHints clears every hint flag', () => {
-    dismissHint('resume')
-    dismissHint('projects')
+    dismissHint('portfolio-folder')
+    dismissHint('apps-folder')
     resetAllHints()
-    expect(isHintDismissed('resume')).toBe(false)
-    expect(isHintDismissed('projects')).toBe(false)
+    expect(isHintDismissed('portfolio-folder')).toBe(false)
+    expect(isHintDismissed('apps-folder')).toBe(false)
   })
 })
