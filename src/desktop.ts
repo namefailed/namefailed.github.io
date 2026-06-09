@@ -21,7 +21,6 @@ import { Splitter } from './splitter'
 import {
   attachLazyPrefetchHandlers,
   LAUNCHER_ICON_ROWS,
-  PINNED_DOCK_CMDS,
   TERMINAL_TILE_SENTINEL,
 } from './launcher-catalog'
 import { isDesktopWmChordKey } from './desktop-keyboard-chords'
@@ -35,6 +34,14 @@ import {
   type LauncherOverlayFlags,
 } from './desktop-launcher-overlay'
 import { pickSpatialFocusAction } from './desktop-spatial-focus'
+import {
+  extraDockCommands,
+  orderedDockCommands,
+  renderTaskbarDock,
+  syncDockAutoHide,
+  syncYasbFocusedTitle,
+  wireDockHoverZone,
+} from './desktop-taskbar'
 import { launcherIconWindowSpec, windowSpecForCommand } from './desktop-window-spec'
 import { animateWmThenRemove, playWmMountAnim } from './desktop-wm-animations'
 import { initYasbClock } from './yasb-clock'
@@ -44,20 +51,6 @@ import { mountWelcomeGuide } from './welcome-guide'
 import { mountDesktopTiles } from './desktop-tiles'
 import type { WindowLayout } from './window-layout'
 import { BspLayout } from './bsp-layout'
-
-// ── Launcher icon lookup ───────────────────────────────────────────────────────
-//
-// `LAUNCHER_ICON_ROWS` is a small constant array (~10 items) that never changes after
-// module load. Pre-index it by `cmd` so `syncTaskbar` avoids an O(n²) scan per render.
-
-type AppIconRow = { kind: 'app'; cmd: string; label: string; glyph: string }
-
-/** Fast O(1) lookup of icon metadata by command id. */
-const ICON_META_BY_CMD = new Map<string, AppIconRow>(
-  LAUNCHER_ICON_ROWS
-    .filter((r): r is AppIconRow => r.kind === 'app')
-    .map(r => [r.cmd, r]),
-)
 
 // ── DOM helpers ────────────────────────────────────────────────────────────────
 
@@ -193,7 +186,7 @@ export class Desktop {
     mountWelcomeGuide()
 
     // Wire auto-hide hover zone for the dock
-    this.setupDockHoverZone()
+    wireDockHoverZone(this.taskbarDock)
 
     // Mount draggable desktop icon grid (behind tiling panes)
     const workspace = document.getElementById('desktop-workspace')
@@ -962,60 +955,16 @@ export class Desktop {
 
   /** All windows accessible from the dock: open (by tile order) then minimized. */
   private dockWindows(): TiledWin[] {
-    const seen = new Set<string>()
-    const out: TiledWin[] = []
-    for (const w of this.windows) {
-      if (!seen.has(w.command)) { seen.add(w.command); out.push(w) }
-    }
+    const order = orderedDockCommands(
+      this.windows.map(w => w.command),
+      this.minimized.map(m => m.win.command),
+    )
+    const byCmd = new Map<string, TiledWin>()
+    for (const w of this.windows) byCmd.set(w.command, w)
     for (const { win } of this.minimized) {
-      if (!seen.has(win.command)) { seen.add(win.command); out.push(win) }
+      if (!byCmd.has(win.command)) byCmd.set(win.command, win)
     }
-    return out
-  }
-
-  /** Hover-zone strip: reveals the dock on cursor reaching the bottom edge.
-   *  Only hides the dock again when in auto-hide mode (a window is maximized).
-   *  In normal mode the dock is always-visible via CSS; reveal() is a no-op.
-   */
-  private setupDockHoverZone(): void {
-    const taskbar = this.taskbarDock.closest<HTMLElement>('#wm-taskbar')!
-    const zone = document.createElement('div')
-    zone.className = 'dock-hover-zone'
-    document.body.appendChild(zone)
-
-    let hideTimer: ReturnType<typeof setTimeout> | null = null
-
-    const reveal = (): void => {
-      if (hideTimer !== null) { clearTimeout(hideTimer); hideTimer = null }
-      taskbar.classList.add('dock--visible')
-    }
-    /** Retract after a short grace period so brief pointer exits don't flicker the dock. */
-    const scheduleHide = (): void => {
-      if (hideTimer !== null) clearTimeout(hideTimer)
-      hideTimer = setTimeout(() => {
-        hideTimer = null
-        if (taskbar.classList.contains('dock--auto-hide')) {
-          taskbar.classList.remove('dock--visible')
-        }
-      }, 420)
-    }
-
-    zone.addEventListener('pointerenter', reveal)
-    taskbar.addEventListener('pointerenter', reveal)
-    taskbar.addEventListener('pointerleave', e => {
-      if (!(e.relatedTarget instanceof Node) || !taskbar.contains(e.relatedTarget as Node)) scheduleHide()
-    })
-  }
-
-  /** Sync dock auto-hide state: normal = always-visible; maximized = auto-hide. */
-  private syncDockVisibility(): void {
-    const taskbar = this.taskbarDock.closest<HTMLElement>('#wm-taskbar')!
-    const isMaximized = this.maximizedId !== null
-    taskbar.classList.toggle('dock--auto-hide', isMaximized)
-    if (!isMaximized) {
-      // Remove any stale dock--visible; base CSS keeps it visible without it.
-      taskbar.classList.remove('dock--visible')
-    }
+    return order.map(cmd => byCmd.get(cmd)!).filter(Boolean)
   }
 
   /** Ctrl+1–9: focus the Nth open/minimized window (left to right in dock order). */
@@ -1029,128 +978,52 @@ export class Desktop {
   }
 
   private syncFocusedTitle(): void {
-    const el = document.getElementById('yasb-focused')
-    if (!el) return
+    syncYasbFocusedTitle(this.focusedId, this.windows.length)
+  }
 
-    if (this.focusedId !== null) {
-      const label = this.focusedId === 'terminal'
-        ? 'namefailed@dev — ~/terminal'
-        : (ICON_META_BY_CMD.get(this.focusedId)?.label ?? this.focusedId)
-      el.textContent = label
-      return
-    }
-
-    el.textContent = this.windows.length === 0 ? 'mrgrey.site' : '—'
+  private syncDockVisibility(): void {
+    syncDockAutoHide(this.taskbarDock, this.maximizedId !== null)
   }
 
   private syncTaskbar(): void {
-    this.taskbarDock.replaceChildren()
+    const openCommands = this.windows.map(w => w.command)
+    const minimizedCommands = this.minimized.map(m => m.win.command)
+    const dockOrder = orderedDockCommands(openCommands, minimizedCommands)
 
-    // ── Pinned apps (always visible even when not running) ────────────────────
-    for (const cmd of PINNED_DOCK_CMDS) {
-      const isTerminal = cmd === 'terminal'
-
-      const isRunning = this.windows.some(w => w.command === cmd) ||
-        this.minimized.some(m => m.win.command === cmd)
-
-      const isActive = this.focusedId === cmd
-
-      const isMinimized = this.minimized.some(m => m.win.command === cmd)
-
-      const meta = isTerminal
-        ? { glyph: '~', label: 'Terminal' }
-        : (ICON_META_BY_CMD.get(cmd) ?? { glyph: '?', label: cmd })
-
-      const btn = document.createElement('button')
-      btn.type = 'button'
-      btn.className = 'wm-task-btn'
-      btn.dataset.cmd = cmd
-      if (isActive)    btn.classList.add('wm-task-btn--active')
-      if (isMinimized) btn.classList.add('wm-task-btn--minimized')
-      if (!isRunning)  btn.classList.add('wm-task-btn--idle')
-      btn.title = meta.label
-      btn.setAttribute('aria-label', meta.label)
-
-      const gl = document.createElement('span')
-      gl.className = 'wm-task-glyph'
-      gl.setAttribute('aria-hidden', 'true')
-      gl.textContent = meta.glyph
-      btn.appendChild(gl)
-
-      const lab = document.createElement('span')
-      lab.className = 'wm-task-label'
-      lab.textContent = meta.label
-      btn.appendChild(lab)
-
-      if (isTerminal) {
-        btn.addEventListener('click', () => {
-          // The tiling terminal lives in this.windows, not this.termWin.
-          // focusedId === 'terminal' when the terminal tile is the active window.
-          const termTile = this.windows.find(w => w.command === 'terminal')
-          const focused  = this.focusedId === 'terminal'
-          if (termTile && focused) {
-            // Already open and focused → minimize it
-            this.minimizeWindow(termTile)
-          } else {
-            // Closed, minimized, or not focused → open/restore/focus
-            void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+    renderTaskbarDock(
+      this.taskbarDock,
+      {
+        focusedId: this.focusedId,
+        openCommands,
+        minimizedCommands,
+        extraCommands: extraDockCommands(dockOrder),
+      },
+      {
+        onPinnedClick: cmd => {
+          if (cmd === 'terminal') {
+            const termTile = this.windows.find(w => w.command === 'terminal')
+            const focused = this.focusedId === 'terminal'
+            if (termTile && focused) {
+              this.minimizeWindow(termTile)
+            } else {
+              void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+            }
+            return
           }
-        })
-      } else {
-        attachLazyPrefetchHandlers(btn, cmd)
-        btn.addEventListener('click', () => void this.openWindow(windowSpecForCommand(cmd)))
-      }
-
-      this.taskbarDock.appendChild(btn)
-    }
-
-    // ── Separator + extra running/minimized windows not in pinned list ────────
-    const pinnedSet = new Set<string>(PINNED_DOCK_CMDS)
-    const extras = this.dockWindows().filter(w => !pinnedSet.has(w.command))
-
-    if (extras.length > 0) {
-      const sep = document.createElement('div')
-      sep.className = 'wm-dock-sep'
-      sep.setAttribute('role', 'separator')
-      sep.setAttribute('aria-hidden', 'true')
-      this.taskbarDock.appendChild(sep)
-
-      for (const win of extras) {
-        const isMinimized = this.minimized.some(m => m.win === win)
-        const isActive    = this.focusedId === win.command
-        const meta = ICON_META_BY_CMD.get(win.command) ?? {
-          kind: 'app' as const, cmd: win.command, label: win.command, glyph: '◇',
-        }
-
-        const btn = document.createElement('button')
-        btn.type = 'button'
-        btn.className = 'wm-task-btn'
-        btn.dataset.cmd = win.command
-        if (isActive)    btn.classList.add('wm-task-btn--active')
-        if (isMinimized) btn.classList.add('wm-task-btn--minimized')
-        btn.title = meta.label
-        btn.setAttribute('aria-label', meta.label)
-
-        const gl = document.createElement('span')
-        gl.className = 'wm-task-glyph'
-        gl.setAttribute('aria-hidden', 'true')
-        gl.textContent = meta.glyph
-        btn.appendChild(gl)
-
-        const lab = document.createElement('span')
-        lab.className = 'wm-task-label'
-        lab.textContent = meta.label
-        btn.appendChild(lab)
-
-        btn.addEventListener('click', () => {
+          void this.openWindow(windowSpecForCommand(cmd))
+        },
+        onExtraClick: cmd => {
+          const win = this.dockWindows().find(w => w.command === cmd)
+          if (!win) return
           const minimized = this.minimized.find(m => m.win === win)
-          if (minimized) { this.restoreMinimized(minimized); return }
+          if (minimized) {
+            this.restoreMinimized(minimized)
+            return
+          }
           this.focusWindow(win)
-        })
-        attachLazyPrefetchHandlers(btn, win.command)
-        this.taskbarDock.appendChild(btn)
-      }
-    }
+        },
+      },
+    )
   }
 
   // ── private: keyboard ──────────────────────────────────────────────────────
