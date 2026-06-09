@@ -110,7 +110,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-422 tests across 27 test files (428 unit assertions; plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+465 tests across 31 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|
@@ -124,7 +124,10 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `content/portfolio.test.ts` | Portfolio content assembly |
 | `desktop-tiles.test.ts` | Tile layout, drag snap, persistence |
 | `desktop.test.ts` | Window manager: focus, keyboard chords, tile limit |
+| `folder-popup-layout.test.ts` | Folder popup placement vs viewport edges |
+| `live-site-screenshot.test.ts` | mShots preview URL builder |
 | `static/static-motion.test.ts` | Brochure typewriter/counter + reduced motion |
+| `static-portfolio-href.test.ts` | Classic portfolio path resolution |
 | `first-visit-flags.test.ts` | First-visit onboarding flags |
 | `hint-bubbles.test.ts` | Hint bubble show/dismiss logic |
 | `intro-toasts.test.ts` | Toast sequencing |
@@ -135,6 +138,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `random-pick.test.ts` | Random/weighted pick |
 | `retro-fx.test.ts` | CRT toggle |
 | `rubik-model.test.ts` | Cube model: all moves, inverses, scramble, algorithms |
+| `rubik-stickers-layout.test.ts` | 3D sticker layout ↔ model move lock |
 | `storage.test.ts` | localStorage wrapper, JSON serialization |
 | `terminal-motd.test.ts` | MOTD rendering |
 | `theme-control.test.ts` | Theme pack apply/persist |
@@ -146,7 +150,7 @@ Run tests: `npm test` · coverage: `npm run test:coverage` · lint: `npm run lin
 
 ## Stylesheets
 
-Desktop shell CSS lives under `src/styles/` (36 section files). `src/style.css` is an `@import` hub only — regenerate with `node scripts/split-style-css.mjs` after editing the monolith backup if needed.
+Desktop shell CSS lives under `src/styles/` (`section.css` plus `section-2.css` … `section-22.css`). `src/style.css` is an `@import` hub only — regenerate with `node scripts/split-style-css.mjs` after editing the monolith backup if needed.
 
 Brochure styles remain in `src/static/static.css` (`--plain-*` tokens).
 

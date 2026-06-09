@@ -7,11 +7,7 @@ import {
   RESUME_SKILL_MATRIX_SECTIONS,
   RESUME_WORKSTYLE_BULLETS,
 } from './content/copy/resume-copy'
-
-/** WordPress mShots — slow first load but real page pixels for project cards */
-function liveSiteScreenshotUrl(web: string): string {
-  return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
-}
+import { liveSiteScreenshotUrl } from './live-site-screenshot'
 
 /** Portrait photo with MG initials fallback — shared by contact and résumé. */
 function mountPortfolioPortrait(

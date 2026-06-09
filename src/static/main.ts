@@ -10,6 +10,7 @@ import {
   type PlainProject,
   SKILLS_PRIMARY,
 } from './static-data'
+import { liveSiteScreenshotUrl } from '../live-site-screenshot'
 
 // ── Data helpers ───────────────────────────────────────────────────────────
 
@@ -23,11 +24,6 @@ function plainProjectsFromPortfolio(): PlainProject[] {
     thumb: p.thumb,
     skipLiveScreenshot: p.skipLiveScreenshot,
   }))
-}
-
-/** WordPress mShots — same source used by the main SPA's portfolio window */
-function liveShotUrl(web: string): string {
-  return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
 }
 
 function spaHomeHref(): string {
@@ -220,7 +216,7 @@ function projectCard(project: PlainProject, delay = 0): HTMLElement {
       ? project.thumb
       : `/${project.thumb}`
     : null
-  const liveShot = project.url && !project.skipLiveScreenshot ? liveShotUrl(project.url) : null
+  const liveShot = project.url && !project.skipLiveScreenshot ? liveSiteScreenshotUrl(project.url) : null
 
   if (thumbPath || liveShot) {
     // Wrap in <a> when a live URL is available so the whole image is clickable
