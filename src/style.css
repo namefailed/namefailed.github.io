@@ -356,6 +356,10 @@ html.retro-fx::before {
   border-color: rgba(var(--th-accent-rgb), 0.45);
 }
 
+.skip-link--classic:focus-visible {
+  top: calc(max(12px, env(safe-area-inset-top, 0px)) + 2.75rem);
+}
+
 /* Keyboard focus — visible on chrome; xterm keeps its own caret (no double ring) */
 :focus:not(:focus-visible) {
   outline: none;
@@ -1072,6 +1076,15 @@ html.retro-fx::before {
   font-size: 10px;
   color: var(--th-accent);
   text-shadow: 0 0 12px rgba(var(--th-accent-rgb), 0.45);
+}
+
+a.yasb-btn-classic {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.yasb-btn-classic:hover {
+  color: var(--th-yasb-btn-text);
 }
 
 #desktop.launchers-visible .yasb-btn-apps {
@@ -6001,6 +6014,29 @@ html.retro-fx .xterm-screen {
 
 .wg-tip--done .wg-bullet {
   color: var(--th-green, #a6e3a1);
+}
+
+.welcome-guide-footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--th-surface1, #45475a);
+}
+
+.welcome-guide-classic-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  color: var(--th-accent, #cba6f7);
+  transition: color var(--ui-duration-fast), letter-spacing var(--ui-duration-fast);
+}
+
+.welcome-guide-classic-link:hover {
+  color: var(--th-text, #cdd6f4);
+  letter-spacing: 0.05em;
 }
 
 @keyframes desktop-tile-in {
