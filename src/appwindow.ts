@@ -1,7 +1,7 @@
 /** Read-only tiled window chrome; `.win-body` renders ANSI-ish lines as HTML (editing → EditorWindow / terminal). */
 
 import { ansiToHtmlWithLinks } from './ansi'
-import { escapeHtml } from './window-chrome'
+import { createWindowChrome, escapeHtml } from './window-chrome'
 import type { PortfolioProjectEntry } from './content/portfolio'
 import {
   RESUME_SKILL_MATRIX_SECTIONS,
@@ -123,44 +123,20 @@ export class AppWindow {
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
 
-    // ── shell ───────────────────────────────────────────────────────────────
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window'
+    const chrome = createWindowChrome({
+      title: opts.title,
+      onClose: () => this.onClose(),
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
+    })
+    this.el = chrome.el
     this.el.dataset.app = opts.command
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-
-    // ── title bar ───────────────────────────────────────────────────────────
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">${escapeHtml(opts.title)}</span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min"   title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max"   title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onClose()
-    })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
-    bar.addEventListener('mousedown', () => opts.onFocus())
 
     // ── content ─────────────────────────────────────────────────────────────
     this.bodyEl = document.createElement('div')
     this.bodyEl.className = 'win-body'
 
-    this.el.appendChild(bar)
     this.el.appendChild(this.bodyEl)
 
     if (opts.command === 'resume') {

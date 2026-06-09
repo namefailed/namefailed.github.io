@@ -1,0 +1,63 @@
+/* ── Panes (tiling area) ───────────────────────────────────────────────────── */
+
+#panes {
+  position: relative;
+  z-index: var(--ui-z-wm);
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  min-height: 0;
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+/* Master pane: terminal (resizable via splitter) */
+#terminal-window {
+  flex: 0 0 auto;
+  width: 460px;
+  min-width: 280px;
+}
+
+/* No open windows → #panes is empty/transparent; let pointer events fall through
+   to desktop tiles underneath (which sit at a lower z-index). */
+#desktop[data-content-count="0"] #panes {
+  pointer-events: none;
+}
+
+/* When alone, terminal fills the whole desktop */
+#desktop[data-content-count="0"] #terminal-window {
+  flex: 1;
+  width: auto;
+}
+
+/* Slave pane: BSP columns side-by-side; each .bsp-col stacks windows vertically. */
+#right-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  transform-style: preserve-3d;
+}
+
+/* BSP column — a vertical flex container for up to 2 stacked content windows */
+.bsp-col {
+  flex: 1;
+  min-width: 200px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transform-style: preserve-3d;
+}
+
+/* Horizontal drag handle between two stacked windows inside a .bsp-col */
+.splitter-bsp-h {
+  cursor: ns-resize;
+}
+
+#desktop[data-content-count="0"] #right-pane,
+#desktop[data-content-count="0"] #h-splitter {
+  display: none;
+}

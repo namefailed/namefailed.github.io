@@ -8,6 +8,7 @@
     />
     <meta name="theme-color" content="#181825" />
     <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>
       (function () {
         var p = location.pathname || ''
@@ -238,9 +239,9 @@
                 <span class="win-title">namefailed@dev — ~/terminal</span>
               </div>
               <div class="win-traffic">
-                <span class="dot dot-min" title="minimize"></span>
-                <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-                <span class="dot dot-close" title="close terminal"></span>
+                <span class="dot dot-min" role="button" tabindex="0" title="minimize (ctrl+m)" aria-label="Minimize window"></span>
+                <span class="dot dot-max" role="button" tabindex="0" title="maximize / restore (ctrl+f)" aria-label="Maximize window"></span>
+                <span class="dot dot-close" role="button" tabindex="0" title="close (ctrl+q)" aria-label="Close window"></span>
               </div>
             </div>
             <div class="terminal-stack">

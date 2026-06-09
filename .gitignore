@@ -10,6 +10,10 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
+playwright-report
+test-results
+blob-report
 *.local
 
 # Editor directories and files
@@ -28,3 +32,9 @@ dist-ssr
 
 # Internal design specs + implementation plans (not shipped with the repo)
 docs/superpowers/
+
+# Local editor and tooling metadata
+.cursor/
+.claude/
+AGENTS.md
+.cursorrules

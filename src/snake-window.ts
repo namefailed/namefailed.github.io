@@ -1,5 +1,7 @@
 /** Full-tile Snake with adaptive difficulty, pickups, HUD. */
 
+import { createWindowChrome } from './window-chrome'
+
 export interface SnakeWindowOptions {
   onClose: () => void
   onMinimize: () => void
@@ -61,35 +63,16 @@ export class SnakeWindow {
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window snake-app'
+    const chrome = createWindowChrome({
+      title: 'snake',
+      onClose: () => { this.stopLoop(); this.onClose() },
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
+    })
+    this.el = chrome.el
+    this.el.classList.add('snake-app')
     this.el.tabIndex = -1
-
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">snake</span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.stopLoop()
-      this.onClose()
-    })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
 
     const hud = document.createElement('div')
     hud.className = 'snake-hud'
@@ -162,15 +145,12 @@ export class SnakeWindow {
     stack.appendChild(hud)
     stack.appendChild(this.wrap)
 
-    this.el.appendChild(bar)
     this.el.appendChild(stack)
 
     this.ro = new ResizeObserver(() => this.onWrapResize())
     this.ro.observe(this.wrap)
 
     this.el.addEventListener('keydown', e => this.onKey(e), true)
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-    bar.addEventListener('mousedown', () => opts.onFocus())
 
     requestAnimationFrame(() => {
       this.syncGridFromWrap()

@@ -1,0 +1,780 @@
+/* ── Content window body ───────────────────────────────────────────────────── */
+
+.win-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--ui-space-4) var(--ui-space-4) var(--ui-space-4) var(--ui-space-5);
+  font-size: var(--ui-text-md);
+  line-height: var(--ui-line-normal);
+  color: var(--th-text);
+  min-height: 0;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  scrollbar-color: var(--th-scroll-thumb) rgba(0, 0, 0, 0.18);
+}
+
+.win-body::-webkit-scrollbar {
+  width: 8px;
+}
+.win-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+.win-body::-webkit-scrollbar-thumb {
+  background: var(--th-scroll-thumb);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.win-body::-webkit-scrollbar-thumb:hover {
+  background: var(--th-scroll-thumb-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.win-line { white-space: pre; min-height: 1em; }
+
+/* Clickable URLs in ANSI tiles (résumé / contact / About / generic lines) */
+.win-line a.terminal-link {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--th-accent) 48%, transparent);
+  text-underline-offset: 3px;
+}
+
+.win-line a.terminal-link:hover {
+  color: var(--th-accent);
+  text-decoration-color: var(--th-accent);
+}
+
+.win-line a.terminal-link:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Résumé window: title + narrative flush left; bullets wrap with hanging indent */
+.app-window[data-app='resume'] .win-title-left {
+  justify-content: flex-start;
+}
+
+.app-window[data-app='resume'] .win-title {
+  text-align: left;
+}
+
+.app-window[data-app='resume'] .resume-main-col,
+.app-window[data-app='resume'] .resume-lead-text,
+.app-window[data-app='resume'] .resume-body-block {
+  text-align: left;
+}
+
+.app-window[data-app='resume'] .win-line--hang {
+  padding-left: 2em;
+  text-indent: -2em;
+  box-sizing: border-box;
+}
+
+/* Résumé: narrative + portrait; with skills · default *wide* = story left · aside right (photo + matrix).
+   Stacked header row only when the résumé container is phone-sized (<680px); tiled panes stay wide.
+   Narrative column uses overflow-x so long pre lines scroll instead of covering the aside. */
+.resume-layout {
+  container-name: resume;
+  container-type: inline-size;
+  width: 100%;
+  display: grid;
+  align-items: start;
+  /* Tighter row gap — wide two-column layout was leaving a “stripe” of dead vertical rhythm */
+  gap: var(--ui-space-2) var(--ui-space-4);
+}
+
+/* Narrative | portrait — skills omitted only */
+.resume-layout:not(.resume-layout--with-skills) {
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 150px);
+}
+
+.resume-layout:not(.resume-layout--with-skills) > .resume-main-col {
+  grid-column: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.resume-layout:not(.resume-layout--with-skills) > .resume-photo {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.resume-layout.resume-layout--no-photo:not(.resume-layout--with-skills) {
+  grid-template-columns: 1fr;
+}
+
+.resume-layout.resume-layout--no-photo:not(.resume-layout--with-skills) > .resume-main-col {
+  grid-column: 1;
+}
+
+/* Wide: narrative (left) | skills aside (photo on top + matrix below) */
+.resume-layout.resume-layout--with-skills {
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
+  grid-template-rows: auto;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-main-col {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Wrap inside the story column; normal word-break avoids awkward mid-word splits */
+.resume-layout.resume-layout--with-skills > .resume-main-col .resume-lead-text .win-line,
+.resume-layout.resume-layout--with-skills > .resume-main-col .resume-body-block .win-line,
+.resume-layout.resume-layout--with-skills > .resume-main-col > .win-line {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* Prevent long PROFILE paragraph lines from wrapping past the left gutter */
+.resume-layout.resume-layout--with-skills > .resume-main-col .resume-body-block .win-line {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-body .win-line:not(.resume-skill-meter-row) {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* Skill matrix: CSS tracks + `@container` collapses to label + % when the rail is phone-narrow */
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-matrix {
+  container-type: inline-size;
+  container-name: skmx;
+  overflow-x: auto;
+  overflow-y: visible;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-matrix-spacer {
+  flex: 0 0 auto;
+  min-height: 0.35rem;
+  max-height: 0.45rem;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  font-size: 0;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+
+.resume-skills-section-head {
+  flex: 0 0 auto;
+  margin: 0.35rem 0 0;
+  padding: 0 0 0.25rem;
+  font-size: var(--ui-text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: lowercase;
+  color: var(--th-accent);
+  border-bottom: 1px solid rgba(var(--th-accent-rgb), 0.14);
+}
+
+.resume-layout.resume-layout--with-skills .resume-skills-matrix .resume-skills-section-head:first-child {
+  margin-top: 0;
+}
+
+.resume-layout.resume-layout--with-skills .resume-skill-meter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(52px, 5.25rem) 2.1rem;
+  column-gap: 0.55rem;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.22rem 0;
+  box-sizing: border-box;
+}
+
+.resume-layout.resume-layout--with-skills .resume-skill-meter-label {
+  min-width: 0;
+  font-size: var(--ui-text-2xs);
+  line-height: 1.38;
+  color: var(--th-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resume-layout.resume-layout--with-skills .resume-skill-meter-track {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.38),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  align-self: center;
+}
+
+.resume-layout.resume-layout--with-skills .resume-skill-meter-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--th-accent) 35%, transparent) 0%,
+    color-mix(in srgb, var(--th-accent) 72%, transparent) 100%
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--th-accent) 22%, transparent);
+  transition: width var(--ui-duration-slower) var(--ui-easing-out-back);
+}
+
+.resume-layout.resume-layout--with-skills .resume-skill-meter-pct {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--th-text-muted, rgba(205, 214, 244, 0.58));
+  text-align: right;
+  white-space: nowrap;
+}
+
+@container skmx (max-width: 220px) {
+  .resume-skill-meter-row {
+    grid-template-columns: minmax(0, 1fr) 2.35rem;
+  }
+
+  .resume-skill-meter-track {
+    display: none;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skill-meter-label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+    hyphens: auto;
+  }
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes {
+  margin-top: 0.35rem;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.12);
+  background: rgba(var(--th-overlay-rgb), 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes-heading {
+  margin: 0 0 0.35em;
+  padding: 0;
+  font-size: var(--ui-text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: lowercase;
+  color: var(--th-accent);
+  line-height: 1.45;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes-item {
+  margin: 0 0 0.45em;
+  padding: 0;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel .resume-skills-notes-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Photo left · lead + PROFILE/experience stack in column 2 (no tall photo shoving PROFILE down) */
+.resume-layout.resume-layout--with-skills .resume-lead-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--ui-space-4);
+  row-gap: var(--ui-space-2);
+  align-items: start;
+  min-width: 0;
+  margin-bottom: var(--ui-space-2);
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-grid > .resume-lead-photo {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin: 0;
+  max-width: 7.5rem;
+  align-self: start;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-grid > .resume-lead-text {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-grid > .resume-body-block {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* No-photo path: tuck PROFILE under contact — drop extra row rhythm that read as “dead air” */
+.resume-layout.resume-layout--with-skills .resume-lead-grid--no-photo {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0;
+  margin-bottom: var(--ui-space-1);
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-grid--no-photo > .resume-lead-text {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-grid--no-photo > .resume-body-block {
+  grid-column: 1;
+  grid-row: 2;
+  padding-top: 0;
+  border-top: none;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-photo__img {
+  display: block;
+  width: 100%;
+  max-width: 7.5rem;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-photo .contact-photo-placeholder {
+  max-width: min(7.5rem, 100%);
+  margin: 0;
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-photo .contact-photo-initials {
+  font-size: clamp(17px, 4.25vw, 26px);
+}
+
+.resume-layout.resume-layout--with-skills .resume-lead-text,
+.resume-layout.resume-layout--with-skills .resume-body-block {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  position: sticky;
+  top: 0.5rem;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-4) var(--ui-space-3);
+  box-sizing: border-box;
+  font-size: var(--ui-text-sm);
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--th-titlebar-border);
+  background: rgba(var(--th-overlay-rgb), 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 var(--ui-space-2) var(--ui-space-4) rgba(0, 0, 0, 0.3);
+}
+
+.resume-layout.resume-layout--with-skills > .resume-skills-panel > .resume-skills-body {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-text-col {
+  min-width: 0;
+  max-width: min(74ch, 100%);
+}
+
+/* With skills rail: use full narrative column width — 74ch left empty space on wide panes */
+.resume-layout.resume-layout--with-skills > .resume-main-col.resume-text-col {
+  max-width: none;
+}
+
+.resume-photo {
+  width: 100%;
+  max-width: 156px;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--th-titlebar-border);
+  box-shadow: 0 var(--ui-space-2) var(--ui-space-6) rgba(0, 0, 0, 0.35);
+}
+
+.resume-text-col .win-line:first-child {
+  margin-top: 0;
+}
+
+/* Scroll tail without stable gutter — gutter looked like “empty footer” beside the dock */
+.app-window[data-app='resume'] .win-body {
+  scrollbar-gutter: auto;
+  padding-bottom: var(--ui-space-3);
+}
+
+/* Narrow resume: reduce side padding to prevent blank space */
+@container resume (max-width: 679px) {
+  .app-window[data-app='resume'] .win-body {
+    padding: var(--ui-space-3) var(--ui-space-3);
+  }
+}
+
+/* Collapse stray empty win-lines in résumé tiles (ANSI blank lines still render a min-height row) */
+.app-window[data-app='resume'] .resume-lead-text .win-line:empty,
+.app-window[data-app='resume'] .resume-body-block .win-line:empty {
+  min-height: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 620px) {
+  .resume-layout:not(.resume-layout--with-skills) {
+    grid-template-columns: 1fr;
+    grid-auto-flow: row;
+  }
+
+  .resume-layout:not(.resume-layout--with-skills) > .resume-photo,
+  .resume-layout:not(.resume-layout--with-skills) > .resume-main-col {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+
+  .resume-layout:not(.resume-layout--with-skills) > .resume-photo {
+    justify-self: center;
+    max-width: 188px;
+  }
+}
+
+/* With skills · narrow: narrative on top, skills at bottom (full-width) */
+@container resume (max-width: 679px) {
+  .resume-layout.resume-layout--with-skills {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0;
+    row-gap: var(--ui-space-3);
+    align-items: start;
+    justify-items: stretch;
+  }
+
+  /* No `.resume-photo` in the tree — full-width narrative + skills below */
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) > .resume-main-col:has(.resume-body-block) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) > .resume-main-col:not(:has(.resume-body-block)) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel {
+    display: contents;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* Narrative: full-width on top (row 1) */
+  .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    align-self: start;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) > .resume-lead-grid {
+    margin-bottom: 0.35rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) .resume-body-block {
+    min-width: 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Skills: full-width at bottom (row 2) */
+  /* Use both direct child and nested selectors for display: contents compatibility */
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-panel > .resume-skills-body {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  /* Legacy flat narrative (no lead/body): full-width on top */
+  .resume-layout.resume-layout--with-skills > .resume-main-col:not(:has(.resume-body-block)) {
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+    overflow-x: hidden;
+  }
+
+  /* Legacy: skills at bottom (row 2) */
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-panel > .resume-skills-body {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-main-col .win-line {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Skills body in narrow layout: no card styling (full width, no padding/border/bg) */
+  .resume-layout.resume-layout--with-skills .resume-skills-body {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: var(--ui-text-sm);
+    border-radius: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-body .win-line:not(.resume-skill-meter-row) {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-matrix {
+    container-type: inline-size;
+    container-name: skmx;
+    overflow-x: auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-notes-heading {
+    margin: 0 0 0.35em;
+    padding: 0;
+    line-height: 1.45;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-notes-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-notes-item {
+    margin: 0 0 0.35em;
+    padding: 0;
+    line-height: 1.48;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Skills notes in narrow layout: no card styling */
+  .resume-layout.resume-layout--with-skills .resume-skills-notes {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+}
+
+/*
+ * Fallback when container queries unavailable — mirror @container resume rules above.
+ * Narrative on top, skills at bottom (single column stack).
+ */
+@media (max-width: 679px), (max-height: 720px) {
+  .resume-layout.resume-layout--with-skills {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0;
+    row-gap: var(--ui-space-3);
+    align-items: start;
+    justify-items: stretch;
+  }
+
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) > .resume-main-col:has(.resume-body-block) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-photo)) > .resume-main-col:not(:has(.resume-body-block)) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-skills-panel {
+    display: contents;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* Narrative: full-width on top (row 1) */
+  .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    align-self: start;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) > .resume-lead-grid {
+    margin-bottom: 0.35rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-main-col:has(.resume-body-block) .resume-body-block {
+    min-width: 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Legacy flat narrative (no lead/body): full-width on top */
+  .resume-layout.resume-layout--with-skills > .resume-main-col:not(:has(.resume-body-block)) {
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+    overflow-x: hidden;
+  }
+
+  /* Skills: full-width at bottom (row 2) */
+  /* Use both direct child and nested selectors for display: contents compatibility */
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:has(.resume-body-block) > .resume-skills-panel > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-body,
+  .resume-layout.resume-layout--with-skills:not(:has(.resume-body-block)) > .resume-skills-panel > .resume-skills-body {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .resume-layout.resume-layout--with-skills > .resume-main-col .win-line {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Skills body in narrow layout: no card styling (full width, no padding/border/bg) */
+  .resume-layout.resume-layout--with-skills .resume-skills-body {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: var(--ui-text-sm);
+    border-radius: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-body .win-line:not(.resume-skill-meter-row) {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-matrix {
+    container-type: inline-size;
+    container-name: skmx;
+    overflow-x: auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-notes-heading {
+    margin: 0 0 0.35em;
+    padding: 0;
+    line-height: 1.45;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-notes-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .resume-layout.resume-layout--with-skills .resume-skills-notes-item {
+    margin: 0 0 0.35em;
+    padding: 0;
+    line-height: 1.48;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Skills notes in narrow layout: no card styling */
+  .resume-layout.resume-layout--with-skills .resume-skills-notes {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* Narrow resume: reduce side padding to prevent blank space */
+  .app-window[data-app='resume'] .win-body {
+    padding: var(--ui-space-3) var(--ui-space-3);
+  }
+}

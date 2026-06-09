@@ -1,0 +1,13 @@
+/* ── Phosphor flicker (retro mode only) ─────────────────────────────────────── */
+
+@keyframes phosphor-flicker {
+   0% { opacity: 1.00; }
+  19% { opacity: 1.00; }
+  20% { opacity: 0.97; }
+  21% { opacity: 1.00; }
+  60% { opacity: 1.00; }
+  61% { opacity: 0.98; }
+  62% { opacity: 1.00; }
+ 100% { opacity: 1.00; }
+}
+/* ── Narrow viewports (phones): stack tiles; keyboard WM shortcuts remain but drag matters less ─ */

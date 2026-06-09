@@ -1,0 +1,218 @@
+/* ── Floating dock (taskbar) ──────────────────────────────────────────────── */
+
+#wm-taskbar.wm-taskbar {
+  position: absolute;
+  bottom: max(var(--ui-gap-wm), env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
+  z-index: var(--ui-z-chrome-popover);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: auto;
+  padding: 0 var(--ui-gap-wm);
+  box-sizing: border-box;
+  /* Always visible — only hidden by launchers-visible override */
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: 50% 100%;
+  transition:
+    opacity var(--ui-duration-slower) var(--ui-easing-emph),
+    transform var(--ui-duration-slower) var(--ui-easing-out-back),
+    filter var(--ui-duration-slow) var(--ui-easing-smooth);
+}
+/* Auto-hide mode: active only when a window is maximised */
+#wm-taskbar.wm-taskbar.dock--auto-hide {
+  opacity: 0;
+  transform: translateY(calc(100% + 8px)) scale(0.96);
+  pointer-events: none;
+}
+/* Reveal on hover while auto-hiding */
+#wm-taskbar.wm-taskbar.dock--auto-hide.dock--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+/* Hover trigger strip at viewport bottom — intentionally taller than visible so it's easy to hit */
+.dock-hover-zone {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24px;
+  z-index: var(--ui-z-chrome-popover);
+  pointer-events: auto;
+}
+
+/*
+ * Dock uses a higher z-index than the launcher shell, so it would sit on top of the grid.
+ * While Applications / show-desktop is open, tuck the dock away so nothing overlaps the overlay.
+ */
+#desktop.launchers-visible #wm-taskbar.wm-taskbar {
+  opacity: 0;
+  transform: translateY(calc(100% + 18px)) scale(0.93);
+  filter: saturate(0.75);
+}
+
+#desktop.launchers-visible #wm-taskbar .wm-taskbar-dock {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #wm-taskbar.wm-taskbar {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes wm-dock-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.94);
+    filter: blur(12px) saturate(0.86);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+    filter: blur(0) saturate(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0) saturate(1);
+  }
+}
+
+.wm-taskbar-dock {
+  pointer-events: auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: calc(var(--ui-gap-wm) - 2px);
+  max-width: calc(100% - 2 * var(--ui-gap-wm));
+  padding: var(--ui-dock-pill-pad-v) var(--ui-space-3) calc(var(--ui-dock-pill-pad-v) + 1px);
+  border-radius: var(--ui-radius-dock);
+  box-sizing: border-box;
+  background: linear-gradient(
+    165deg,
+    rgba(var(--th-overlay-rgb), 0.42) 0%,
+    var(--th-dock-bg) 55%
+  );
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.18);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.38),
+    0 2px 8px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: wm-dock-rise 0.78s var(--ui-easing-out-back) 0.1s both;
+}
+
+.wm-task-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  margin: 0;
+  min-height: var(--ui-dock-btn-min-h);
+  min-width: 0;
+  padding: 2px var(--ui-gap-wm) 2px 5px;
+  font-family: inherit;
+  font-size: var(--ui-text-2xs);
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.14);
+  background: rgba(var(--th-overlay-rgb), 0.28);
+  color: var(--th-text);
+  transition:
+    background var(--ui-duration-med) var(--ui-easing-smooth),
+    border-color var(--ui-duration-med) var(--ui-easing-smooth),
+    transform var(--ui-duration-fast) var(--ui-easing-spring),
+    opacity var(--ui-duration-med) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-med) var(--ui-easing-emph);
+}
+
+.wm-task-btn:hover {
+  background: var(--th-icon-hover-bg);
+  border-color: rgba(var(--th-accent-rgb), 0.32);
+  transform: translateY(-2px);
+}
+
+.wm-task-btn--active {
+  background: rgba(var(--th-accent-rgb), 0.18);
+  border-color: rgba(var(--th-accent-rgb), 0.72);
+  box-shadow:
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.28),
+    0 10px 24px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.wm-task-btn--minimized {
+  opacity: 0.68;
+}
+
+.wm-task-btn--idle {
+  opacity: 0.48;
+}
+
+.wm-task-btn--idle:hover {
+  opacity: 0.85;
+}
+
+.wm-task-btn--closed {
+  opacity: 0.5;
+}
+
+/* Divider between pinned launchers and running (unpinned) windows */
+.wm-dock-sep {
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 1px;
+  margin: 3px var(--ui-space-3);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(var(--th-accent-rgb), 0.35) 20%,
+    rgba(var(--th-accent-rgb), 0.35) 80%,
+    transparent
+  );
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.wm-task-btn.wm-task-btn--running {
+  border-style: dashed;
+  border-color: rgba(var(--th-accent-rgb), 0.28);
+}
+
+.wm-task-glyph {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  opacity: 0.96;
+}
+
+.wm-task-btn--active .wm-task-glyph {
+  color: var(--th-accent);
+}
+
+.wm-task-label {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--ui-text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: var(--ui-line-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 88px;
+}
+
+.wm-task-btn--active .wm-task-label {
+  color: var(--th-text);
+}

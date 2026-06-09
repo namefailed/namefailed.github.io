@@ -16,6 +16,7 @@
  */
 
 import type { WindowSpec } from './appwindow'
+import { createWindowChrome } from './window-chrome'
 import { P5_EXAMPLES } from './p5-sketches'
 import { vfsReadRaw, vfsMkdir, vfsWrite } from './os-fs'
 import { storageGet, storageSet } from './storage'
@@ -128,12 +129,17 @@ export class P5Window {
     this.onMinimize = opts.onMinimize
     this.onMaximize = opts.onMaximize
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window p5-app'
+    const chrome = createWindowChrome({
+      title: 'p5.js',
+      onClose: () => this.onClose(),
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
+    })
+    this.el = chrome.el
+    this.el.classList.add('p5-app')
     this.el.dataset.app = 'p5'
-    this.el.addEventListener('mousedown', () => opts.onFocus())
 
-    this.el.appendChild(this.buildTitleBar())
     this.el.appendChild(this.buildBody())
 
     document.addEventListener('click', this.onDocClick)
@@ -155,24 +161,6 @@ export class P5Window {
   }
 
   // ── DOM construction ────────────────────────────────────────────────────────
-
-  private buildTitleBar(): HTMLElement {
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left"><span class="win-title">p5.js</span></div>
-      <div class="win-traffic">
-        <span class="dot dot-min"   title="minimize"></span>
-        <span class="dot dot-max"   title="maximize / restore"></span>
-        <span class="dot dot-close" title="close"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => { e.stopPropagation(); this.onClose() })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => { e.stopPropagation(); this.onMinimize() })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => { e.stopPropagation(); this.onMaximize() })
-    bar.addEventListener('mousedown', () => this.onFocus())
-    return bar
-  }
 
   private buildBody(): HTMLElement {
     const stack = document.createElement('div')

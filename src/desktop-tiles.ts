@@ -5,6 +5,7 @@
  */
 
 import { storageGet, storageSet, storageRemove } from './storage'
+import { computeFolderPopupPosition } from './folder-popup-layout'
 
 export const ZONE_PORTFOLIO = 'portfolio' as const
 export const ZONE_TOOLS = 'tools' as const
@@ -208,6 +209,30 @@ function closeActivePopup(): void {
   popupKeyController = null
 }
 
+/** Measure after mount, then place above/below based on free space on both sides. */
+function positionFolderPopup(anchor: HTMLElement, popup: HTMLElement): void {
+  const anchorRect = anchor.getBoundingClientRect()
+  const popupRect = popup.getBoundingClientRect()
+  const pos = computeFolderPopupPosition(
+    {
+      left: anchorRect.left,
+      top: anchorRect.top,
+      right: anchorRect.right,
+      bottom: anchorRect.bottom,
+      width: anchorRect.width,
+      height: anchorRect.height,
+    },
+    {
+      width: popupRect.width || popup.offsetWidth || 220,
+      height: popupRect.height || popup.offsetHeight || 180,
+    },
+    { width: window.innerWidth, height: window.innerHeight },
+  )
+  popup.dataset.placement = pos.placement
+  popup.style.left = `${pos.left}px`
+  popup.style.top = `${pos.top}px`
+}
+
 function toggleFolderPopup(
   anchor: HTMLElement,
   def: FolderDef,
@@ -258,19 +283,8 @@ function toggleFolderPopup(
 
   popup.appendChild(grid)
 
-  // Position popup above the anchor tile using fixed coords (avoids scroll offset issues)
   document.body.appendChild(popup)
-  const rect = anchor.getBoundingClientRect()
-  const pw = popup.offsetWidth || 220
-  const ph = popup.offsetHeight || 180
-  let left = rect.left + rect.width / 2 - pw / 2
-  let top  = rect.top - ph - 10
-  // Keep within viewport
-  if (left < 8) left = 8
-  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8
-  if (top < 8) top = rect.bottom + 10
-  popup.style.left = `${left}px`
-  popup.style.top  = `${top}px`
+  positionFolderPopup(anchor, popup)
 
   // Keyboard close — AbortController ensures cleanup via any close path
   popupKeyController = new AbortController()

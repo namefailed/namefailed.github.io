@@ -1,0 +1,368 @@
+/* ── reset ─────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Defaults match Catppuccin Mocha until JS applies a pack from localStorage */
+:root {
+  --th-body-bg:
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(35, 32, 48, 0.55), transparent 55%), radial-gradient(ellipse 120% 80% at 50% 0%, rgba(18, 18, 28, 0.9), transparent 45%), #050508;
+  --th-monitor-bg: linear-gradient(165deg, #3f3f4c 0%, #2a2a34 22%, #1c1c24 55%, #14141a 100%);
+  --th-desktop-bg: #11111b;
+  --th-accent-rgb: 245, 194, 231;
+  --th-accent: #f5c2e7;
+  --th-blue-rgb: 137, 180, 250;
+  --th-blue: #89b4fa;
+  --th-text: #cdd6f4;
+  --th-text-muted: #a6adc8;
+  --th-subtext: #585b70;
+  --th-surface0: #313244;
+  --th-surface1: #1e1e2e;
+  --th-mantle: #181825;
+  --th-overlay-rgb: 17, 17, 27;
+  --th-yasb-bg:
+    linear-gradient(180deg, rgba(36, 36, 52, 0.96) 0%, rgba(22, 22, 34, 0.94) 100%);
+  --th-yasb-btn-bg: rgba(49, 50, 68, 0.65);
+  --th-yasb-btn-hover-bg: rgba(69, 71, 90, 0.85);
+  --th-yasb-btn-text: #e0e6ff;
+  --th-yasb-clock: #bac4ef;
+  --th-launcher-backdrop: rgba(17, 17, 27, 0.42);
+  --th-launcher-panel: rgba(24, 24, 37, 0.55);
+  --th-launcher-input-bg: rgba(30, 30, 46, 0.65);
+  --th-launcher-input-bg-focus: rgba(30, 30, 46, 0.85);
+  --th-matrix-fade: rgba(17, 17, 27, 0.11);
+  --th-matrix-g1: #313244;
+  --th-matrix-g2: #1e1e2e;
+  --th-matrix-g3: #11111b;
+  --th-splitter-idle: rgba(180, 190, 254, 0.12);
+  --th-splitter-hover: rgba(245, 194, 231, 0.55);
+  --th-dock-bg: rgba(30, 30, 46, 0.85);
+  --th-icon-hover-bg: rgba(49, 50, 68, 0.65);
+  --th-icon-glyph-start: rgba(49, 50, 68, 0.98);
+  --th-icon-glyph-end: rgba(24, 24, 37, 0.92);
+  --th-win-border: rgba(255, 255, 255, 0.07);
+  --th-titlebar-border: rgba(255, 255, 255, 0.05);
+  --th-dot-close: #f38ba8;
+  --th-dot-min: #f9e2af;
+  --th-dot-max: #a6e3a1;
+  --th-badge-insert: #89b4fa;
+  --th-badge-normal: #a6e3a1;
+  --th-badge-visual: #cba6f7;
+  --th-badge-fg: #1e1e2e;
+  --th-scroll-thumb: #313244;
+  --th-scroll-thumb-hover: #45475a;
+  /* Secondary/teal accent — the "fun/tools" colour; matches each theme's terminal cyan */
+  --th-teal-rgb: 148, 226, 213;
+  --th-teal: #94e2d5;
+/* ── UI tokens (layout / rhythm — unchanged by theme packs) ───────────────── */
+  --ui-font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --ui-font-mono: var(--ui-font-sans);
+
+  --ui-text-2xs: 0.625rem;   /* ~10px */
+  --ui-text-xs: 0.6875rem;   /* ~11px */
+  --ui-text-sm: 0.75rem;     /* ~12px */
+  --ui-text-md: 0.8125rem;   /* ~13px */
+
+  --ui-line-tight: 1.25;
+  --ui-line-snug: 1.35;
+  --ui-line-normal: 1.45;
+
+  /* One rhythm: tiling gaps, splitters, desktop bottom inset */
+  --ui-gap-wm: 7px;
+  /* Dock height reserve: pill padding + buttons + dock border — no extra “air”; gap to windows = wm-stack pad (--ui-gap-wm). */
+  --ui-dock-pill-pad-v: 4px;
+  --ui-dock-btn-min-h: 22px;
+  --ui-reserve-dock: calc(2 * var(--ui-dock-pill-pad-v) + var(--ui-dock-btn-min-h) + 2px);
+  --ui-space-2: var(--ui-gap-wm);
+  --ui-space-3: 10px;
+  --ui-space-4: 14px;
+  --ui-space-5: 18px;
+  --ui-space-6: 24px;
+  --ui-space-8: 28px;
+  --ui-space-10: 32px;
+
+  --ui-touch-min: 44px;
+
+  --ui-radius-pill: 999px;
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 14px;
+  --ui-radius-lg: 20px;
+  --ui-radius-launcher-icon: 16px;
+  --ui-radius-dock: 12px;
+  --ui-radius-md-inner: clamp(14px, 2.4vmin, 28px);
+  --ui-radius-monitor: clamp(22px, 3.2vmin, 40px);
+  --ui-radius-monitor-inner: clamp(16px, 2.6vmin, 32px);
+  --ui-monitor-pad: clamp(10px, 1.6vmin, 18px);
+
+  --ui-duration-fast: 0.14s;
+  --ui-duration-med: 0.22s;
+  --ui-duration-slow: 0.34s;
+  --ui-duration-slower: 0.46s;
+  --ui-duration-splash: 0.72s;
+  /** Tiled window chrome — open/close (matches `desktop.ts` slack timers loosely) */
+  --ui-duration-wm-in: 0.55s;
+  --ui-duration-wm-out: 0.32s;
+  /** Comfortable defaults — bumped routes override duration explicitly where helpful */
+  --ui-easing-standard: cubic-bezier(0.33, 0.86, 0.36, 1);
+  --ui-easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ui-easing-emph: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui-easing-spring: cubic-bezier(0.34, 1.24, 0.54, 1);
+  --ui-easing-out-back: cubic-bezier(0.22, 1.28, 0.25, 1);
+
+  --ui-focus-ring: 2px solid rgba(var(--th-accent-rgb), 0.85);
+  --ui-focus-offset: 2px;
+
+  /* Z stacking — reserve high layers for CRT overlay */
+  --ui-z-base: 1;
+  --ui-z-matrix: 0;
+  --ui-z-wm: 2;
+  --ui-z-splitter: 3;
+  --ui-z-yasb: 40;
+  /* Popovers anchored to bar / dock share a band (different containing blocks). */
+  --ui-z-chrome-popover: 60;
+  --ui-z-yasb-popover: 70;
+  /* Must sit above retro overlay (8999+) so dialogs stay readable. */
+  --ui-z-modal: 10000;
+  --ui-z-retro-vignette: 8999;
+  --ui-z-retro-scanlines: 9000;
+  /* Launcher sits above wm tiles but inside the same shell as YASB. */
+  --ui-z-launcher-root: 5;
+  --ui-z-launcher-backdrop: 1;
+  --ui-z-launcher-panel: 2;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--ui-font-sans);
+  font-size: 16px;
+  line-height: var(--ui-line-normal);
+}
+
+/* Room / desk behind the “monitor” */
+body {
+  background: var(--th-body-bg);
+}
+/* ── CRT-style monitor shell (~98% viewport, rounded like old plastic bezel) ─ */
+
+@keyframes wm-monitor-in {
+  from {
+    opacity: 0;
+    filter: blur(12px) saturate(0.92);
+    transform: translate(-50%, calc(-50% + 18px)) scale(0.972);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) saturate(1);
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+#monitor-frame {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 98vw;
+  height: 98vh;
+  max-width: 100%;
+  max-height: 100%;
+  z-index: var(--ui-z-base);
+  display: flex;
+  flex-direction: column;
+  animation: wm-monitor-in var(--ui-duration-splash) var(--ui-easing-emph) both;
+  /* Outer bezel + notch / home-indicator safe areas on phones */
+  padding: max(var(--ui-monitor-pad), env(safe-area-inset-top, 0px))
+    max(var(--ui-monitor-pad), env(safe-area-inset-right, 0px))
+    max(var(--ui-monitor-pad), env(safe-area-inset-bottom, 0px))
+    max(var(--ui-monitor-pad), env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+  border-radius: var(--ui-radius-monitor);
+  background: var(--th-monitor-bg);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 0 2px rgba(0, 0, 0, 0.55),
+    inset 0 2px 2px rgba(255, 255, 255, 0.1),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.45),
+    0 28px 56px rgba(0, 0, 0, 0.65),
+    0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+#monitor-frame::before {
+  content: '';
+  position: absolute;
+  inset: clamp(6px, 1vmin, 12px);
+  border-radius: var(--ui-radius-monitor-inner);
+  pointer-events: none;
+  z-index: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    inset 0 3px 12px rgba(0, 0, 0, 0.35),
+    inset 0 0 40px rgba(0, 0, 0, 0.25);
+}
+/* ── Retro CRT layer (off unless html.retro-fx — toggle with `retro` command) ─ */
+
+html.retro-fx body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--th-overlay-rgb), 0.35);
+  pointer-events: none;
+  z-index: var(--ui-z-base);
+}
+
+html.retro-fx::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent         0px,
+    transparent         1px,
+    rgba(0,0,0,0.045)   1px,
+    rgba(0,0,0,0.045)   2px
+  );
+  pointer-events: none;
+  z-index: var(--ui-z-retro-scanlines);
+}
+
+html.retro-fx::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 50%,
+    rgba(0,0,0,0.55) 100%
+  );
+  pointer-events: none;
+  z-index: var(--ui-z-retro-vignette);
+}
+/* ── Desktop (the WM workspace — wallpaper & glass inside the bezel) ─────── */
+
+/* Wallpaper gradient + matrix canvas layered on top */
+#desktop {
+  position: relative;
+  z-index: var(--ui-z-base);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border-radius: var(--ui-radius-md-inner);
+  overflow: hidden;
+  --desktop-bottom-gutter: var(--ui-gap-wm);
+  padding: 0 0 var(--desktop-bottom-gutter);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--th-desktop-bg);
+  background-image: radial-gradient(ellipse at 50% 55%, var(--th-surface1) 0%, var(--th-mantle) 60%, var(--th-desktop-bg) 100%);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 80px rgba(0, 0, 0, 0.35);
+}
+
+#matrix-bg {
+  position: absolute;
+  inset: 0;
+  z-index: var(--ui-z-matrix);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#desktop-workspace {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: var(--ui-z-base);
+  display: flex;
+  flex-direction: column;
+  /* Reserve = dock slab height + the gap-wm offset used by the taskbar's `bottom` property,
+     so the content floor aligns exactly with the top of the floating pill. */
+  --workspace-dock-reserve: calc(var(--ui-reserve-dock) + var(--ui-gap-wm));
+  padding-bottom: var(--workspace-dock-reserve);
+  box-sizing: border-box;
+  transition: padding-bottom var(--ui-duration-slower) var(--ui-easing-emph);
+}
+
+/* Maximised windows fill the full viewport — no reserve for the (now auto-hidden) dock. */
+#desktop[data-maximized="1"] #desktop-workspace {
+  padding-bottom: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keyboard: first focusable in tab order; jumps xterm focus with JS (see main.ts) */
+.skip-link:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link:focus-visible {
+  position: fixed;
+  z-index: calc(var(--ui-z-yasb) + 20);
+  left: max(12px, env(safe-area-inset-left, 0px));
+  top: max(12px, env(safe-area-inset-top, 0px));
+  width: auto;
+  height: auto;
+  margin: 0;
+  clip: auto;
+  padding: var(--ui-space-2) var(--ui-space-4);
+  overflow: visible;
+  white-space: nowrap;
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--th-text);
+  background: rgba(var(--th-overlay-rgb), 0.95);
+  border: 1px solid var(--th-titlebar-border);
+  border-radius: var(--ui-radius-sm);
+  box-shadow:
+    0 var(--ui-space-2) var(--ui-space-6) rgba(0, 0, 0, 0.5),
+    0 0 0 3px rgba(var(--th-accent-rgb), 0.15);
+}
+
+.skip-link:focus-visible:hover {
+  color: var(--th-accent);
+  border-color: rgba(var(--th-accent-rgb), 0.45);
+}
+
+/* Keyboard focus — visible on chrome; xterm keeps its own caret (no double ring) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: var(--ui-focus-offset);
+}
+
+.xterm .xterm-helper-textarea:focus,
+.xterm .xterm-helper-textarea:focus-visible {
+  outline: none !important;
+}

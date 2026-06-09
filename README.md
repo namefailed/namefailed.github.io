@@ -22,7 +22,7 @@ A second entry (`/static/`) serves the same portfolio content as a polished broc
 - xterm.js terminal with vim-mode editing (insert / normal / visual)
 - Seven switchable colour themes — Catppuccin Mocha, Dracula, Nord, Gruvbox Dark, Tokyo Night, Solarized Dark, One Dark
 - Matrix rain backdrop and CRT scanline/vignette overlay (both toggleable and persistent)
-- Virtual filesystem (VFS v4) backed by `localStorage` — `cat`, `ls`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `edit`, `wc`, and more
+- Virtual filesystem (VFS v8) backed by `localStorage` — `cat`, `ls`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `edit`, `wc`, and more
 
 ### Shell commands
 - `resume` — full résumé with inline skills matrix in ANSI colour
@@ -71,6 +71,9 @@ Pre-loaded in `~/sketches/` (VFS):
 | `npm run build` | `tsc` then Vite build → `dist/` and `dist/static/` |
 | `npm run preview` | Preview `dist/` locally |
 | `npm test` | Vitest — `*.test.ts` files |
+| `npm run test:coverage` | Vitest with v8 coverage report |
+| `npm run lint` | ESLint (TypeScript + e2e) |
+| `npm run test:e2e` | Playwright smoke tests against `dist/` preview |
 
 ## GitHub Pages
 
@@ -87,7 +90,7 @@ The deploy publishes `dist/`, not the repo root. `index.html` at the root only w
 
 ## Testing
 
-414 tests across 25 test files:
+428 unit tests across 27 test files (plus Playwright smoke e2e).
 - `npm test` — run Vitest suite
 - Tests co-located with source: `module.ts` → `module.test.ts`
-- Coverage: VFS, vim input, storage, ANSI, CLI tools, window chrome, matrix rain, boot splash, rubik model, p5 sketches, launcher catalog, desktop tiles, intro toasts, hint bubbles, wallpaper, first-visit flags, BSP layout, theme control
+- Coverage: VFS, vim input, storage, ANSI, CLI tools, window chrome, matrix rain, boot splash, rubik model, p5 sketches, launcher catalog, desktop tiles, desktop WM (focus/keyboard), static motion, intro toasts, hint bubbles, wallpaper, first-visit flags, BSP layout, theme control

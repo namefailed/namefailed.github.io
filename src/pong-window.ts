@@ -1,5 +1,7 @@
 /** Local Pong vs CPU or P2 — W/S vs arrows; fixed step on requestAnimationFrame. */
 
+import { createWindowChrome } from './window-chrome'
+
 export interface PongWindowOptions {
   onClose: () => void
   onMinimize: () => void
@@ -85,35 +87,16 @@ export class PongWindow {
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window pong-app'
+    const chrome = createWindowChrome({
+      title: 'pong',
+      onClose: () => { this.dispose(); this.onClose() },
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
+    })
+    this.el = chrome.el
+    this.el.classList.add('pong-app')
     this.el.tabIndex = -1
-
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">pong</span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.dispose()
-      this.onClose()
-    })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
 
     const hud = document.createElement('header')
     hud.className = 'pong-hud'
@@ -193,7 +176,6 @@ export class PongWindow {
     stack.appendChild(hud)
     stack.appendChild(this.wrap)
 
-    this.el.appendChild(bar)
     this.el.appendChild(stack)
 
     const kd = (e: KeyboardEvent): void => {
@@ -210,8 +192,6 @@ export class PongWindow {
     this.el.addEventListener('keydown', kd, true)
     this.el.addEventListener('keyup', ku, true)
 
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-    bar.addEventListener('mousedown', () => opts.onFocus())
     this.wrap.addEventListener('mousedown', () => {
       opts.onFocus()
       this.canvas.focus()

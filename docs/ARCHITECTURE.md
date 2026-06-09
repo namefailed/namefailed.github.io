@@ -73,7 +73,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 ### Fake OS Layer (`os-*.ts`)
 | Module | Purpose |
 |--------|---------|
-| `os-fs.ts` | Virtual filesystem backed by `localStorage` key `portfolio-vfs-v4-namefailed-home`. Debounced saves (150ms). Seeds `~/sketches/` with all p5 examples on first visit |
+| `os-fs.ts` | Virtual filesystem backed by `localStorage` key `portfolio-vfs-v8-namefailed-home`. Debounced saves (150ms). Seeds `~/p5.js/` with all p5 examples on first visit |
 | `os-sound.ts` | Web Audio API for UI sound effects |
 | `os-systray.ts` | Toast notifications, settings panel |
 | `os-registry.ts` | Shared ref for shell commands → Desktop (prevents circular imports) |
@@ -110,15 +110,22 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-297 tests across 18 test files. Tests co-located with source: `module.ts` → `module.test.ts`.
+422 tests across 27 test files (428 unit assertions; plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|
 | `ansi.test.ts` | ANSI-to-HTML conversion |
 | `boot-splash.test.ts` | Boot animation line arrays |
 | `browser-url.test.ts` | URL normalization |
+| `bsp-layout.test.ts` | BSP column routing, splitter placement |
 | `commands/cli-text-utils.test.ts` | `cal`, `wc`, human-readable bytes |
+| `commands/system-commands.test.ts` | System-flavour shell commands |
+| `commands/vfs-commands.test.ts` | VFS shell commands |
+| `content/portfolio.test.ts` | Portfolio content assembly |
 | `desktop-tiles.test.ts` | Tile layout, drag snap, persistence |
+| `desktop.test.ts` | Window manager: focus, keyboard chords, tile limit |
+| `static/static-motion.test.ts` | Brochure typewriter/counter + reduced motion |
+| `first-visit-flags.test.ts` | First-visit onboarding flags |
 | `hint-bubbles.test.ts` | Hint bubble show/dismiss logic |
 | `intro-toasts.test.ts` | Toast sequencing |
 | `launcher-catalog.test.ts` | Launcher grid, TILED_WINDOW_COMMANDS, prefetch |
@@ -130,10 +137,18 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `rubik-model.test.ts` | Cube model: all moves, inverses, scramble, algorithms |
 | `storage.test.ts` | localStorage wrapper, JSON serialization |
 | `terminal-motd.test.ts` | MOTD rendering |
+| `theme-control.test.ts` | Theme pack apply/persist |
 | `vim.test.ts` | Vim input: modes, motions, operators, undo |
+| `wallpaper.test.ts` | Wallpaper apply/clear events |
 | `window-chrome.test.ts` | Window chrome factory |
 
-Run tests: `npm test`
+Run tests: `npm test` · coverage: `npm run test:coverage` · lint: `npm run lint` · e2e: `npm run test:e2e`
+
+## Stylesheets
+
+Desktop shell CSS lives under `src/styles/` (36 section files). `src/style.css` is an `@import` hub only — regenerate with `node scripts/split-style-css.mjs` after editing the monolith backup if needed.
+
+Brochure styles remain in `src/static/static.css` (`--plain-*` tokens).
 
 ## Naming Conventions
 
@@ -192,7 +207,7 @@ All state in `localStorage`:
 
 | Key | Contents |
 |-----|----------|
-| `portfolio-vfs-v4-namefailed-home` | VFS tree and cwd (bump version to force fresh defaults) |
+| `portfolio-vfs-v8-namefailed-home` | VFS tree and cwd (bump version to force fresh defaults) |
 | `mrgrey-theme` | Selected theme id |
 | `mrgrey-os-sound` / `mrgrey-os-volume` | Sound on/off and volume |
 | `mrgrey-retro-fx` | CRT overlay toggle |
@@ -217,6 +232,6 @@ No backend required.
 
 **`p5-sketches.ts`** — Sketch definitions (code as strings). Seeded into the VFS by `os-fs.ts` on first visit. `p5-window.ts` renders them in a sandboxed iframe.
 
-**`os-*.ts`** — Fake OS layer. `os-fs.ts` is VFS v4 backed by localStorage. Bumping the version number forces fresh default trees for returning visitors.
+**`os-*.ts`** — Fake OS layer. `os-fs.ts` is VFS v8 backed by localStorage. Bumping the version number forces fresh default trees for returning visitors.
 
 **`theme-control.ts` + `theme-packs.ts`** — Theme packs define CSS custom properties (`--th-*`), xterm palette, and matrix rain colors. `theme-control.ts` applies them and persists the selection.

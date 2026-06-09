@@ -1,6 +1,7 @@
 /** Modal editor over the fake VFS (normal / insert / ex); not the terminal one-line vim widget. */
 
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
+import { createWindowChrome } from './window-chrome'
 
 export interface EditorWindowOptions {
   initialPath: string
@@ -79,37 +80,16 @@ export class EditorWindow {
     const startText = initial.ok ? initial.body : ''
     this.savedText = startText
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window editor-app'
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title"></span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    this.titleEl = bar.querySelector('.win-title') as HTMLElement
-
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.tryCloseFromChrome()
+    const chrome = createWindowChrome({
+      title: '',
+      onClose: () => this.tryCloseFromChrome(),
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
     })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
-    bar.addEventListener('mousedown', () => opts.onFocus())
+    this.el = chrome.el
+    this.el.classList.add('editor-app')
+    this.titleEl = chrome.titleEl
 
     const stack = document.createElement('div')
     stack.className = 'editor-stack'
@@ -156,7 +136,6 @@ export class EditorWindow {
     const ro = new ResizeObserver(() => this.syncBlockCaret())
     ro.observe(this.textareaWrap)
 
-    this.el.appendChild(bar)
     this.el.appendChild(stack)
 
     this.resetUndoStack(startText)
