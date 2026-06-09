@@ -1,96 +1,111 @@
 # namefailed.github.io
 
-**Live:** https://mrgrey.site  
-**Alt:** https://namefailed.github.io/
+**Live:** [mrgrey.site](https://mrgrey.site) · **Alt:** [namefailed.github.io](https://namefailed.github.io/)
 
-A personal portfolio built as an in-browser window manager — tiling layout, xterm.js terminal, a toy filesystem, seven colour themes, and optional CRT/matrix effects.
+A personal portfolio built as an **in-browser desktop OS** — tiling window manager, xterm.js terminal, virtual filesystem, vim-style editor, interactive demos, and seven runtime colour themes. The same content also ships as a polished brochure at `/static/` (mobile default).
 
-A second entry (`/static/`) serves the same portfolio content as a polished brochure page. Mobile visitors are redirected there automatically.
+---
 
-## Stack
+## At a glance
 
-- TypeScript, Vite 8 (two HTML entry points)
-- [@xterm/xterm](https://github.com/xtermjs/xterm.js) + fit + web-links addons
-- Three.js (Rubik's cube — lazy-loaded in its own chunk)
-- Web Audio API (sound effects)
-- No framework — vanilla DOM throughout
+| | |
+|---|---|
+| **Stack** | TypeScript · Vite 8 · vanilla DOM (no framework) |
+| **Terminal** | [@xterm/xterm](https://github.com/xtermjs/xterm.js) + vim input layer |
+| **3D** | Three.js (Rubik cube — lazy chunk only) |
+| **Tests** | **563** unit · **3** e2e smoke · CI on every `main` push |
+| **Deploy** | GitHub Actions → GitHub Pages (`dist/`) |
+
+---
+
+## Why this exists
+
+Most portfolios list skills. This one **runs** them: modular TypeScript, lazy code splitting, keyboard-driven UX, tested pure helpers, and client-side persistence — packaged as something memorable to explore.
+
+**For reviewers:** start with [docs/OVERVIEW.md](docs/OVERVIEW.md) — architecture diagram, technical highlights, skills map.
+
+**For contributors & AI agents:** [docs/README.md](docs/README.md) — full documentation index.
+
+---
+
+## Quick start
+
+```bash
+npm install
+npm run dev          # desktop → http://localhost:5173/
+npm test             # 563 unit tests
+npm run build && npm run test:e2e
+```
+
+Open the terminal (`Ctrl+T`) and type `help`.
+
+---
 
 ## Features
 
 ### Desktop shell
-- Tiling window manager with floating dock and launcher overlay
-- xterm.js terminal with vim-mode editing (insert / normal / visual)
-- Seven switchable colour themes — Catppuccin Mocha, Dracula, Nord, Gruvbox Dark, Tokyo Night, Solarized Dark, One Dark
-- Matrix rain backdrop and CRT scanline/vignette overlay (both toggleable and persistent)
-- Virtual filesystem (VFS v8) backed by `localStorage` — `cat`, `ls`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `edit`, `wc`, and more
+- BSP tiling window manager with drag splitters, floating dock, Applications launcher
+- Lazy-loaded tiles: résumé, projects, editor, file explorer, browser, p5 viewer, games, Rubik cube
+- xterm.js shell with 50+ commands and vim-style prompt editing
+- VFS v8 in `localStorage` — real `edit` / `ls` / `mkdir` workflow
+- Seven themes, CRT overlay, matrix rain, wallpaper, Web Audio UI sounds
 
-### Shell commands
-- `resume` — full résumé with inline skills matrix in ANSI colour
-- `projects` — portfolio project listing with links
-- `contact`, `about`, `help`, `whoami`, `motd`, `fortune`
-- `theme [id|list|random]` — switch colour packs at runtime
-- `browse <url>` — embedded browser tile
-- `edit [file]` — in-shell text editor backed by the VFS; `F5` / `:run` plays a `.js` file in the p5 viewer
-- `p5` — p5.js sketch viewer; 8+ built-in sketches; `Open…` loads from VFS
-- `cube` — interactive Rubik's cube (Three.js); drag to spin, U/D/L/R/F/B keys, animated scramble/solve, algorithm picker
-- `snake`, `pong` — playable games
-- `paint` — pixel canvas
-- `ssh`, `apt`, `cowsay`, `neofetch`, `wc`, `matrix` — easter eggs and flavour commands
+### Brochure (`/static/`)
+- Scroll progress, section nav, typewriter hero, animated counters
+- Auto-redirect on viewport ≤768px
 
-### p5.js sketches
-Pre-loaded in `~/sketches/` (VFS):
-- Fractal Tree, Game of Life, Lorenz Attractor, Spirograph, Noise Terrain, Mandelbrot, Bouncing Balls, Sine Waves
-- Create your own: `edit ~/sketches/myscript.js` → `F5` to run it live
+---
 
-### Static brochure (`/static/`)
-- Scroll progress bar, floating section-nav dots with tooltips
-- Typewriter headline effect, animated stat counters
-- Scroll-triggered fade-in animations (respects `prefers-reduced-motion`)
-- Experience cards with role-type colour strips and a "Featured" badge
-- Auto-redirect from mobile: viewport ≤ 768px lands on `/static/` by default
+## Keyboard shortcuts
 
-### Keybinds
 | Chord | Action |
 |-------|--------|
 | `Ctrl+T` | Open / focus terminal |
-| `Ctrl+D` | Desktop / launcher |
-| `Ctrl+H` | Focus terminal (← left) |
-| `Ctrl+L` | Enter right pane (→) |
-| `Ctrl+K` | Previous window (↑) |
-| `Ctrl+J` | Next window (↓) |
-| `Ctrl+Q` | Close focused window |
-| `Ctrl+M` | Minimise focused window |
-| `Ctrl+F` | Maximise / restore |
-| `Ctrl+1–9` | Focus Nth open window |
+| `Ctrl+D` | Applications launcher |
+| `Ctrl+H/L/K/J` | Focus window ← → ↑ ↓ |
+| `Ctrl+Q/M/F` | Close / minimize / maximize |
+| `Ctrl+1–9` | Focus dock slot |
+
+Full list: `keybinds` in terminal or [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
+
+---
+
+## Documentation
+
+| Document | Audience |
+|----------|----------|
+| [docs/README.md](docs/README.md) | **Documentation hub** |
+| [docs/OVERVIEW.md](docs/OVERVIEW.md) | Employers & technical reviewers |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Site users |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module layout & data flow |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local dev & change recipes |
+| [docs/AGENTS.md](docs/AGENTS.md) | AI agents & automation |
+| [docs/API.md](docs/API.md) | Types & extension APIs |
+| [docs/THEMING.md](docs/THEMING.md) | Colour packs & CSS tokens |
+| [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) | Coding standards |
+
+---
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Vite dev server — desktop at `/`, brochure at `/static/` |
-| `npm run build` | `tsc` then Vite build → `dist/` and `dist/static/` |
-| `npm run preview` | Preview `dist/` locally |
-| `npm test` | Vitest — `*.test.ts` files |
-| `npm run test:coverage` | Vitest with v8 coverage report |
-| `npm run lint` | ESLint (TypeScript + e2e) |
-| `npm run test:e2e` | Playwright smoke tests against `dist/` preview |
+| `npm run dev` | Vite dev — `/` desktop, `/static/` brochure |
+| `npm run build` | `tsc` + Vite → `dist/` |
+| `npm run preview` | Preview production build |
+| `npm test` | Vitest unit suite |
+| `npm run test:coverage` | Coverage report |
+| `npm run lint` | ESLint |
+| `npm run test:e2e` | Playwright smoke tests |
+
+---
 
 ## GitHub Pages
 
-The deploy publishes `dist/`, not the repo root. `index.html` at the root only works under `vite dev`.
+Deploy publishes **`dist/`**, not the repo root. One-time: repo → Settings → Pages → Source → **GitHub Actions**. Pushes to `main` run lint, tests, build, e2e, then deploy (`.github/workflows/deploy-pages.yml`).
 
-**One-time setup:** repo → Settings → Pages → Build and deployment → Source → **GitHub Actions**. Pushes to `main` build and deploy via `.github/workflows/deploy-pages.yml`.
+---
 
-## Docs
+## License
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module layout, bootstrap order, chunk strategy, testing
-- [docs/THEMING.md](docs/THEMING.md) — ThemePack interface, custom property reference, how to add a pack
-- [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — TypeScript standards, CSS conventions, testing guidelines
-- [docs/API.md](docs/API.md) — Window system, VFS, storage utilities, theming API
-
-## Testing
-
-428 unit tests across 27 test files (plus Playwright smoke e2e).
-- `npm test` — run Vitest suite
-- Tests co-located with source: `module.ts` → `module.test.ts`
-- Coverage: VFS, vim input, storage, ANSI, CLI tools, window chrome, matrix rain, boot splash, rubik model, p5 sketches, launcher catalog, desktop tiles, desktop WM (focus/keyboard), static motion, intro toasts, hint bubbles, wallpaper, first-visit flags, BSP layout, theme control
+Personal portfolio — source available for review; contact author for reuse.

@@ -1,264 +1,309 @@
 # Architecture
 
-Personal portfolio site built as an in-browser fake desktop environment. TypeScript throughout, Vite for bundling, no framework. All state persists to `localStorage`.
+Technical map of the portfolio desktop OS. For a narrative introduction see [OVERVIEW.md](./OVERVIEW.md). For change recipes see [DEVELOPMENT.md](./DEVELOPMENT.md) and [AGENTS.md](./AGENTS.md).
 
-## Entry Points
+---
+
+## System diagram
+
+```mermaid
+sequenceDiagram
+  participant HTML as index.html
+  participant Main as main.ts
+  participant Boot as bootstrap-shell
+  participant Desk as Desktop
+  participant Term as terminal
+  participant Tile as *-window.ts
+
+  HTML->>Main: load
+  Main->>Boot: bootstrapShellUi()
+  Boot->>Boot: theme, splash, sound, systray
+  Boot->>Desk: new Desktop(#desktop)
+  Note over Desk: BSP layout, dock, keyboard chords
+  Term->>Desk: openWindow(spec) via os-registry
+  Desk->>Tile: dynamic import() on first open
+```
+
+---
+
+## Entry points
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Desktop shell — CRT monitor frame, YASB status bar, launcher overlay, tiling panes, floating dock |
-| `static/index.html` | Brochure page — same portfolio content, no OS chrome. Mobile auto-redirects here (viewport ≤ 768px) |
-| `src/main.ts` | Vite entry: imports CSS, calls `bootstrapShellUi()` |
-| `src/bootstrap-shell.ts` | Startup sequence: boot splash → theme → retro-fx → sound → Desktop → matrix rain. Terminal is a lazy tile, not pre-mounted. |
-| `src/static/main.ts` | Brochure entry: mounts banner, hero, sections, scroll-spy, animations |
+| `index.html` | Desktop shell — monitor frame, YASB bar, launcher, `#panes` → `#right-pane` |
+| `static/index.html` | Brochure — no OS chrome; mobile redirect target |
+| `src/main.ts` | Imports CSS, calls `bootstrapShellUi()` |
+| `src/bootstrap-shell.ts` | Boot splash → theme → wallpaper → retro FX → sound → systray → `Desktop` → matrix rain (idle) |
+| `src/static/main.ts` | Brochure: hero, sections, scroll-spy, motion |
 
-## Module Layers
+**Terminal is not in static HTML.** It opens as a lazy tile (`Ctrl+T`, dock, or `terminal` command).
 
-### Core Shell
+---
+
+## Bootstrap order
+
+1. `runBootSplash()` — skippable after first visit (`mrgrey-boot-seen`)
+2. `initThemeFromStorage()` — apply `--th-*` tokens + xterm palette
+3. `loadSavedWallpaper()`
+4. `initRetroFxFromStorage()`
+5. `initOsSound()` + `initSystray()`
+6. `new Desktop(desktopEl)` — WM, dock, folder tiles, keyboard listener
+7. `initMatrixBg()` — deferred via `requestIdleCallback`
+
+---
+
+## Module layers
+
+### Window manager (`desktop*.ts`)
+
+`desktop.ts` (~340 lines) orchestrates extracted subsystems via `desktop-wm-hosts.ts`:
+
 | Module | Responsibility |
 |--------|----------------|
-| `desktop.ts` | WM orchestrator (~430 lines) — constructor, `wm()` delegate, public API |
-| `desktop-wm-hosts.ts` | Host/context bindings into extracted WM modules |
-| `desktop-open-window.ts` | Lazy tile open dispatch (editor, games, portfolio, terminal tile) |
-| `desktop-taskbar.ts` | Dock rendering, YASB title, auto-hide hover zone |
-| `desktop-wm-lifecycle.ts` | Tiled close / minimize / restore animations |
-| `desktop-wm-maximize.ts` | Right-pane content maximize only |
-| `desktop-wm-terminal.ts` | YASB launcher chrome (terminal is a lazy tile) |
-| `desktop-keyboard-handler.ts` | Ctrl+chord dispatch |
-| `desktop-spatial-focus.ts` | Ctrl+H/J/K/L geometry |
-| `desktop-launcher-overlay.ts` | Show-desktop / Applications overlay flags + DOM sync |
-| `desktop-launcher-grid.ts` | Applications overlay icon grid |
-| `desktop-window-spec.ts` | `WindowSpec` builders for tiles and launcher |
-| `desktop-wm-animations.ts` | Mount/unmount tile animations |
-| `desktop-wm-tile-limit.ts` | Cap visible tiles (bump oldest to dock) |
-| `desktop-wm-sync.ts` | Shell `dataset.*` mirrors for CSS |
-| `desktop-ps-snapshot.ts` | Simulated `ps` rows for terminal MOTD |
-| `editor-ex-commands.ts` | Modal editor `:w` / `:q` / `:e` ex-mode parsing |
-| `editor-vim-ops.ts` | Pure caret/line/motion helpers for vim motions (`j`/`k`, `:N`, counts, dd/yy) |
-| `editor-vim-keys.ts` | INSERT/NORMAL key-chord helpers (Esc, count prefix) |
-| `editor-window-meta.ts` | Editor path compare + title string helpers |
-| `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
-| `bootstrap-shell.ts` | Boot sequence orchestration |
-| `launcher-catalog.ts` | Launcher grid definitions, dock membership, lazy-chunk prefetch triggers |
+| `desktop.ts` | Public API, `openWindow`, global key listener, sync |
+| `desktop-wm-hosts.ts` | Context objects wired into WM modules |
+| `desktop-open-window.ts` | Lazy tile dispatch (`dispatchOpenWindow`) |
+| `desktop-wm-lifecycle.ts` | Mount / close / minimize / restore + animations |
+| `desktop-wm-maximize.ts` | Content-window maximize (`max-content` on `#panes`) |
+| `desktop-wm-focus.ts` | Focus tile / terminal tile |
+| `desktop-wm-sync.ts` | `#desktop` `dataset.*` for CSS (counts, maximized, terminal closed) |
+| `desktop-wm-tile-limit.ts` | Cap visible tiles; bump oldest to dock |
+| `desktop-wm-animations.ts` | Mount/unmount animation classes |
+| `desktop-wm-terminal.ts` | YASB Applications button chrome |
+| `desktop-keyboard-handler.ts` | Ctrl+chord routing |
+| `desktop-keyboard-chords.ts` | Allowed WM key set |
+| `desktop-spatial-focus.ts` | Ctrl+H/J/K/L bounding-rect focus |
+| `desktop-taskbar.ts` | Dock render, YASB title, auto-hide |
+| `desktop-launcher-overlay.ts` | Show-desktop + launcher overlay state |
+| `desktop-launcher-grid.ts` | Applications icon grid |
+| `desktop-window-spec.ts` | `WindowSpec` builders from command names |
+| `desktop-ps-snapshot.ts` | Fake `ps` rows for MOTD |
+| `desktop-tiles.ts` | Draggable folder icons on workspace |
+| `launcher-catalog.ts` | Dock pins, launcher rows, chunk prefetch |
 
-### Window Tiles (`*-window.ts`)
-Each tile is self-contained with close/minimize/maximize/focus callbacks. All lazy-loaded except `appwindow.ts`. `desktop.ts` uses dynamic `import()` so each module ships in its own chunk.
+### Layout
 
-| Module | Type | Notes |
-|--------|------|-------|
-| `appwindow.ts` | Content | Read-only portfolio tiles (resume, projects, contact, about) |
-| `editor-window.ts` | Editor | Vim-mode text editor over VFS; `F5` / `:run` plays a `.js` file in the p5 viewer |
-| `file-explorer-window.ts` | Explorer | File browser with rename/cut/copy/paste/delete; double-click `.js` → p5 viewer |
-| `browser-window.ts` | Browser | Iframe embed with URL bar, bookmarks |
-| `paint-window.ts` | Canvas | Pixel canvas with brush, eraser, fill |
-| `p5-window.ts` | Viewer | Sandboxed p5.js sketch viewer; loads built-in sketches + VFS files |
-| `rubik-window.ts` | Game | Interactive 3D Rubik's cube (Three.js); drag to spin, animated scramble/solve, algorithm picker |
-| `pong-window.ts` | Game | Pong vs CPU or P2 |
-| `snake-window.ts` | Game | Snake with WASD/arrow controls |
+| Module | Responsibility |
+|--------|----------------|
+| `bsp-layout.ts` | Two-column BSP; shorter column first; max 4 visible |
+| `splitter.ts` | Pointer drag resize (column width / row height) |
+| `window-layout.ts` | `WindowLayout` interface |
 
-Three.js ships exclusively in the `rubik-window` lazy chunk (~139 kB gzipped). It is never in the main bundle.
+### Window tiles (`*-window.ts`)
 
-### Shared Utilities
+Self-contained classes with `el`, `command`, WM callbacks. Lazy-loaded except `appwindow.ts`.
+
+| Module | Type |
+|--------|------|
+| `appwindow.ts` | Portfolio content (resume, projects, contact, about) |
+| `terminal.ts` | xterm.js shell + command dispatch |
+| `editor-window.ts` | Modal vim editor over VFS |
+| `file-explorer-window.ts` | VFS browser |
+| `browser-window.ts` | iframe + URL bar |
+| `paint-window.ts` | Pixel canvas |
+| `p5-window.ts` | Sandboxed p5 viewer |
+| `rubik-window.ts` | Three.js Rubik cube |
+| `pong-window.ts` / `snake-window.ts` | Arcade games |
+
+Three.js ships **only** in the `rubik-window` lazy chunk.
+
+### Editor vim stack
+
+| Module | Responsibility |
+|--------|----------------|
+| `editor-window.ts` | DOM, modes, key routing, VFS I/O |
+| `editor-vim-ops.ts` | Pure text/cursor/motion helpers (unit tested) |
+| `editor-vim-keys.ts` | Pure INSERT/NORMAL key-chord helpers |
+| `editor-ex-commands.ts` | `:w` / `:q` / `:e` ex-mode parsing |
+| `editor-window-meta.ts` | Path compare, title strings |
+| `vim.ts` | **Separate** — terminal one-line vim widget |
+
+### Fake OS (`os-*.ts`)
+
 | Module | Purpose |
 |--------|---------|
-| `storage.ts` | Safe `localStorage` wrapper with JSON helpers, error handling for private mode |
-| `window-chrome.ts` | Shared window titlebar factory — eliminates duplication across tiles |
-| `splitter.ts` | Drag-to-resize handle for horizontal/vertical splits |
-| `theme.ts` / `theme-control.ts` / `theme-packs.ts` | Theme system — CSS custom properties, xterm palettes, matrix rain colors |
-| `ansi.ts` | ANSI-to-HTML conversion for rendering terminal output |
-| `ascii.ts` | ASCII art strings used in boot splash and neofetch |
-| `boot-splash.ts` | Scripted boot animation lines |
-| `hint-bubbles.ts` | Dismissable first-visit hints on desktop folder tiles |
-| `intro-toasts.ts` | Auto-dismiss toast notifications on first visit |
-| `matrix-bg.ts` | Canvas matrix rain animation with visibility pause optimization |
-| `random-pick.ts` | Seeded random / weighted pick utilities |
-| `retro-fx.ts` | CRT scanlines and vignette toggle |
-| `vim.ts` | Vim-style line editor — insert/normal/visual modes, operators, motions |
-
-### Rubik Model (`rubik-*.ts`)
-| Module | Purpose |
-|--------|---------|
-| `rubik-model.ts` | Pure cube state: face arrays, move functions, scramble generator, canonical algorithms |
-| `rubik-stickers-layout.ts` | Three.js geometry helpers: sticker center, animation axis/angle, face outward vector |
-
-### p5.js Sketches
-| Module | Purpose |
-|--------|---------|
-| `p5-sketches.ts` | 8+ built-in p5.js sketch definitions (code as strings); `sketchFilename()` helper |
-| `p5-window.ts` | Sandboxed iframe viewer; loads sketches from built-in list or VFS |
-
-Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
-
-### Fake OS Layer (`os-*.ts`)
-| Module | Purpose |
-|--------|---------|
-| `os-fs.ts` | Virtual filesystem backed by `localStorage` key `portfolio-vfs-v8-namefailed-home`. Debounced saves (150ms). Seeds `~/p5.js/` with all p5 examples on first visit |
-| `os-sound.ts` | Web Audio API for UI sound effects |
-| `os-systray.ts` | Toast notifications, settings panel |
-| `os-registry.ts` | Shared ref for shell commands → Desktop (prevents circular imports) |
-| `os-apt.ts` | `apt install` joke command |
-| `os-packages.ts` | `cowsay` package simulation |
+| `os-fs.ts` | VFS v8 — `portfolio-vfs-v8-namefailed-home` |
+| `os-registry.ts` | `Desktop` ref for terminal → `openWindow` |
+| `os-sound.ts` | Web Audio UI sounds |
+| `os-systray.ts` | Toasts + settings panel |
+| `os-apt.ts` / `os-packages.ts` | Joke package manager |
 
 ### Commands (`commands/`)
+
 | File | Purpose |
 |------|---------|
-| `index.ts` | Keyword-to-handler registry (thin merger of sub-registries) |
-| `app-commands.ts` | Tile launcher stubs — commands that return `[]` and are intercepted by the desktop layer |
-| `vfs-commands.ts` | VFS shell commands: `ls`, `cat`, `cd`, `mkdir`, `rm`, `mv`, `cp`, `touch`, `pwd`, `wc`, `tree` |
-| `system-commands.ts` | System-flavour commands: `echo`, `env`, `date`, `whoami`, `neofetch`, `cowsay`, `ssh`, `apt` |
-| `help-output.ts` | Help screen rendering |
-| `cli-text-utils.ts` | Text utilities: `cal`, `wc`, human-readable bytes |
-| `cli-fortunes.ts` | Echo flavor text |
-| `types.ts` | `Command` interface |
+| `index.ts` | Registry merge |
+| `app-commands.ts` | Tile stubs — `run: () => []`, desktop intercepts |
+| `vfs-commands.ts` | `ls`, `cat`, `cd`, `mkdir`, … |
+| `system-commands.ts` | `theme`, `neofetch`, `help`, … |
+| `help-output.ts` | Help screens + `keybinds` legend |
+| `cli-text-utils.ts` | `cal`, `wc`, bytes formatting |
 
-### Content (`content/`)
-| File | Purpose |
+### Content
+
+| Path | Purpose |
 |------|---------|
-| `copy/resume-copy.ts` | Resume text, skill matrix data |
-| `copy/about-copy.ts` | `whoami` output, neofetch column |
-| `copy/contact-copy.ts` | Contact tile content |
-| `copy/projects-catalog.ts` | Project listings |
-| `portfolio.ts` | Assembled ANSI line arrays for each portfolio tile |
+| `content/copy/*.ts` | Résumé, projects, about, contact copy |
+| `portfolio.ts` | ANSI arrays for content tiles |
+| `static/static-data.ts` | Brochure single source of truth |
 
-### Static Site (`src/static/`)
-| File | Purpose |
-|------|---------|
-| `main.ts` | Brochure page mount — progress bar, scroll-spy, typewriter, animated counters |
-| `static-data.ts` | Single source of truth for profile, contact, skills, experience |
-| `static.css` | Standalone stylesheet using `--plain-*` tokens (not `--th-*`) |
+### Shared utilities
 
-## Testing
+| Module | Purpose |
+|--------|---------|
+| `storage.ts` | Safe localStorage wrapper |
+| `window-chrome.ts` | Titlebar + traffic-light factory |
+| `theme-packs.ts` / `theme-control.ts` | Runtime themes |
+| `ansi.ts` | ANSI → HTML |
+| `matrix-bg.ts` / `retro-fx.ts` / `wallpaper.ts` | Visual effects |
+| `boot-splash.ts` / `welcome-guide.ts` / `hint-bubbles.ts` | Onboarding |
 
-563 tests across 46 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+### Rubik model
 
-| Test File | Coverage |
-|-----------|----------|
-| `ansi.test.ts` | ANSI-to-HTML conversion |
-| `boot-splash.test.ts` | Boot animation line arrays |
-| `browser-url.test.ts` | URL normalization |
-| `bsp-layout.test.ts` | BSP column routing, splitter placement |
-| `commands/cli-text-utils.test.ts` | `cal`, `wc`, human-readable bytes |
-| `commands/system-commands.test.ts` | System-flavour shell commands |
-| `commands/vfs-commands.test.ts` | VFS shell commands |
-| `content/portfolio.test.ts` | Portfolio content assembly |
-| `desktop-tiles.test.ts` | Tile layout, drag snap, persistence |
-| `desktop.test.ts` | Window manager: focus, keyboard chords, tile limit |
-| `desktop-window-spec.test.ts` | Portfolio/tool WindowSpec builders |
-| `desktop-spatial-focus.test.ts` | Ctrl+H/J/K/L spatial focus geometry |
-| `desktop-launcher-overlay.test.ts` | Launcher overlay flag state machine |
-| `folder-popup-layout.test.ts` | Folder popup placement vs viewport edges |
-| `live-site-screenshot.test.ts` | mShots preview URL builder |
-| `prefers-reduced-motion.test.ts` | Reduced-motion media query probe |
-| `static/static-motion.test.ts` | Brochure typewriter/counter + reduced motion |
-| `static-portfolio-href.test.ts` | Classic portfolio path resolution |
-| `first-visit-flags.test.ts` | First-visit onboarding flags |
-| `hint-bubbles.test.ts` | Hint bubble show/dismiss logic |
-| `intro-toasts.test.ts` | Toast sequencing |
-| `launcher-catalog.test.ts` | Launcher grid, TILED_WINDOW_COMMANDS, prefetch |
-| `matrix-bg.test.ts` | Matrix rain canvas logic |
-| `os-fs.test.ts` | Virtual filesystem operations |
-| `p5-sketches.test.ts` | Sketch definitions, `sketchFilename()` |
-| `random-pick.test.ts` | Random/weighted pick |
-| `retro-fx.test.ts` | CRT toggle |
-| `rubik-model.test.ts` | Cube model: all moves, inverses, scramble, algorithms |
-| `rubik-stickers-layout.test.ts` | 3D sticker layout ↔ model move lock |
-| `storage.test.ts` | localStorage wrapper, JSON serialization |
-| `terminal-motd.test.ts` | MOTD rendering |
-| `theme-control.test.ts` | Theme pack apply/persist |
-| `vim.test.ts` | Vim input: modes, motions, operators, undo |
-| `wallpaper.test.ts` | Wallpaper apply/clear events |
-| `window-chrome.test.ts` | Window chrome factory |
+| Module | Purpose |
+|--------|---------|
+| `rubik-model.ts` | Pure cube state — moves, scramble, algorithms |
+| `rubik-stickers-layout.ts` | Three.js geometry helpers |
 
-Run tests: `npm test` · coverage: `npm run test:coverage` · lint: `npm run lint` · e2e: `npm run test:e2e`
+---
+
+## Data flow: command → tile
+
+```mermaid
+flowchart LR
+  A[User types command] --> B[terminal.ts]
+  B --> C{commands registry}
+  C -->|app command returns []| D[os-registry Desktop ref]
+  D --> E[desktop.openWindow]
+  E --> F[dispatchOpenWindow]
+  F --> G[dynamic import *-window]
+  G --> H[bsp-layout.mount]
+```
+
+---
+
+## Build & chunks
+
+Vite entry points (`vite.config.ts`):
+
+- `index.html` → main bundle + lazy chunks per tile
+- `static/index.html` → separate brochure bundle
+
+`prefetchLazyWindowModule()` in `launcher-catalog.ts` warms chunks on launcher hover.
+
+---
 
 ## Stylesheets
 
-Desktop shell CSS lives under `src/styles/` (`section.css` plus `section-2.css` … `section-22.css`). `src/style.css` is an `@import` hub only — regenerate with `node scripts/split-style-css.mjs` after editing the monolith backup if needed.
+| Area | Location |
+|------|----------|
+| Desktop | `src/styles/section.css` + `section-2.css` … `section-22.css` via `src/style.css` |
+| Brochure | `src/static/static.css` (`--plain-*` tokens) |
 
-Brochure styles remain in `src/static/static.css` (`--plain-*` tokens).
+Regenerate split CSS: `node scripts/split-style-css.mjs`
 
-## Naming Conventions
+---
 
-- **Storage/Init**: `initXFromStorage` — reads and applies persisted state once at boot
-- **Window Contract**: `openWindow` / `WindowSpec` — contract between terminal and desktop tiles
-- **Tile Suffix**: `*-window.ts` — self-contained tile. If it doesn't end in `-window.ts`, it isn't a tile.
-- **OS Prefix**: `os-*.ts` — fake OS layer modules
-- **Verb-First**: `runShellHelp`, `renderKeybindsLegend`, `playOsSound`, `pushToast`
-- **Private Methods**: `handleKey()`, `syncDom()` — private methods don't use `_` prefix (class-based privacy)
+## State persistence
 
-## Key Patterns
-
-### Window Chrome (window-chrome.ts)
-```typescript
-import { createWindowChrome } from './window-chrome'
-
-const { el, titlebar, titleEl, btnClose, btnMin, btnMax } = createWindowChrome({
-  title: 'Window Title',
-  onClose: () => {},
-  onMinimize: () => {},
-  onMaximize: () => {},
-  onFocus: () => {},
-})
-```
-
-### Storage Utility (storage.ts)
-```typescript
-import { storageGet, storageSet, storageGetJson, storageSetJson, storageGetBool } from './storage'
-
-storageSet('key', 'value')           // Returns boolean success
-storageGetJson<Config>('key', {})    // Returns fallback on error
-storageGetBool('key', true)          // Parses '1'/'0' strings
-```
-
-### Lazy Window Dispatch
-`desktop.ts` uses `await import('./module-name')` to open each tile. This keeps all window code out of the main bundle. The `prefetchLazyWindowModule()` function in `launcher-catalog.ts` fires the same import on hover/focus to warm the chunk before the user clicks.
-
-### Theme System
-Themes are self-contained `ThemePack` objects in `theme-packs.ts`. Adding a theme requires no other file changes — the picker and `theme` command auto-detect via array iteration.
-
-## Build & Deploy
-
-```bash
-npm install
-npm run dev        # Vite dev server — desktop at /, brochure at /static/
-npm run build      # tsc && vite build → dist/ and dist/static/
-npm test           # Vitest
-npm run preview    # Preview dist/ locally
-```
-
-Deploy publishes `dist/` to GitHub Pages via Actions (`.github/workflows/deploy-pages.yml`).
-
-## State Persistence
-
-All state in `localStorage`:
+All client-side via `storage.ts`:
 
 | Key | Contents |
 |-----|----------|
-| `portfolio-vfs-v8-namefailed-home` | VFS tree and cwd (bump version to force fresh defaults) |
-| `mrgrey-theme` | Selected theme id |
-| `mrgrey-os-sound` / `mrgrey-os-volume` | Sound on/off and volume |
-| `mrgrey-retro-fx` | CRT overlay toggle |
-| `mrgrey-matrix-bg` | Matrix rain toggle |
-| `mrgrey-browser-iframe-tip-dismiss` | Browser tile tip dismissal |
-| `mrgrey-desktop-tile-positions` | Desktop tile drag positions |
-| `portfolio-fe-prefs-v1` | File explorer preferences |
+| `portfolio-vfs-v8-namefailed-home` | VFS tree + cwd |
+| `mrgrey-theme` | Theme id |
+| `mrgrey-os-sound` / `mrgrey-os-volume` | Audio prefs |
+| `mrgrey-retro-fx` | CRT toggle |
+| `mrgrey-matrix-bg` | Matrix rain |
+| `mrgrey-wallpaper` | Wallpaper URL |
+| `mrgrey-desktop-tile-positions-v6` | Folder tile positions |
+| `portfolio-fe-prefs-v1` | File explorer prefs |
+| `mrgrey-boot-seen` / `mrgrey-guide-seen` / `mrgrey-toasts-seen` | Onboarding flags |
 
-No backend required.
+Full list: [AGENTS.md](./AGENTS.md#localstorage-keys-authoritative).
 
-## Layers (narrative summary)
+Bump VFS key version in `os-fs.ts` to reset visitor filesystems.
 
-**`content/`** — Portfolio copy. Long text lives under `content/copy/`. `portfolio.ts` assembles ANSI line arrays for each tile (resume, whoami, projects, links).
+---
 
-**`commands/`** — `index.ts` is the keyword-to-handler map. Split into `app-commands.ts` (tile stubs), `vfs-commands.ts` (filesystem), `system-commands.ts` (OS-flavour text commands).
+## Testing
 
-**`desktop.ts` + `launcher-catalog.ts`** — `desktop.ts` owns tiling layout, dock, focus, minimize/maximize, and all Ctrl-chord keyboard handling. `launcher-catalog.ts` holds grid definitions and dock membership.
+**563 tests** · **46 files** · Vitest in Node · Playwright e2e smoke.
 
-**`*-window.ts`** — One file per tile. Each takes close/minimize/maximize/focus callbacks. All lazy-loaded on first open via `await import()`. Three.js is inside `rubik-window` only.
+### By domain
 
-**`rubik-model.ts`** — Pure cube state with no DOM dependency. All move functions, inverse sequences, scramble generator, and named algorithms live here and are fully unit-tested.
+| Domain | Example test files |
+|--------|-------------------|
+| WM / desktop | `desktop.test.ts`, `desktop-wm-*.test.ts`, `desktop-keyboard-handler.test.ts`, `bsp-layout.test.ts` |
+| Editor vim | `editor-vim-ops.test.ts`, `editor-vim-keys.test.ts`, `editor-ex-commands.test.ts` |
+| Terminal / vim | `vim.test.ts`, `terminal-motd.test.ts` |
+| VFS / commands | `os-fs.test.ts`, `commands/*.test.ts` |
+| Tiles / launcher | `launcher-catalog.test.ts`, `desktop-open-window.test.ts`, `window-chrome.test.ts` |
+| Rubik | `rubik-model.test.ts`, `rubik-stickers-layout.test.ts` |
+| Theme / FX | `theme-control.test.ts`, `matrix-bg.test.ts`, `retro-fx.test.ts`, `wallpaper.test.ts` |
+| Brochure | `static/static-motion.test.ts`, `static-portfolio-href.test.ts` |
+| Content | `content/portfolio.test.ts`, `p5-sketches.test.ts` |
 
-**`p5-sketches.ts`** — Sketch definitions (code as strings). Seeded into the VFS by `os-fs.ts` on first visit. `p5-window.ts` renders them in a sandboxed iframe.
+```bash
+npm test
+npm run test:coverage
+npm run test:e2e
+```
 
-**`os-*.ts`** — Fake OS layer. `os-fs.ts` is VFS v8 backed by localStorage. Bumping the version number forces fresh default trees for returning visitors.
+---
 
-**`theme-control.ts` + `theme-packs.ts`** — Theme packs define CSS custom properties (`--th-*`), xterm palette, and matrix rain colors. `theme-control.ts` applies them and persists the selection.
+## Naming conventions
+
+| Pattern | Meaning |
+|---------|---------|
+| `*-window.ts` | Lazy-loaded tile |
+| `desktop-wm-*` | Window manager subsystem |
+| `os-*` | Fake OS layer |
+| `initXFromStorage` | Boot-time restore from localStorage |
+| `editor-vim-*` | Pure editor helpers |
+
+Details: [STYLE_GUIDE.md](./STYLE_GUIDE.md).
+
+---
+
+## Key patterns
+
+### Window chrome
+
+```typescript
+const { el, titleEl } = createWindowChrome({
+  title: 'My Tile',
+  onClose, onMinimize, onMaximize, onFocus,
+})
+```
+
+### Lazy open
+
+```typescript
+// desktop-open-window.ts
+case 'myapp': {
+  const { MyAppWindow } = await import('./myapp-window')
+  // mount via layout + push to windows[]
+}
+```
+
+### Theme pack
+
+Self-contained `ThemePack` in `theme-packs.ts` — picker auto-detects new entries.
+
+---
+
+## CI / deploy
+
+`.github/workflows/deploy-pages.yml`:
+
+`lint` → `npm test` → `npm run build` → `npm run test:e2e` → upload `dist/` → GitHub Pages
+
+---
+
+## See also
+
+- [OVERVIEW.md](./OVERVIEW.md) — project narrative for reviewers
+- [API.md](./API.md) — type reference
+- [AGENTS.md](./AGENTS.md) — agent change recipes
+- [THEMING.md](./THEMING.md) — `--th-*` catalogue

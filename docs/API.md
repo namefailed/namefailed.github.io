@@ -1,61 +1,47 @@
 # API Reference
 
-Key interfaces and types for extending the portfolio OS.
+Interfaces and extension points for the portfolio OS. For step-by-step recipes see [DEVELOPMENT.md](./DEVELOPMENT.md) and [AGENTS.md](./AGENTS.md).
 
 ---
 
-## Window System
+## Window system
 
 ### WindowSpec
 
-The contract between terminal commands and the desktop tile system.
+Contract between shell commands and the desktop tile system (`appwindow.ts`).
 
 ```typescript
 interface WindowSpec {
-  /** Unique tile id — the same CLI again focuses or closes this window */
+  /** Unique tile id — same CLI again focuses or toggles this window */
   command: string
   title: string
   content: string[]
-  
-  /** Virtual path for `edit` / `vim` (in-browser FS) */
-  editorPath?: string
-  
-  /** Starting directory for `explorer` (vfs path) */
-  explorerPath?: string
-  
-  /** Initial URL for embedded `browse` */
-  browserUrl?: string
-  
-  /** When `command === 'resume'`, ANSI lines plus optional skills aside */
-  resumeSkills?: string[]
-  
-  /** Résumé header lines (name/contact) — paired with resumeBody */
+
+  editorPath?: string       // edit / vim / editor
+  explorerPath?: string     // explorer starting directory
+  browserUrl?: string       // browse initial URL
+  resumeSkills?: string[]   // resume tile aside
   resumeLead?: string[]
-  
-  /** PROFILE … certifications — full-width under header row */
   resumeBody?: string[]
-  
-  /** Thumbnail/metadata list for `projects` tile layout */
   projectCards?: readonly PortfolioProjectEntry[]
+  p5SketchPath?: string     // p5 viewer VFS path
 }
 ```
 
-### AppWindowOptions
+Build specs from command names: `windowSpecForCommand()` in `desktop-window-spec.ts`.
 
-Used when creating a new window tile.
+### Opening tiles
 
-```typescript
-interface AppWindowOptions extends WindowSpec {
-  onClose: () => void
-  onMinimize: () => void
-  onMaximize: () => void
-  onFocus: () => void
-}
-```
+Flow:
+
+1. Terminal runs command → `app-commands` returns `[]`
+2. `terminal.ts` calls `getDesktopRef().openWindow(spec)`
+3. `desktop.ts` → `dispatchOpenWindow()` in `desktop-open-window.ts`
+4. Dynamic `import('./foo-window')` → mount via `BspLayout`
+
+Do **not** instantiate tiles from command handlers directly.
 
 ### WindowChromeOptions
-
-Factory options for `createWindowChrome()`.
 
 ```typescript
 interface WindowChromeOptions {
@@ -64,82 +50,81 @@ interface WindowChromeOptions {
   onMinimize: () => void
   onMaximize: () => void
   onFocus?: () => void
-  /** When true, focus callback is also attached to titlebar mousedown. Default true. */
-  focusOnTitlebar?: boolean
+  focusOnTitlebar?: boolean  // default true
 }
 
 interface WindowChromeElements {
-  el: HTMLElement           // Container (.app-window)
-  titlebar: HTMLElement     // Title bar element
-  titleEl: HTMLElement      // Title text span
-  btnClose: HTMLElement      // Close button
-  btnMin: HTMLElement         // Minimize button
-  btnMax: HTMLElement         // Maximize button
+  el: HTMLElement
+  titlebar: HTMLElement
+  titleEl: HTMLElement
+  btnClose: HTMLElement
+  btnMin: HTMLElement
+  btnMax: HTMLElement
 }
 ```
+
+Factory: `createWindowChrome()` in `window-chrome.ts`.
+
+### TiledWin
+
+Union of all tile classes (`desktop-open-window.ts`):
+
+```typescript
+type TiledWin =
+  | AppWindow | EditorWindow | FileExplorerWindow | BrowserWindow
+  | PaintWindow | SnakeWindow | PongWindow | RubikWindow | P5Window
+  | TerminalWindow
+```
+
+Each tile exposes: `el`, `command`, `onFocus`, `setActive()`, `setMinimized()`, `isMaximized()`, etc.
 
 ---
 
 ## Commands
 
-### Command Interface
+### Command interface
 
 ```typescript
 interface Command {
-  /** One-line description shown in help */
   description: string
-  
-  /** Handler function — receives arguments, returns lines to print */
   run: (args: string[]) => string[]
-  
-  /** Hidden from `help` listing (e.g., deprecated aliases) */
   hidden?: boolean
-  
-  /** Fake load time for window-spawning commands (milliseconds) */
-  loadMs?: number
+  loadMs?: number   // fake delay for tile commands
 }
 ```
 
-### Registering a Command
+Registry: `commands/index.ts` merges `vfsCommands`, `systemCommands`, `appCommands`.
 
-Add to `commands/index.ts`:
+### Register a text command
 
 ```typescript
-export const commands: Record<string, Command> = {
-  mycommand: {
-    description: 'Does something useful',
-    run: (args) => {
-      return ['Output line 1', 'Output line 2']
-    },
+// commands/system-commands.ts
+export const systemCommands = {
+  hello: {
+    description: 'Says hello',
+    run: args => [`Hello, ${args[0] ?? 'world'}!`],
   },
 }
 ```
 
-For window-spawning commands, return empty array and handle via `desktop.ts`:
+### Register a tile command
 
 ```typescript
+// commands/app-commands.ts
 myapp: {
-  description: 'Opens my custom app',
+  description: 'Opens my app tile',
   loadMs: 400,
-  run: () => [],
-}
+  run: () => [],   // required — desktop opens the tile
+},
 ```
 
-Then in `desktop.ts` `openWindow()`:
-
-```typescript
-case 'myapp': {
-  const win = new MyAppWindow({ ... })
-  // ... attach to DOM
-  return
-}
-```
+Then add dispatch in `desktop-open-window.ts` and launcher entries in `launcher-catalog.ts`.
 
 ---
 
-## Virtual Filesystem
+## Virtual filesystem
 
-### Node Types
+### Node types
 
 ```typescript
 type FsDir = { t: 'd'; c: Record<string, FsNode> }
@@ -147,181 +132,103 @@ type FsFile = { t: 'f'; body: string }
 type FsNode = FsDir | FsFile
 ```
 
-### Core Operations
+Storage key: **`portfolio-vfs-v8-namefailed-home`** (`os-fs.ts`).
+
+### Core operations
 
 ```typescript
-// Path operations
-export function vfsNormalize(input: string): string
-export function vfsPwd(): string
-export function vfsCd(path: string): string | null  // error or null
-
-// Directory operations
-export function vfsLs(path?: string): string[]
-export function vfsLsLong(path?: string): VfsLongEntry[]
-export function vfsMkdir(path: string): string | null  // error or null
-
-// File operations
-export function vfsCat(path: string): string | null  // contents or error
-export function vfsTouch(path: string): string | null  // error or null
-export function vfsWrite(path: string, body: string): string | null
-export function vfsReadRaw(path: string): { ok: true; body: string } | { ok: false; err: string }
-
-// Utility
-export function vfsFormatPath(abs: string): string  // /home/namefailed → ~
+vfsNormalize(input: string): string
+vfsPwd(): string
+vfsCd(path: string): string | null
+vfsLs(path?: string): string[]
+vfsLsLong(path?: string): VfsLongEntry[]
+vfsCat(path: string): string | null
+vfsTouch(path: string): string | null
+vfsWrite(path: string, body: string): string | null
+vfsReadRaw(path: string): { ok: true; body: string } | { ok: false; err: string }
+vfsFormatPath(abs: string): string   // /home/namefailed → ~
+vfsMkdir(path: string): string | null
 ```
 
-### Usage Example
-
-```typescript
-import { vfsCat, vfsWrite, vfsNormalize, FS_HOME } from './os-fs'
-
-// Read file
-const content = vfsCat('/home/namefailed/notes.txt')
-if (content !== null) {
-  console.log(content)
-}
-
-// Write file
-const err = vfsWrite('notes.txt', 'New content')
-if (err) {
-  console.error('Write failed:', err)
-}
-
-// Normalize path
-const abs = vfsNormalize('~/Documents')  // → /home/namefailed/Documents
-```
+Debounced save: **150 ms** after mutations.
 
 ---
 
 ## Storage
 
-### Functions
+Always use `storage.ts` — never raw `localStorage` in new code.
 
 ```typescript
-/** Get item from localStorage; returns null on any error or if not found */
-export function storageGet(key: string): string | null
-
-/** Set item in localStorage; returns true on success, false on error */
-export function storageSet(key: string, value: string): boolean
-
-/** Remove item from localStorage; returns true on success, false on error */
-export function storageRemove(key: string): boolean
-
-/** Get and parse JSON from localStorage; returns fallback on error or if not found */
-export function storageGetJson<T>(key: string, fallback: T): T
-
-/** Stringify and store JSON in localStorage; returns true on success */
-export function storageSetJson<T>(key: string, value: T): boolean
-
-/** Get numeric value from localStorage with bounds checking */
-export function storageGetNumber(key: string, fallback: number, min?: number, max?: number): number
-
-/** Get boolean from localStorage (parses '1'/'0') */
-export function storageGetBool(key: string, fallback: boolean): boolean
-
-/** Store boolean as '1'/'0' */
-export function storageSetBool(key: string, value: boolean): boolean
+storageGet(key: string): string | null
+storageSet(key: string, value: string): boolean
+storageRemove(key: string): boolean
+storageGetJson<T>(key: string, fallback: T): T
+storageSetJson<T>(key: string, value: T): boolean
+storageGetNumber(key: string, fallback: number, min?: number, max?: number): number
+storageGetBool(key: string, fallback: boolean): boolean
+storageSetBool(key: string, value: boolean): boolean
 ```
 
-### Usage
+### Keys reference
 
-```typescript
-import { storageSet, storageGetJson, storageGetBool } from './storage'
+| Key | Module |
+|-----|--------|
+| `portfolio-vfs-v8-namefailed-home` | `os-fs.ts` |
+| `mrgrey-theme` | `theme-control.ts` |
+| `mrgrey-os-sound` / `mrgrey-os-volume` | `os-sound.ts` |
+| `mrgrey-retro-fx` | `retro-fx.ts` |
+| `mrgrey-matrix-bg` | `matrix-bg.ts` |
+| `mrgrey-wallpaper` | `wallpaper.ts` |
+| `mrgrey-desktop-tile-positions-v6` | `desktop-tiles.ts` |
+| `portfolio-fe-prefs-v1` | `file-explorer-window.ts` |
+| `mrgrey-browser-iframe-tip-dismiss` | `browser-window.ts` |
+| `mrgrey-boot-seen` | `boot-splash.ts` |
+| `mrgrey-guide-seen` | `welcome-guide.ts` |
+| `mrgrey-toasts-seen` | `intro-toasts.ts` |
+| `mrgrey-hint-<id>` | `hint-bubbles.ts` |
+| `mrgrey-p5-tip-seen` | `p5-window.ts` |
+| `mrgrey-pkgs-v1` | `os-packages.ts` |
 
-// Simple values
-storageSet('my-key', 'value')
-
-// JSON objects
-interface Config {
-  theme: string
-  volume: number
-}
-const config = storageGetJson<Config>('my-config', { theme: 'mocha', volume: 0.72 })
-
-// Booleans
-const enabled = storageGetBool('feature-flag', true)
-storageSetBool('feature-flag', false)
-```
+Full table: [AGENTS.md](./AGENTS.md#localstorage-keys-authoritative).
 
 ---
 
 ## Themes
 
-### ThemePack Interface
+### ThemePack
 
 ```typescript
-export interface ThemePack {
-  id: string          // slug used in localStorage and the `theme` command
-  label: string       // display name shown in the picker
-  terminal: ITheme    // xterm.js colour palette
-  matrixRain: string[] // 8 hex colours for matrix rain glyph tints
-  css: Record<string, string> // maps every --th-* custom property to a value
+interface ThemePack {
+  id: string
+  label: string
+  terminal: ITheme           // xterm.js palette
+  matrixRain: string[]       // 8 hex colours
+  css: Record<string, string> // all --th-* properties
 }
 ```
 
-### Theme Control Functions
+### Control functions
 
 ```typescript
-/** Apply named theme; returns false if id is unknown */
-export function applyTheme(id: string): boolean
-
-/** Restore the saved pack at boot; falls back to Mocha */
-export function initThemeFromStorage(): void
-
-/** Returns the currently applied ThemePack */
-export function getActivePack(): ThemePack
-
-/** Returns the current pack id string */
-export function getThemeId(): string
-
-/** Returns { id, label }[] for the picker UI */
-export function listThemeSummaries(): ReadonlyArray<{ id: string; label: string }>
+applyTheme(id: string): boolean
+initThemeFromStorage(): void
+getActivePack(): ThemePack
+getThemeId(): string
+listThemeSummaries(): ReadonlyArray<{ id: string; label: string }>
 ```
 
-### Adding a Theme
-
-1. Define in `src/theme-packs.ts`:
-
-```typescript
-const myThemeCss: Record<string, string> = {
-  ...mochaCss,
-  '--th-desktop-bg': '#0d1117',
-  '--th-accent': '#ff6b6b',
-  // ... overrides
-}
-
-const myTheme: ThemePack = {
-  id: 'my-theme',
-  label: 'My Theme',
-  terminal: {
-    background: '#0d1117',
-    foreground: '#c9d1d9',
-    // ... xterm palette
-  },
-  matrixRain: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#74b9ff', '#a29bfe'],
-  css: myThemeCss,
-}
-```
-
-2. Add to `THEME_PACKS` array:
-
-```typescript
-export const THEME_PACKS: ThemePack[] = [
-  // ... existing themes
-  myTheme,
-]
-```
+Adding a pack: [THEMING.md](./THEMING.md).
 
 ---
 
-## Vim Input
+## Vim input (terminal)
 
-### VimInput Class
+`vim.ts` — one-line shell editor (separate from editor tile).
 
 ```typescript
-export type VimMode = 'insert' | 'normal' | 'visual'
+type VimMode = 'insert' | 'normal' | 'visual'
 
-export type InputAction =
+type InputAction =
   | { type: 'none' }
   | { type: 'rendered' }
   | { type: 'submit'; value: string }
@@ -330,163 +237,112 @@ export type InputAction =
   | { type: 'interrupt' }
   | { type: 'clear' }
 
-export class VimInput {
+class VimInput {
   mode: VimMode
-  
-  constructor(onModeChange: (mode: VimMode) => void)
-  
+  handleKey(ev: KeyboardEvent): InputAction
   getValue(): string
   setBuffer(text: string): void
-  setBufferInsert(text: string): void
-  clear(): void
-  render(): string
-  cursorBack(): number
-  handleKey(ev: KeyboardEvent): InputAction
-}
-```
-
-### Usage
-
-```typescript
-import { VimInput } from './vim'
-
-const vim = new VimInput((mode) => {
-  console.log('Mode changed to:', mode)
-})
-
-// In a keydown handler
-const action = vim.handleKey(event)
-switch (action.type) {
-  case 'submit':
-    console.log('Submit:', action.value)
-    break
-  case 'history':
-    console.log('Navigate history:', action.dir)
-    break
-  case 'complete':
-    triggerAutocomplete()
-    break
+  // ...
 }
 ```
 
 ---
 
-## ANSI Helpers
+## Editor vim ops (tile)
 
-### ansi.ts
+Pure functions in `editor-vim-ops.ts` — safe to unit test without DOM:
 
 ```typescript
-/** Convert ANSI escape sequences to HTML */
-export function ansiToHtml(input: string): string
-
-/** Convert ANSI to HTML with clickable link detection */
-export function ansiToHtmlWithLinks(input: string): string
-
-/** Strip all ANSI escape codes */
-export function stripAnsi(input: string): string
-
-/** Theme color helpers */
-export const c = {
-  pink: '\x1b[35m',
-  blue: '\x1b[34m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  cyan: '\x1b[36m',
-  white: '\x1b[37m',
-  dim: '\x1b[2m',
-  bold: '\x1b[1m',
-  reset: '\x1b[0m',
-}
+lineCountTotal(text: string): number
+getLineCol(text: string, pos: number): { line: number; col: number }
+moveVertPos(text: string, pos: number, delta: -1 | 1): number
+moveHorizPos(text: string, pos: number, delta: -1 | 1, steps?: number): number
+wordForwardPos / wordBackPos / wordEndForwardPos
+findNextOnLine(text, kind, ch, fromPos): number | null
+deleteLineBlockText / yankLineBlockText / joinLinesText / pasteYankText
+// ...
 ```
 
-### Usage
+Key chords: `editor-vim-keys.ts` — `insertModeKeyAction`, `tryAppendCountDigit`.
+
+Ex commands: `parseEditorExCommand()` in `editor-ex-commands.ts`.
+
+---
+
+## ANSI
 
 ```typescript
-import { ansiToHtmlWithLinks, c } from './ansi'
+ansiToHtml(input: string): string
+ansiToHtmlWithLinks(input: string): string
+stripAnsi(input: string): string
 
-const output = [
-  `${c.pink}Welcome${c.reset} to the terminal`,
-  `${c.dim}Type ${c.blue}help${c.reset}${c.dim} to get started${c.reset}`,
-]
-
-const html = output.map(line => ansiToHtmlWithLinks(line)).join('<br>')
+const c = { pink, blue, green, yellow, red, cyan, white, dim, bold, reset }
 ```
 
 ---
 
-## Event System
+## Events & sound
 
-### Custom Events
+### Custom events
 
-```typescript
-// Theme change
-window.dispatchEvent(new CustomEvent('mrgrey-theme-change'))
-
-// Matrix rain toggle
-document.documentElement.dataset.matrixBg = 'on' | 'off'
-```
+| Event | Detail |
+|-------|--------|
+| `mrgrey-theme-change` | none |
+| `mrgrey-wallpaper-change` | `string \| null` URL |
+| `mrgrey-first-window` | none |
+| `mrgrey-terminal-cmd` | none |
 
 ### Sound
 
 ```typescript
-import { playOsSound } from './os-sound'
-
-type OsSoundKind = 'focus' | 'click' | 'notify' | 'boot'
-
-playOsSound('focus')   // Window focus
-playOsSound('click')   // Button click
-playOsSound('notify')  // Toast notification
-playOsSound('boot')    // System boot
+playOsSound('focus' | 'click' | 'notify' | 'boot')
 ```
 
-### Toast Notifications
+### Toasts
 
 ```typescript
-import { pushToast } from './os-systray'
-
-pushToast('Message text')                    // Default timeout
-pushToast('Message text', 5000)            // 5 second timeout
-pushToast('Message text', 0)               // Persistent (manual dismiss)
+pushToast(message: string, timeoutMs?: number)  // 0 = persistent
 ```
 
 ---
 
-## Keyboard Shortcuts
+## WM keyboard API
 
-| Chord | Action |
-|-------|--------|
-| `Ctrl+H` | Focus terminal (← left) |
-| `Ctrl+L` | Enter right pane (→) |
-| `Ctrl+K` | Previous window (↑) |
-| `Ctrl+J` | Next window (↓) |
-| `Ctrl+Q` | Close focused window |
-| `Ctrl+M` | Minimize focused window |
-| `Ctrl+F` | Maximize / restore |
-| `Ctrl+1–9` | Activate dock slot N |
-| `Ctrl+T` | Focus terminal |
-| `Ctrl+D` | Desktop / launcher |
+Host interface for `desktop-keyboard-handler.ts`:
 
----
+```typescript
+interface DesktopKeyboardHost {
+  openTerminal(): void
+  focusTaskbarIndex(index: number): void
+  focusSpatial(dir: 'h' | 'j' | 'k' | 'l'): void
+  closeFocusedOrTerminal(): void
+  minimizeFocusedOrTerminal(): void
+  toggleMaximizeFocused(): void
+  toggleShowDesktop(): void
+}
+```
 
-## Storage Keys
-
-| Key | Purpose | Module |
-|-----|---------|--------|
-| `portfolio-vfs-v3-namefailed-home` | VFS tree and cwd | os-fs |
-| `mrgrey-theme` | Selected theme id | theme-control |
-| `mrgrey-os-sound` | Sound enabled flag | os-sound |
-| `mrgrey-os-volume` | Volume level (0–1) | os-sound |
-| `mrgrey-retro-fx` | CRT toggle | retro-fx |
-| `mrgrey-matrix-bg` | Matrix rain toggle | matrix-bg |
-| `mrgrey-browser-iframe-tip-dismiss` | Browser tip dismissed | browser-window |
-| `portfolio-fe-prefs-v1` | File explorer prefs | file-explorer |
-| `mrgrey-pkgs-v1` | Installed packages | os-packages |
+Chord table: [USER_GUIDE.md](./USER_GUIDE.md).
 
 ---
 
-## See Also
+## OS registry
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — Module structure and entry points
-- [THEMING.md](./THEMING.md) — Detailed theme customization
-- [STYLE_GUIDE.md](./STYLE_GUIDE.md) — Coding standards
+Breaks circular import between terminal and desktop:
+
+```typescript
+// os-registry.ts
+setDesktopRef(desktop: Desktop): void
+getDesktopRef(): Desktop | null
+```
+
+Called once from `Desktop` constructor.
+
+---
+
+## See also
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — module map
+- [DEVELOPMENT.md](./DEVELOPMENT.md) — setup & workflows
+- [AGENTS.md](./AGENTS.md) — machine-oriented guide
+- [THEMING.md](./THEMING.md) — CSS token catalogue

@@ -1,6 +1,8 @@
 # Theming
 
-The site ships with seven colour packs selectable at runtime via the `theme` shell command or the settings panel. Each pack is a self-contained object—no separate CSS files, no build step.
+Seven colour packs selectable at runtime via the `theme` shell command or the settings panel. Each pack is a self-contained object — no separate CSS files, no build step.
+
+**See also:** [API.md](./API.md#themes) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [USER_GUIDE.md](./USER_GUIDE.md#themes-and-effects)
 
 ## ThemePack interface
 
@@ -112,12 +114,14 @@ const myPackCss: Record<string, string> = {
 | `--th-matrix-g2` | Gradient stop 2 |
 | `--th-matrix-g3` | Gradient stop 3 (darkest, matches desktop) |
 
-### Splitters
+### Splitters (BSP tiling)
 
 | Property | Used by |
 |----------|---------|
-| `--th-splitter-idle` | Drag handle at rest |
-| `--th-splitter-hover` | Drag handle on hover / active |
+| `--th-splitter-idle` | Column / row drag handle at rest |
+| `--th-splitter-hover` | Handle on hover / active drag |
+
+Note: legacy horizontal terminal splitter CSS was removed; splitters are BSP-only (`.splitter-v`, `.splitter-bsp-h`).
 
 ### Dock and icons
 
