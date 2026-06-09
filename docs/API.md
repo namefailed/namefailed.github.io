@@ -250,17 +250,24 @@ class VimInput {
 
 ## Editor vim ops (tile)
 
-Pure functions in `editor-vim-ops.ts` — safe to unit test without DOM:
+Split pure modules — safe to unit test without DOM:
+
+| Module | Exports |
+|--------|---------|
+| `editor-vim-motions.ts` | Caret positions, word/find motions — **no buffer mutation** |
+| `editor-vim-edits.ts` | `{ text, pos }` mutations — `BufferEditResult` contract |
+| `editor-vim-ops.ts` | Barrel re-export of both |
+| `editor-buffer.ts` | `applyBufferEditToState`, `runIndentBufferEdit` — shared apply layer |
+| `editor-normal-handlers.ts` | `EDITOR_NORMAL_KEY_HANDLERS`, `dispatchEditorNormalKey` |
 
 ```typescript
-// Motions
+// Motions (editor-vim-motions.ts)
 moveVertPos / moveVertRepeat / moveHorizPos
 wordForwardPos / wordBackPos / wordEndForwardPos
-wordForwardRepeat / wordBackRepeat / wordEndForwardRepeat
 findNextOnLine / repeatFindPos / reverseFindKind
 lineEndCaretPos / appendLineEndPos / firstNonBlankOnLine
 
-// Edits
+// Edits (editor-vim-edits.ts)
 indentLinesText / unindentLinesText   // >> / <<
 toggleCaseRunText                     // ~
 substituteCharsText                   // s
@@ -273,6 +280,8 @@ applyReplaceRunsText / pasteYankText
 ```
 
 Key chords: `editor-vim-keys.ts` — `insertModeKeyAction`, `tryAppendCountDigit`.
+
+Multi-key chords (`gg`, `dd`, `>>`, find-await) remain in `editor-window.ts`.
 
 Ex commands: `parseEditorExCommand()` in `editor-ex-commands.ts`.
 

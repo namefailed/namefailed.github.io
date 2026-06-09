@@ -111,8 +111,12 @@ Three.js ships **only** in the `rubik-window` lazy chunk.
 
 | Module | Responsibility |
 |--------|----------------|
-| `editor-window.ts` | DOM, modes, key routing, VFS I/O |
-| `editor-vim-ops.ts` | Pure text/cursor/motion helpers (unit tested) |
+| `editor-window.ts` | DOM, modes, chord routing, VFS I/O |
+| `editor-normal-handlers.ts` | NORMAL-mode single-key handler map |
+| `editor-buffer.ts` | Buffer state apply layer (textarea ↔ pure edits) |
+| `editor-vim-ops.ts` | Barrel re-export of motions + edits |
+| `editor-vim-motions.ts` | Pure caret/motion helpers (no mutation) |
+| `editor-vim-edits.ts` | Pure `{ text, pos }` buffer mutations |
 | `editor-vim-keys.ts` | Pure INSERT/NORMAL key-chord helpers |
 | `editor-ex-commands.ts` | `:w` / `:q` / `:e` ex-mode parsing |
 | `editor-window-meta.ts` | Path compare, title strings |
@@ -228,14 +232,14 @@ Bump VFS key version in `os-fs.ts` to reset visitor filesystems.
 
 ## Testing
 
-**583 tests** · **46 files** · Vitest in Node · Playwright e2e smoke.
+**587 tests** · **48 files** · Vitest in Node · Playwright e2e smoke.
 
 ### By domain
 
 | Domain | Example test files |
 |--------|-------------------|
 | WM / desktop | `desktop.test.ts`, `desktop-wm-*.test.ts`, `desktop-keyboard-handler.test.ts`, `bsp-layout.test.ts` |
-| Editor vim | `editor-vim-ops.test.ts`, `editor-vim-keys.test.ts`, `editor-ex-commands.test.ts` |
+| Editor vim | `editor-vim-motions.test.ts`, `editor-vim-edits.test.ts`, `editor-buffer.integration.test.ts`, `editor-vim-keys.test.ts`, `editor-ex-commands.test.ts` |
 | Terminal / vim | `vim.test.ts`, `terminal-motd.test.ts` |
 | VFS / commands | `os-fs.test.ts`, `commands/*.test.ts` |
 | Tiles / launcher | `launcher-catalog.test.ts`, `desktop-open-window.test.ts`, `window-chrome.test.ts` |
