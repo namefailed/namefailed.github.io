@@ -1,6 +1,6 @@
 # Style Guide
 
-Coding standards and best practices for the portfolio codebase.
+Coding standards for the portfolio codebase. For AI agent workflows see [AGENTS.md](./AGENTS.md). For setup see [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ---
 
@@ -417,11 +417,16 @@ Add storage.ts: centralized localStorage wrapper
 
 Keep docs in `docs/` updated when making architectural changes:
 
-- `ARCHITECTURE.md` — module structure, entry points, patterns
-- `THEMING.md` — custom properties, adding themes
-- `STYLE_GUIDE.md` — this file (coding standards)
+| Doc | Update when… |
+|-----|----------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | New modules, bootstrap changes, persistence keys |
+| [API.md](./API.md) | Public types, extension points |
+| [AGENTS.md](./AGENTS.md) | New invariants, storage keys, file-map changes |
+| [USER_GUIDE.md](./USER_GUIDE.md) | New commands or keybinds |
+| [THEMING.md](./THEMING.md) | New themes or `--th-*` tokens |
+| [README.md](../README.md) | Test counts, stack versions, deploy notes |
 
-When adding new modules, update the relevant tables in ARCHITECTURE.md.
+When adding modules, update the relevant tables — do not leave docs stale.
 
 ---
 
@@ -474,6 +479,7 @@ el.innerHTML = escapeHtml(userInput)
 ## Tooling
 
 - `npm run lint` — ESLint (TypeScript, e2e specs, maintainer scripts)
+- `npm test` — **563** Vitest unit tests (46 files)
 - `npm run test:coverage` — Vitest v8 coverage (`coverage/` gitignored)
 - `npm run test:e2e` — Playwright smoke against `vite preview`
 - Desktop CSS: `src/styles/*.css` via `src/style.css` hub; regenerate with `node scripts/split-style-css.mjs`

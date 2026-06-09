@@ -36,5 +36,5 @@ docs/superpowers/
 # Local editor and tooling metadata
 .cursor/
 .claude/
-AGENTS.md
+/AGENTS.md
 .cursorrules
