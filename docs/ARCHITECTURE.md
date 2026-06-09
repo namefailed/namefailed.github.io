@@ -110,7 +110,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-512 tests across 39 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+516 tests across 41 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|

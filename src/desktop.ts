@@ -12,7 +12,17 @@ import {
   type TiledWin,
 } from './desktop-open-window'
 import { handleDesktopGlobalKey, type DesktopKeyboardHost } from './desktop-keyboard-handler'
+import { mountLauncherIconGrid } from './desktop-launcher-grid'
+import { buildPsSnapshot, type PsSnapshotRow } from './desktop-ps-snapshot'
 import { focusSubtarget } from './desktop-wm-focus'
+import { enforceTileLimit as applyTileLimit, type TileLimitHost } from './desktop-wm-tile-limit'
+import {
+  closeTerminalColumn,
+  initYasbLauncherChrome,
+  minimizeTerminalColumn,
+  wireTerminalTitlebar,
+  type TerminalColumnHost,
+} from './desktop-wm-terminal'
 import {
   closeTiledWindow,
   minimizeTiledWindow,
@@ -28,11 +38,6 @@ import {
   type WmMaximizeContext,
 } from './desktop-wm-maximize'
 import { Splitter } from './splitter'
-import {
-  attachLazyPrefetchHandlers,
-  LAUNCHER_ICON_ROWS,
-  TERMINAL_TILE_SENTINEL,
-} from './launcher-catalog'
 import {
   closeLauncherOverlayFlags,
   initLauncherSearchFilter,
@@ -51,8 +56,8 @@ import {
   syncYasbFocusedTitle,
   wireDockHoverZone,
 } from './desktop-taskbar'
-import { launcherIconWindowSpec, windowSpecForCommand } from './desktop-window-spec'
-import { animateWmThenRemove, playWmMountAnim } from './desktop-wm-animations'
+import { windowSpecForCommand } from './desktop-window-spec'
+import { playWmMountAnim } from './desktop-wm-animations'
 import { initYasbClock } from './yasb-clock'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
@@ -61,34 +66,7 @@ import { mountDesktopTiles } from './desktop-tiles'
 import type { WindowLayout } from './window-layout'
 import { BspLayout } from './bsp-layout'
 
-// ── DOM helpers ────────────────────────────────────────────────────────────────
-
-/** Create a desktop-icon glyph span using textContent (never innerHTML). */
-function makeIconGlyph(glyph: string): HTMLSpanElement {
-  const span = document.createElement('span')
-  span.className = 'desktop-icon-glyph'
-  span.setAttribute('aria-hidden', 'true')
-  span.textContent = glyph
-  return span
-}
-
-/** Create a desktop-icon label span using textContent (never innerHTML). */
-function makeIconLabel(label: string): HTMLSpanElement {
-  const span = document.createElement('span')
-  span.className = 'desktop-icon-label'
-  span.textContent = label
-  return span
-}
-
-export interface PsSnapshotRow {
-  pid: number
-  tty: string
-  stat: string
-  time: string
-  cmd: string
-}
-
-export type { WindowSpec }
+export type { WindowSpec, PsSnapshotRow }
 
 export class Desktop {
   private desktop:    HTMLElement
@@ -136,19 +114,10 @@ export class Desktop {
     // Terminal window clicks → focus terminal
     termWin.addEventListener('mousedown', () => this.focusTerminal())
 
-    // Terminal title-bar buttons
-    const tbar = termWin.querySelector('.win-titlebar')
-    tbar?.querySelector('.dot-min')?.addEventListener('click', e => {
-      e.stopPropagation()
-      this.minimizeTerminal()
-    })
-    tbar?.querySelector('.dot-max')?.addEventListener('click', e => {
-      e.stopPropagation()
-      this.toggleMaximizeTerminal()
-    })
-    tbar?.querySelector('.dot-close')?.addEventListener('click', e => {
-      e.stopPropagation()
-      this.closeTerminal()
+    wireTerminalTitlebar(termWin, {
+      onMinimize: () => this.minimizeTerminal(),
+      onMaximize: () => this.toggleMaximizeTerminal(),
+      onClose: () => this.closeTerminal(),
     })
 
     // Horizontal splitter between terminal and right pane
@@ -168,10 +137,14 @@ export class Desktop {
     // Window resize → refit terminal
     window.addEventListener('resize', () => this.fitTerminal())
 
-    this.initDesktopIcons()
+    mountLauncherIconGrid({ openWindow: spec => void this.openWindow(spec) })
     initLauncherSearchFilter()
     initYasbClock()
-    this.initYasbChrome()
+    initYasbLauncherChrome({
+      launcherOverlay: this.launcherOverlay,
+      onApplicationsClick: () => this.toggleLauncherFromButton(),
+      onCloseLauncher: () => this.closeLauncherOverlay(),
+    })
     setDesktopRef(this)
 
     // Mount first-visit welcome guide (non-blocking)
@@ -196,28 +169,7 @@ export class Desktop {
 
   /** Simulated `ps` output: shell plus tiled / minimized windows */
   getPsSnapshot(): PsSnapshotRow[] {
-    const rows: PsSnapshotRow[] = []
-    let pid = 400
-    rows.push({ pid: pid++, tty: 'pts/0', stat: 'Ss+', time: '0:00', cmd: '-bash' })
-    for (const w of this.windows) {
-      rows.push({
-        pid: pid++,
-        tty: 'wm-pty',
-        stat: this.focusedId === w.command ? 'Sl+' : 'Sl',
-        time: '0:00',
-        cmd: w.command,
-      })
-    }
-    for (const { win } of this.minimized) {
-      rows.push({
-        pid: pid++,
-        tty: 'wm-pty',
-        stat: 'T',
-        time: '0:00',
-        cmd: `${win.command} (minimized)`,
-      })
-    }
-    return rows
+    return buildPsSnapshot(this.windows, this.minimized, this.focusedId)
   }
 
   /**
@@ -233,6 +185,36 @@ export class Desktop {
    * All heavy tile modules are loaded via dynamic `import()` on first open, keeping the initial
    * bundle lean.
    */
+  private terminalColumnHost(): TerminalColumnHost {
+    const self = this
+    return {
+      termWin: self.termWin,
+      launcherOverlay: self.launcherOverlay,
+      prefersReducedMotion: () => self.prefersReducedMotion(),
+      getMaximizedId: () => self.maximizedId,
+      unmaximizeTerminal: () => self.unmaximizeTerminal(),
+      hasOpenWindows: () => self.windows.length > 0,
+      focusFirstWindow: () => self.focusWindow(self.windows[0]!),
+      clearFocusAndSync: () => {
+        self.focusedId = null
+        self.sync()
+      },
+      sync: () => self.sync(),
+    }
+  }
+
+  private tileLimitHost(): TileLimitHost {
+    const self = this
+    return {
+      get windows() { return self.windows },
+      get minimized() { return self.minimized },
+      get maxVisible() { return self.layout.maxVisible },
+      getFocusedId: () => self.focusedId,
+      setFocusedId: id => { self.focusedId = id },
+      unmaximizeContent: win => self.unmaximizeContent(win),
+    }
+  }
+
   private lifecycleContext(): WmLifecycleContext {
     const self = this
     return {
@@ -409,50 +391,12 @@ export class Desktop {
 
   private minimizeTerminal(): void {
     playOsSound('click')
-    if (this.termWin.classList.contains('terminal-closed')) return
-    if (this.termWin.classList.contains('wm-animate-close')) return
-    if (this.maximizedId === TERMINAL_TILE_SENTINEL) this.unmaximizeTerminal()
-
-    const applyMin = (): void => {
-      this.termWin.classList.remove('wm-animate-close')
-      this.termWin.classList.add('minimized')
-      this.termWin.classList.remove('active')
-      if (this.windows.length > 0) {
-        this.focusWindow(this.windows[0])
-      } else {
-        this.focusedId = null
-        this.sync()
-      }
-    }
-
-    animateWmThenRemove(this.termWin, applyMin, { reducedMotion: this.prefersReducedMotion() })
+    minimizeTerminalColumn(this.terminalColumnHost())
   }
 
   /** Dismiss terminal (hidden tile). Unlike minimize, does not auto-open app launchers. */
   private closeTerminal(): void {
-    if (this.termWin.classList.contains('terminal-closed')) return
-    if (this.termWin.classList.contains('wm-animate-close')) return
-    if (this.maximizedId === TERMINAL_TILE_SENTINEL) this.unmaximizeTerminal()
-
-    const applyClose = (): void => {
-      this.termWin.classList.remove('wm-animate-close')
-      this.termWin.classList.remove('minimized')
-      this.termWin.classList.add('terminal-closed')
-      closeLauncherOverlayFlags(this.launcherOverlay)
-      this.termWin.classList.remove('active')
-      if (this.windows.length > 0) {
-        this.focusWindow(this.windows[0])
-      } else {
-        this.focusedId = null
-      }
-      this.sync()
-    }
-
-    if (this.prefersReducedMotion() || !this.termWin.isConnected || this.termWin.classList.contains('minimized')) {
-      applyClose()
-    } else {
-      animateWmThenRemove(this.termWin, applyClose, { reducedMotion: false })
-    }
+    closeTerminalColumn(this.terminalColumnHost())
   }
 
   // ── private: show desktop ───────────────────────────────────────────────────
@@ -481,57 +425,6 @@ export class Desktop {
     requestAnimationFrame(() => document.getElementById('launcher-search')?.focus())
   }
 
-  private initYasbChrome(): void {
-    document.getElementById('btn-applications')?.addEventListener('click', e => {
-      e.stopPropagation()
-      this.toggleLauncherFromButton()
-    })
-    document.getElementById('launcher-backdrop')?.addEventListener('click', () => {
-      this.closeLauncherOverlay()
-    })
-    document.addEventListener(
-      'keydown',
-      ev => {
-        if (ev.key !== 'Escape') return
-        if (!launcherOverlayVisible(this.launcherOverlay)) return
-        if (ev.ctrlKey || ev.altKey || ev.metaKey) return
-        ev.preventDefault()
-        this.closeLauncherOverlay()
-      },
-      true,
-    )
-  }
-
-  // ── desktop icons (wallpaper layer launchers) ───────────────────────────────
-
-  private initDesktopIcons(): void {
-    const root = document.getElementById('desktop-icons')
-    if (!root) return
-
-    for (const item of LAUNCHER_ICON_ROWS) {
-      const btn = document.createElement('button')
-      btn.type = 'button'
-      btn.className = 'desktop-icon'
-      if (item.kind === 'terminal') {
-        btn.appendChild(makeIconGlyph(item.glyph))
-        btn.appendChild(makeIconLabel(item.label))
-        btn.addEventListener('click', () => {
-          void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
-        })
-      } else {
-        const spec = launcherIconWindowSpec(item.cmd)
-        if (!spec) continue
-        btn.appendChild(makeIconGlyph(item.glyph))
-        btn.appendChild(makeIconLabel(item.label))
-        attachLazyPrefetchHandlers(btn, item.cmd)
-        btn.addEventListener('click', () => {
-          void this.openWindow(spec)
-        })
-      }
-      root.appendChild(btn)
-    }
-  }
-
   // ── private: vertical splitters between stacked content windows ───────────
 
   /**
@@ -540,17 +433,7 @@ export class Desktop {
    * Call this before appending a new window to #right-pane.
    */
   private enforceTileLimit(): void {
-    if (this.windows.length < this.layout.maxVisible) return
-    // Prefer to bump the window that isn't currently focused
-    const bump = this.windows.find(w => w.command !== this.focusedId) ?? this.windows[0]
-    if (!bump) return
-    if (bump.isMaximized()) this.unmaximizeContent(bump)
-    bump.setMinimized(true)
-    bump.el.remove()
-    const idx = this.windows.indexOf(bump)
-    if (idx !== -1) this.windows.splice(idx, 1)
-    this.minimized.push({ win: bump })
-    if (this.focusedId === bump.command) this.focusedId = null
+    applyTileLimit(this.tileLimitHost())
   }
 
   /** Rebuild layout splitters after any window close, minimize, or restore. */
