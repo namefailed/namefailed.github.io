@@ -17,7 +17,21 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 ### Core Shell
 | Module | Responsibility |
 |--------|----------------|
-| `desktop.ts` | Tiling window manager, dock, launcher overlay, focus management, Ctrl+chord keyboard handling |
+| `desktop.ts` | WM orchestrator (~510 lines) — wires host contexts, constructor, public API |
+| `desktop-open-window.ts` | Lazy tile open dispatch (editor, games, portfolio, terminal tile) |
+| `desktop-taskbar.ts` | Dock rendering, YASB title, auto-hide hover zone |
+| `desktop-wm-lifecycle.ts` | Tiled close / minimize / restore animations |
+| `desktop-wm-maximize.ts` | Terminal column vs content maximize |
+| `desktop-wm-terminal.ts` | Legacy left-column terminal chrome + YASB launcher buttons |
+| `desktop-keyboard-handler.ts` | Ctrl+chord dispatch |
+| `desktop-spatial-focus.ts` | Ctrl+H/J/K/L geometry |
+| `desktop-launcher-overlay.ts` | Show-desktop / Applications overlay flags + DOM sync |
+| `desktop-launcher-grid.ts` | Applications overlay icon grid |
+| `desktop-window-spec.ts` | `WindowSpec` builders for tiles and launcher |
+| `desktop-wm-animations.ts` | Mount/unmount tile animations |
+| `desktop-wm-tile-limit.ts` | Cap visible tiles (bump oldest to dock) |
+| `desktop-wm-sync.ts` | Shell `dataset.*` mirrors for CSS |
+| `desktop-ps-snapshot.ts` | Simulated `ps` rows for terminal MOTD |
 | `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
 | `bootstrap-shell.ts` | Boot sequence orchestration |
 | `launcher-catalog.ts` | Launcher grid definitions, dock membership, lazy-chunk prefetch triggers |
@@ -110,7 +124,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-516 tests across 41 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+520 tests across 41 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|

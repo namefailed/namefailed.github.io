@@ -47,15 +47,17 @@ import {
   toggleShowDesktopFlags,
   type LauncherOverlayFlags,
 } from './desktop-launcher-overlay'
-import { pickSpatialFocusAction } from './desktop-spatial-focus'
+import { applySpatialFocusAction, pickSpatialFocusAction } from './desktop-spatial-focus'
 import {
-  extraDockCommands,
-  orderedDockCommands,
+  buildTaskbarDockSnapshot,
   renderTaskbarDock,
+  resolveDockWindows,
   syncDockAutoHide,
   syncYasbFocusedTitle,
+  taskbarPinnedAction,
   wireDockHoverZone,
 } from './desktop-taskbar'
+import { syncShellDataset } from './desktop-wm-sync'
 import { windowSpecForCommand } from './desktop-window-spec'
 import { playWmMountAnim } from './desktop-wm-animations'
 import { initYasbClock } from './yasb-clock'
@@ -451,12 +453,12 @@ export class Desktop {
    * to the next animation frame so the DOM has settled before xterm measures the container.
    */
   private sync(): void {
-    const count = this.windows.length
-    this.desktop.dataset.contentCount = String(count)
-    this.desktop.dataset.terminalClosed = this.termWin.classList.contains('terminal-closed')
-      ? '1'
-      : '0'
-    this.desktop.dataset.maximized = this.maximizedId !== null ? '1' : '0'
+    syncShellDataset(
+      this.desktop,
+      this.termWin,
+      this.windows.length,
+      this.maximizedId !== null,
+    )
     this.syncLauncherVisibility()
     this.syncTaskbar()
     this.syncDockVisibility()
@@ -466,16 +468,7 @@ export class Desktop {
 
   /** All windows accessible from the dock: open (by tile order) then minimized. */
   private dockWindows(): TiledWin[] {
-    const order = orderedDockCommands(
-      this.windows.map(w => w.command),
-      this.minimized.map(m => m.win.command),
-    )
-    const byCmd = new Map<string, TiledWin>()
-    for (const w of this.windows) byCmd.set(w.command, w)
-    for (const { win } of this.minimized) {
-      if (!byCmd.has(win.command)) byCmd.set(win.command, win)
-    }
-    return order.map(cmd => byCmd.get(cmd)!).filter(Boolean)
+    return resolveDockWindows(this.windows, this.minimized)
   }
 
   /** Ctrl+1–9: focus the Nth open/minimized window (left to right in dock order). */
@@ -499,29 +492,27 @@ export class Desktop {
   private syncTaskbar(): void {
     const openCommands = this.windows.map(w => w.command)
     const minimizedCommands = this.minimized.map(m => m.win.command)
-    const dockOrder = orderedDockCommands(openCommands, minimizedCommands)
 
     renderTaskbarDock(
       this.taskbarDock,
-      {
-        focusedId: this.focusedId,
-        openCommands,
-        minimizedCommands,
-        extraCommands: extraDockCommands(dockOrder),
-      },
+      buildTaskbarDockSnapshot(this.focusedId, openCommands, minimizedCommands),
       {
         onPinnedClick: cmd => {
-          if (cmd === 'terminal') {
+          const action = taskbarPinnedAction(
+            cmd,
+            this.windows.some(w => w.command === 'terminal'),
+            this.focusedId === 'terminal',
+          )
+          if (action.type === 'minimize-terminal-tile') {
             const termTile = this.windows.find(w => w.command === 'terminal')
-            const focused = this.focusedId === 'terminal'
-            if (termTile && focused) {
-              this.minimizeWindow(termTile)
-            } else {
-              void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
-            }
+            if (termTile) this.minimizeWindow(termTile)
             return
           }
-          void this.openWindow(windowSpecForCommand(cmd))
+          if (action.type === 'open-terminal-tile') {
+            void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+            return
+          }
+          void this.openWindow(windowSpecForCommand(action.cmd))
         },
         onExtraClick: cmd => {
           const win = this.dockWindows().find(w => w.command === cmd)
@@ -568,11 +559,15 @@ export class Desktop {
       this.focusedId,
       dir,
     )
-    if (action.type === 'focus') {
-      const win = this.windows.find(w => w.command === action.id)
-      if (win) this.focusWindow(win)
-    } else if (action.type === 'open-terminal') {
-      void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
-    }
+    const openCommands = this.windows.map(w => w.command)
+    applySpatialFocusAction(action, openCommands, {
+      focusWindow: cmd => {
+        const win = this.windows.find(w => w.command === cmd)
+        if (win) this.focusWindow(win)
+      },
+      openTerminal: () => {
+        void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+      },
+    })
   }
 }

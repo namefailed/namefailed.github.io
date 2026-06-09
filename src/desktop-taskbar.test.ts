@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
+  buildTaskbarDockSnapshot,
   extraDockCommands,
   focusedTitleLabel,
   orderedDockCommands,
   taskbarIconMeta,
+  taskbarPinnedAction,
 } from './desktop-taskbar'
 
 describe('taskbarIconMeta', () => {
@@ -30,6 +32,30 @@ describe('extraDockCommands', () => {
   it('filters pinned dock entries', () => {
     const dock = ['terminal', 'edit', 'paint', 'snake']
     expect(extraDockCommands(dock)).toEqual(['paint', 'snake'])
+  })
+})
+
+describe('taskbarPinnedAction', () => {
+  it('minimizes focused terminal tile', () => {
+    expect(taskbarPinnedAction('terminal', true, true)).toEqual({
+      type: 'minimize-terminal-tile',
+    })
+  })
+
+  it('opens terminal when tile missing or unfocused', () => {
+    expect(taskbarPinnedAction('terminal', false, false)).toEqual({
+      type: 'open-terminal-tile',
+    })
+    expect(taskbarPinnedAction('terminal', true, false)).toEqual({
+      type: 'open-terminal-tile',
+    })
+  })
+})
+
+describe('buildTaskbarDockSnapshot', () => {
+  it('includes extras outside pinned dock cmds', () => {
+    const snap = buildTaskbarDockSnapshot('edit', ['edit'], ['paint'])
+    expect(snap.extraCommands).toEqual(['paint'])
   })
 })
 
