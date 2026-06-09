@@ -18,21 +18,15 @@ import type { TerminalWindow } from './terminal'
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { FS_HOME, vfsNormalize } from './os-fs'
 import { Splitter } from './splitter'
-import { commands } from './commands/index'
-import {
-  PORTFOLIO_PROJECTS,
-  resumeWindowSplitPayload,
-  whoamiAboutLines,
-  linksAndContactLines,
-} from './content/portfolio'
 import {
   attachLazyPrefetchHandlers,
   LAUNCHER_ICON_ROWS,
   PINNED_DOCK_CMDS,
   TERMINAL_TILE_SENTINEL,
-  tileTitleForPortfolioCommand,
-  TILED_WINDOW_COMMANDS,
 } from './launcher-catalog'
+import { isDesktopWmChordKey } from './desktop-keyboard-chords'
+import { launcherIconWindowSpec, windowSpecForCommand } from './desktop-window-spec'
+import { initYasbClock } from './yasb-clock'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { mountWelcomeGuide } from './welcome-guide'
@@ -105,15 +99,6 @@ export class Desktop {
   private static readonly WM_MOUNT_MS = 640
   /** Close / shrink animation fallback if `animationend` does not fire. */
   private static readonly WM_UNMOUNT_MS = 400
-  /**
-   * Keys intercepted by the WM before xterm/vim see them.
-   * Defined once at class level so it isn't rebuilt on every keydown.
-   */
-  private static readonly WM_KEYS = new Set([
-    't', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'h', 'l', 'j', 'k', 'q', 'm', 'd', 'f',
-  ])
-
   private desktop:    HTMLElement
   private panes:      HTMLElement
   private rightPane:  HTMLElement
@@ -192,7 +177,7 @@ export class Desktop {
 
     this.initDesktopIcons()
     this.initLauncherSearch()
-    this.initTopBarClock()
+    initYasbClock()
     this.initYasbChrome()
     setDesktopRef(this)
 
@@ -207,7 +192,7 @@ export class Desktop {
     if (workspace) {
       mountDesktopTiles({
         host: workspace,
-        onActivate: cmd => void this.openWindow(this.specForCommand(cmd)),
+        onActivate: cmd => void this.openWindow(windowSpecForCommand(cmd)),
       })
     }
 
@@ -595,39 +580,6 @@ export class Desktop {
    * Portfolio commands (resume/projects/whoami/links) need their content
    * pre-populated; tool/game commands only need the command key.
    */
-  private specForCommand(cmd: string): WindowSpec {
-    switch (cmd) {
-      case 'resume':
-        return {
-          command: 'resume',
-          title: tileTitleForPortfolioCommand('resume'),
-          ...resumeWindowSplitPayload(),
-        }
-      case 'projects':
-        return {
-          command: 'projects',
-          title: tileTitleForPortfolioCommand('projects'),
-          content: [],
-          projectCards: PORTFOLIO_PROJECTS,
-        }
-      case 'whoami':
-        return {
-          command: 'whoami',
-          title: tileTitleForPortfolioCommand('whoami'),
-          content: whoamiAboutLines(),
-        }
-      case 'links':
-        return {
-          command: 'links',
-          title: tileTitleForPortfolioCommand('links'),
-          content: linksAndContactLines(),
-        }
-      default:
-        // Tool/game windows build their own content — only command key is needed.
-        return { command: cmd } as WindowSpec
-    }
-  }
-
   /** Open or focus the terminal tile (lazy — lives in the right pane like any other window). */
   focusTerminal(): void {
     void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
@@ -1055,20 +1007,6 @@ export class Desktop {
     })
   }
 
-  private initTopBarClock(): void {
-    const el = document.getElementById('yasb-clock-text')
-    if (!el) return
-    const tick = (): void => {
-      el.textContent = new Date().toLocaleTimeString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    }
-    tick()
-    // Clock shows HH:MM only — 60 s is sufficient resolution
-    window.setInterval(tick, 60_000)
-  }
-
   // ── desktop icons (wallpaper layer launchers) ───────────────────────────────
 
   private initDesktopIcons(): void {
@@ -1086,38 +1024,13 @@ export class Desktop {
           void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
         })
       } else {
-        const cmd = commands[item.cmd]
-        if (!cmd || !TILED_WINDOW_COMMANDS.has(item.cmd)) continue
+        const spec = launcherIconWindowSpec(item.cmd)
+        if (!spec) continue
         btn.appendChild(makeIconGlyph(item.glyph))
         btn.appendChild(makeIconLabel(item.label))
         attachLazyPrefetchHandlers(btn, item.cmd)
         btn.addEventListener('click', () => {
-          if (item.cmd === 'resume') {
-            void this.openWindow({
-              command: 'resume',
-              title: tileTitleForPortfolioCommand('resume'),
-              ...resumeWindowSplitPayload(),
-            })
-            return
-          }
-          if (item.cmd === 'projects') {
-            void this.openWindow({
-              command: 'projects',
-              title: tileTitleForPortfolioCommand('projects'),
-              content: [],
-              projectCards: PORTFOLIO_PROJECTS,
-            })
-            return
-          }
-          void this.openWindow({
-            command: item.cmd,
-            title: tileTitleForPortfolioCommand(item.cmd),
-            content: cmd.run([]),
-            editorPath: item.cmd === 'edit' ? 'notes.txt' : undefined,
-            explorerPath: item.cmd === 'explorer' ? FS_HOME : undefined,
-            browserUrl:
-              item.cmd === 'browse' ? DEFAULT_BROWSER_URL : undefined,
-          })
+          void this.openWindow(spec)
         })
       }
       root.appendChild(btn)
@@ -1311,7 +1224,7 @@ export class Desktop {
         })
       } else {
         attachLazyPrefetchHandlers(btn, cmd)
-        btn.addEventListener('click', () => void this.openWindow(this.specForCommand(cmd)))
+        btn.addEventListener('click', () => void this.openWindow(windowSpecForCommand(cmd)))
       }
 
       this.taskbarDock.appendChild(btn)
@@ -1387,7 +1300,7 @@ export class Desktop {
     const key = ev.key.toLowerCase()
 
     // Reserved keys for the WM — intercept before xterm/vim see them
-    if (!Desktop.WM_KEYS.has(key)) return
+    if (!isDesktopWmChordKey(key)) return
 
     ev.preventDefault()
     ev.stopImmediatePropagation()
