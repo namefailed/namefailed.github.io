@@ -228,7 +228,7 @@ Bump VFS key version in `os-fs.ts` to reset visitor filesystems.
 
 ## Testing
 
-**563 tests** · **46 files** · Vitest in Node · Playwright e2e smoke.
+**583 tests** · **46 files** · Vitest in Node · Playwright e2e smoke.
 
 ### By domain
 

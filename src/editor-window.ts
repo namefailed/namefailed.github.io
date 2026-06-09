@@ -4,26 +4,36 @@ import { parseEditorExCommand } from './editor-ex-commands'
 import { insertModeKeyAction, tryAppendCountDigit } from './editor-vim-keys'
 import {
   applyReplaceRunsText,
+  appendLineEndPos,
   consumeCountDigits,
   consumeOptionalNat,
+  deleteCharBackwardText,
+  deleteCharForwardText,
   deleteLineBlockText,
   deleteThroughEOLText,
-  findNextOnLine,
   firstNonBlankOnLine,
   getLineCol,
   gotoLinePos,
+  indentLinesText,
   joinLinesText,
   lineBounds,
   lineCountTotal,
   lineEndCaretPos,
   moveHorizPos,
-  moveVertPos,
+  moveVertRepeat,
+  openLineAboveText,
+  openLineBelowText,
   pasteYankText,
+  repeatFindPos,
   reverseFindKind,
-  wordBackPos,
-  wordEndForwardPos,
-  wordForwardPos,
+  substituteCharsText,
+  toggleCaseRunText,
+  unindentLinesText,
+  wordBackRepeat,
+  wordEndForwardRepeat,
+  wordForwardRepeat,
   yankLineBlockText,
+  yankToEOLText,
 } from './editor-vim-ops'
 import { editorPathsEqual, editorWindowTitle } from './editor-window-meta'
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
@@ -293,16 +303,30 @@ export class EditorWindow {
     return firstNonBlankOnLine(this.textarea.value, pos)
   }
 
-  private deleteLineBlock(nLines: number): void {
-    const line = this.getLineCol().line
-    const result = deleteLineBlockText(this.textarea.value, line, nLines)
-    if (!result) return
+  /** Apply a pure buffer edit result to the textarea + undo stack. */
+  private applyBufferEdit(
+    result: { text: string; pos: number } | null | undefined,
+    opts?: { enterInsert?: boolean },
+  ): boolean {
+    if (!result) return false
     this.textarea.value = result.text
     this.textarea.setSelectionRange(result.pos, result.pos)
     this.dirty = result.text !== this.savedText
     this.recordAfterMutation()
     this.syncTitle()
+    if (opts?.enterInsert) {
+      this.mode = 'insert'
+      this.syncStatus()
+      this.syncEditorChrome()
+    }
     this.refreshModeMeta()
+    return true
+  }
+
+  private deleteLineBlock(nLines: number): void {
+    this.applyBufferEdit(
+      deleteLineBlockText(this.textarea.value, this.getLineCol().line, nLines),
+    )
   }
 
   private yankLineBlock(nLines: number): void {
@@ -313,38 +337,24 @@ export class EditorWindow {
   }
 
   private deleteThroughEOL(): void {
-    const result = deleteThroughEOLText(this.textarea.value, this.textarea.selectionStart)
-    this.textarea.value = result.text
-    this.textarea.setSelectionRange(result.pos, result.pos)
-    this.dirty = result.text !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.refreshModeMeta()
+    this.applyBufferEdit(
+      deleteThroughEOLText(this.textarea.value, this.textarea.selectionStart),
+    )
   }
 
   /** Join consecutive lines beginning at cursor line (minimal vi `J`): no extra spacing. */
   private joinBelow(): void {
     const span = this.consumeCount(1) + 1
-    const result = joinLinesText(this.textarea.value, this.getLineCol().line, span)
-    if (!result) return
-    this.textarea.value = result.text
-    this.textarea.setSelectionRange(result.pos, result.pos)
-    this.dirty = result.text !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.refreshModeMeta()
+    this.applyBufferEdit(
+      joinLinesText(this.textarea.value, this.getLineCol().line, span),
+    )
   }
 
   /** `r` / `{count}r`: replace each of the next `n` glyphs with `ch` (minimal vi semantics). */
   private applyReplaceRuns(n: number, ch: string): void {
-    const result = applyReplaceRunsText(this.textarea.value, this.textarea.selectionStart, n, ch)
-    if (!result) return
-    this.textarea.value = result.text
-    this.textarea.setSelectionRange(result.pos, result.pos)
-    this.dirty = result.text !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.refreshModeMeta()
+    this.applyBufferEdit(
+      applyReplaceRunsText(this.textarea.value, this.textarea.selectionStart, n, ch),
+    )
   }
 
   /** Path matches the file currently loaded in this tile. */
@@ -998,29 +1008,34 @@ export class EditorWindow {
     if (k === 'C') {
       e.preventDefault()
       this.consumeCount(1)
-      this.changeThroughEOL()
+      this.applyBufferEdit(
+        deleteThroughEOLText(this.textarea.value, cur()),
+        { enterInsert: true },
+      )
       return
     }
 
     if (k === 's') {
       e.preventDefault()
-      this.substituteChars(this.consumeCount(1))
+      this.applyBufferEdit(
+        substituteCharsText(this.textarea.value, cur(), this.consumeCount(1)),
+        { enterInsert: true },
+      )
       return
     }
 
     if (k === '~') {
       e.preventDefault()
-      this.toggleCaseRun(this.consumeCount(1))
+      this.applyBufferEdit(
+        toggleCaseRunText(this.textarea.value, cur(), this.consumeCount(1)),
+      )
       return
     }
 
     if (k === 'Y') {
       e.preventDefault()
       this.consumeCount(1)
-      const t = this.textarea.value
-      const p = cur()
-      const { end } = this.lineBounds(p)
-      this.yankRegister = t.slice(p, end)
+      this.yankRegister = yankToEOLText(this.textarea.value, cur())
       this.flashStatus('Yanked to end of line', false)
       return
     }
@@ -1041,46 +1056,26 @@ export class EditorWindow {
 
     if (k === 'X') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      let t = this.textarea.value
-      let p = cur()
-      const chop = Math.min(n, p)
-      if (!chop) return
-      t = t.slice(0, p - chop) + t.slice(p)
-      this.textarea.value = t
-      setCur(p - chop)
-      this.dirty = t !== this.savedText
-      this.recordAfterMutation()
-      this.syncTitle()
+      this.applyBufferEdit(
+        deleteCharBackwardText(this.textarea.value, cur(), this.consumeCount(1)),
+      )
       return
     }
 
     if (k === 'w') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      let p = cur()
-      const t = this.textarea.value
-      for (let i = 0; i < n; i++) p = wordForwardPos(t, p)
-      setCur(p)
+      setCur(wordForwardRepeat(this.textarea.value, cur(), this.consumeCount(1)))
       return
     }
     if (k === 'b') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      let p = cur()
-      const t = this.textarea.value
-      for (let i = 0; i < n; i++) p = wordBackPos(t, p)
-      setCur(p)
+      setCur(wordBackRepeat(this.textarea.value, cur(), this.consumeCount(1)))
       return
     }
 
     if (k === 'e') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      let p = cur()
-      const t = this.textarea.value
-      for (let i = 0; i < n; i++) p = wordEndForwardPos(t, p)
-      setCur(p)
+      setCur(wordEndForwardRepeat(this.textarea.value, cur(), this.consumeCount(1)))
       return
     }
 
@@ -1104,13 +1099,8 @@ export class EditorWindow {
     if (k === 'A') {
       e.preventDefault()
       this.consumeCount(1)
-      const t = this.textarea.value
-      const pos = cur()
-      const rest = t.slice(pos)
-      const nl = rest.indexOf('\n')
-      const end = nl === -1 ? t.length : pos + nl
       this.mode = 'insert'
-      setCur(end)
+      setCur(appendLineEndPos(this.textarea.value, cur()))
       this.syncStatus()
       this.syncEditorChrome()
       return
@@ -1127,36 +1117,13 @@ export class EditorWindow {
     if (k === 'o') {
       e.preventDefault()
       this.consumeCount(1)
-      const t = this.textarea.value
-      const pos = cur()
-      const nl = t.indexOf('\n', pos)
-      const insAt = nl === -1 ? t.length : nl
-      const next = t.slice(0, insAt) + '\n' + t.slice(insAt)
-      this.textarea.value = next
-      setCur(insAt + 1)
-      this.dirty = this.textarea.value !== this.savedText
-      this.mode = 'insert'
-      this.recordAfterMutation()
-      this.syncTitle()
-      this.syncStatus()
-      this.syncEditorChrome()
+      this.applyBufferEdit(openLineBelowText(this.textarea.value, cur()), { enterInsert: true })
       return
     }
     if (k === 'O') {
       e.preventDefault()
       this.consumeCount(1)
-      const t = this.textarea.value
-      const pos = cur()
-      const lineStart = t.lastIndexOf('\n', pos - 1) + 1
-      const next = t.slice(0, lineStart) + '\n' + t.slice(lineStart)
-      this.textarea.value = next
-      setCur(lineStart)
-      this.dirty = this.textarea.value !== this.savedText
-      this.mode = 'insert'
-      this.recordAfterMutation()
-      this.syncTitle()
-      this.syncStatus()
-      this.syncEditorChrome()
+      this.applyBufferEdit(openLineAboveText(this.textarea.value, cur()), { enterInsert: true })
       return
     }
 
@@ -1172,37 +1139,20 @@ export class EditorWindow {
     }
     if (k === 'j') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      for (let i = 0; i < n; i++) {
-        const np = this.moveVert(1)
-        this.textarea.setSelectionRange(np, np)
-      }
-      this.refreshModeMeta()
+      setCur(moveVertRepeat(this.textarea.value, cur(), 1, this.consumeCount(1)))
       return
     }
     if (k === 'k') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      for (let i = 0; i < n; i++) {
-        const np = this.moveVert(-1)
-        this.textarea.setSelectionRange(np, np)
-      }
-      this.refreshModeMeta()
+      setCur(moveVertRepeat(this.textarea.value, cur(), -1, this.consumeCount(1)))
       return
     }
 
     if (k === 'x') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      const t = this.textarea.value
-      let p = cur()
-      const kill = Math.min(n, Math.max(0, t.length - p))
-      if (!kill) return
-      this.textarea.value = t.slice(0, p) + t.slice(p + kill)
-      setCur(p)
-      this.dirty = this.textarea.value !== this.savedText
-      this.recordAfterMutation()
-      this.syncTitle()
+      this.applyBufferEdit(
+        deleteCharForwardText(this.textarea.value, cur(), this.consumeCount(1)),
+      )
       return
     }
 
@@ -1224,10 +1174,6 @@ export class EditorWindow {
     return lineBounds(this.textarea.value, pos)
   }
 
-  private findNextOnLine(kind: 'f' | 'F' | 't' | 'T', ch: string, fromPos: number): number | null {
-    return findNextOnLine(this.textarea.value, kind, ch, fromPos)
-  }
-
   private reverseFindKind(kind: 'f' | 'F' | 't' | 'T'): 'f' | 'F' | 't' | 'T' {
     return reverseFindKind(kind)
   }
@@ -1238,16 +1184,13 @@ export class EditorWindow {
     ch: string,
     remember: boolean,
   ): void {
-    let p = Math.min(Math.max(0, this.textarea.selectionStart), this.textarea.value.length)
-    for (let i = 0; i < times; i++) {
-      const np = this.findNextOnLine(kind, ch, p)
-      if (np == null) {
-        if (i === 0) this.flashStatus('f/F/t/T: not found on this line', true)
-        return
-      }
-      p = np
+    const p0 = Math.min(Math.max(0, this.textarea.selectionStart), this.textarea.value.length)
+    const np = repeatFindPos(this.textarea.value, times, kind, ch, p0)
+    if (np == null) {
+      this.flashStatus('f/F/t/T: not found on this line', true)
+      return
     }
-    this.textarea.setSelectionRange(p, p)
+    this.textarea.setSelectionRange(np, np)
     if (remember) this.lastFind = { kind, ch }
     this.refreshModeMeta()
   }
@@ -1258,116 +1201,15 @@ export class EditorWindow {
   }
 
   private indentLines(nLines: number): void {
-    const t = this.textarea.value
-    const p0 = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    const li = t.slice(0, p0).split('\n').length - 1
-    const lines = t.split('\n')
-    const take = Math.max(1, Math.min(nLines, lines.length - li))
-    for (let j = 0; j < take; j++) lines[li + j] = '  ' + (lines[li + j] ?? '')
-    const next = lines.join('\n')
-    const curLineIdx = t.slice(0, p0).split('\n').length - 1
-    let newP = p0
-    if (curLineIdx >= li && curLineIdx < li + take) newP += 2
-    this.textarea.value = next
-    this.textarea.setSelectionRange(newP, newP)
-    this.dirty = next !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.refreshModeMeta()
+    this.applyBufferEdit(
+      indentLinesText(this.textarea.value, this.textarea.selectionStart, nLines),
+    )
   }
 
   private unindentLines(nLines: number): void {
-    const t = this.textarea.value
-    const p0 = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    const li = t.slice(0, p0).split('\n').length - 1
-    const lines = t.split('\n')
-    const take = Math.max(1, Math.min(nLines, lines.length - li))
-    const curLineIdx = t.slice(0, p0).split('\n').length - 1
-    let removedBefore = 0
-    for (let j = 0; j < take; j++) {
-      const idx = li + j
-      let s = lines[idx] ?? ''
-      let cut = 0
-      if (s.startsWith('  ')) cut = 2
-      else if (s.startsWith('\t')) cut = 1
-      else if (s.startsWith(' ')) cut = 1
-      if (cut && idx === curLineIdx) {
-        const lineStart = t.lastIndexOf('\n', p0 - 1) + 1
-        const col = p0 - lineStart
-        removedBefore = Math.min(cut, col)
-      }
-      lines[idx] = s.slice(cut)
-    }
-    const next = lines.join('\n')
-    const newP = Math.max(0, p0 - removedBefore)
-    this.textarea.value = next
-    this.textarea.setSelectionRange(newP, newP)
-    this.dirty = next !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.refreshModeMeta()
-  }
-
-  private toggleCaseRun(n: number): void {
-    const t = this.textarea.value
-    let p = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    let buf = t
-    for (let i = 0; i < n && p < buf.length; ) {
-      const ch = buf[p]!
-      if (ch === '\n') {
-        p++
-        continue
-      }
-      const repl = ch === ch.toLowerCase() ? ch.toUpperCase() : ch.toLowerCase()
-      buf = buf.slice(0, p) + repl + buf.slice(p + 1)
-      p++
-      i++
-    }
-    if (buf === t) return
-    this.textarea.value = buf
-    const endPos = Math.min(p, buf.length)
-    this.textarea.setSelectionRange(endPos, endPos)
-    this.dirty = buf !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.refreshModeMeta()
-  }
-
-  private changeThroughEOL(): void {
-    const t = this.textarea.value
-    const p = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    const { end } = this.lineBounds(p)
-    const next = t.slice(0, p) + t.slice(end)
-    this.textarea.value = next
-    this.textarea.setSelectionRange(p, p)
-    this.dirty = next !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.mode = 'insert'
-    this.syncStatus()
-    this.syncEditorChrome()
-    this.refreshModeMeta()
-  }
-
-  private substituteChars(n: number): void {
-    const take = Math.max(1, n)
-    const t = this.textarea.value
-    const p = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    const del = Math.min(take, Math.max(0, t.length - p))
-    const next = t.slice(0, p) + t.slice(p + del)
-    this.textarea.value = next
-    this.textarea.setSelectionRange(p, p)
-    this.dirty = next !== this.savedText
-    this.recordAfterMutation()
-    this.syncTitle()
-    this.mode = 'insert'
-    this.syncStatus()
-    this.syncEditorChrome()
-    this.refreshModeMeta()
-  }
-
-  private moveVert(delta: -1 | 1): number {
-    return moveVertPos(this.textarea.value, this.textarea.selectionStart, delta)
+    this.applyBufferEdit(
+      unindentLinesText(this.textarea.value, this.textarea.selectionStart, nLines),
+    )
   }
 
   setActive(active: boolean): void {
