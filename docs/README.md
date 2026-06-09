@@ -32,7 +32,7 @@ Personal portfolio site ([mrgrey.site](https://mrgrey.site)) built as an in-brow
 
 | Metric | Value |
 |--------|-------|
-| Unit tests | **563** across **46** files (`npm test`) |
+| Unit tests | **583** across **46** files (`npm test`) |
 | E2e smoke | **3** Playwright specs (`npm run test:e2e`) |
 | CI | lint → unit tests → build → e2e → GitHub Pages deploy |
 | Stack | TypeScript, Vite 8, vanilla DOM — no React/Vue/Svelte |

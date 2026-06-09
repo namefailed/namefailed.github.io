@@ -13,7 +13,7 @@ A personal portfolio built as an **in-browser desktop OS** — tiling window man
 | **Stack** | TypeScript · Vite 8 · vanilla DOM (no framework) |
 | **Terminal** | [@xterm/xterm](https://github.com/xtermjs/xterm.js) + vim input layer |
 | **3D** | Three.js (Rubik cube — lazy chunk only) |
-| **Tests** | **563** unit · **3** e2e smoke · CI on every `main` push |
+| **Tests** | **583** unit · **3** e2e smoke · CI on every `main` push |
 | **Deploy** | GitHub Actions → GitHub Pages (`dist/`) |
 
 ---
@@ -33,7 +33,7 @@ Most portfolios list skills. This one **runs** them: modular TypeScript, lazy co
 ```bash
 npm install
 npm run dev          # desktop → http://localhost:5173/
-npm test             # 563 unit tests
+npm test             # 583 unit tests
 npm run build && npm run test:e2e
 ```
 

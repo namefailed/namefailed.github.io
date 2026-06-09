@@ -253,13 +253,22 @@ class VimInput {
 Pure functions in `editor-vim-ops.ts` — safe to unit test without DOM:
 
 ```typescript
-lineCountTotal(text: string): number
-getLineCol(text: string, pos: number): { line: number; col: number }
-moveVertPos(text: string, pos: number, delta: -1 | 1): number
-moveHorizPos(text: string, pos: number, delta: -1 | 1, steps?: number): number
+// Motions
+moveVertPos / moveVertRepeat / moveHorizPos
 wordForwardPos / wordBackPos / wordEndForwardPos
-findNextOnLine(text, kind, ch, fromPos): number | null
-deleteLineBlockText / yankLineBlockText / joinLinesText / pasteYankText
+wordForwardRepeat / wordBackRepeat / wordEndForwardRepeat
+findNextOnLine / repeatFindPos / reverseFindKind
+lineEndCaretPos / appendLineEndPos / firstNonBlankOnLine
+
+// Edits
+indentLinesText / unindentLinesText   // >> / <<
+toggleCaseRunText                     // ~
+substituteCharsText                   // s
+deleteCharForwardText / deleteCharBackwardText  // x / X
+deleteLineBlockText / yankLineBlockText / yankToEOLText
+deleteThroughEOLText                  // D / C
+joinLinesText / openLineBelowText / openLineAboveText
+applyReplaceRunsText / pasteYankText
 // ...
 ```
 

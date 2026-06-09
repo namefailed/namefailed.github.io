@@ -100,7 +100,7 @@ Files persist in `localStorage` under `portfolio-vfs-v8-namefailed-home`. First 
 
 | Stage | Tool |
 |-------|------|
-| Unit | Vitest — **563 tests**, **46 files**, Node environment with DOM stubs where needed |
+| Unit | Vitest — **583 tests**, **46 files**, Node environment with DOM stubs where needed |
 | Lint | ESLint 9 + TypeScript-eslint |
 | E2e | Playwright — production build smoke (desktop shell, brochure, nav) |
 | Deploy | GitHub Actions → `dist/` → GitHub Pages |
