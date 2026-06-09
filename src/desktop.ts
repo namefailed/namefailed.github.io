@@ -25,7 +25,18 @@ import {
   TERMINAL_TILE_SENTINEL,
 } from './launcher-catalog'
 import { isDesktopWmChordKey } from './desktop-keyboard-chords'
+import {
+  closeLauncherOverlayFlags,
+  initLauncherSearchFilter,
+  launcherOverlayVisible,
+  openLauncherFromButtonFlags,
+  syncLauncherOverlayDom,
+  toggleShowDesktopFlags,
+  type LauncherOverlayFlags,
+} from './desktop-launcher-overlay'
+import { pickSpatialFocusAction } from './desktop-spatial-focus'
 import { launcherIconWindowSpec, windowSpecForCommand } from './desktop-window-spec'
+import { animateWmThenRemove, playWmMountAnim } from './desktop-wm-animations'
 import { initYasbClock } from './yasb-clock'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
@@ -95,10 +106,6 @@ interface MinimizedEntry {
 
 
 export class Desktop {
-  /** Mount animation length (matches `wm-window-mount` + slack). */
-  private static readonly WM_MOUNT_MS = 640
-  /** Close / shrink animation fallback if `animationend` does not fire. */
-  private static readonly WM_UNMOUNT_MS = 400
   private desktop:    HTMLElement
   private panes:      HTMLElement
   private rightPane:  HTMLElement
@@ -115,9 +122,10 @@ export class Desktop {
   private windows: TiledWin[] = [] // open (visible) windows, in tile order
   private minimized:  MinimizedEntry[] = []
   private focusedId:  string | null    = null   // null = terminal focused
-  private showingDesktop = false
-  /** Opens launcher via status-bar Applications (distinct from Ctrl+D). */
-  private launcherOpen = false
+  private readonly launcherOverlay: LauncherOverlayFlags = {
+    showingDesktop: false,
+    launcherOpen: false,
+  }
 
   /** Active tiling layout — swap via `Desktop.createLayout()` (future). */
   private layout: WindowLayout
@@ -176,7 +184,7 @@ export class Desktop {
     window.addEventListener('resize', () => this.fitTerminal())
 
     this.initDesktopIcons()
-    this.initLauncherSearch()
+    initLauncherSearchFilter()
     initYasbClock()
     this.initYasbChrome()
     setDesktopRef(this)
@@ -613,52 +621,12 @@ export class Desktop {
    */
   private appendToRightPane(win: TiledWin): void {
     this.layout.mount(win.el, this.windows.length)
-    this.playMountAnim(win.el)
+    playWmMountAnim(win.el)
     window.dispatchEvent(new CustomEvent('mrgrey-first-window'))
-  }
-
-  /** One-shot entrance (tiling pane or terminal restored from minimized). */
-  private playMountAnim(el: HTMLElement): void {
-    el.classList.remove('wm-animate-close')
-    el.classList.add('wm-animate-mount')
-    let done = false
-    const finish = (): void => {
-      if (done) return
-      done = true
-      el.classList.remove('wm-animate-mount')
-      el.removeEventListener('animationend', onEnd)
-    }
-    const onEnd = (e: AnimationEvent): void => {
-      if (e.target === el) finish()
-    }
-    el.addEventListener('animationend', onEnd)
-    window.setTimeout(finish, Desktop.WM_MOUNT_MS)
   }
 
   private prefersReducedMotion(): boolean {
     return this.reducedMotionMQ.matches
-  }
-
-  /** Fade/shrink tile, then invoke `done` — no-op cleanup if `el` disconnected. */
-  private animateThenRemove(el: HTMLElement, done: () => void): void {
-    if (!el.isConnected || this.prefersReducedMotion()) {
-      done()
-      return
-    }
-    el.classList.add('wm-animate-close')
-    let finished = false
-    const finalize = (): void => {
-      if (finished) return
-      finished = true
-      el.removeEventListener('animationend', onEnd)
-      el.classList.remove('wm-animate-close')
-      done()
-    }
-    const onEnd = (e: AnimationEvent): void => {
-      if (e.target === el) finalize()
-    }
-    el.addEventListener('animationend', onEnd)
-    window.setTimeout(finalize, Desktop.WM_UNMOUNT_MS)
   }
 
   private closeWindow(win: TiledWin): void {
@@ -679,7 +647,7 @@ export class Desktop {
       this.sync()
     }
 
-    this.animateThenRemove(el, finalizeClose)
+    animateWmThenRemove(el, finalizeClose, { reducedMotion: this.prefersReducedMotion() })
   }
 
   private focusWindow(win: TiledWin): void {
@@ -801,7 +769,7 @@ export class Desktop {
       this.sync()
     }
 
-    this.animateThenRemove(el, finalize)
+    animateWmThenRemove(el, finalize, { reducedMotion: this.prefersReducedMotion() })
   }
 
   private restoreMinimized(entry: MinimizedEntry): void {
@@ -809,8 +777,7 @@ export class Desktop {
     if (i === -1) return
     this.minimized.splice(i, 1)
 
-    this.showingDesktop = false
-    this.launcherOpen = false
+    closeLauncherOverlayFlags(this.launcherOverlay)
 
     entry.win.setMinimized(false)
     this.appendToRightPane(entry.win)
@@ -837,24 +804,7 @@ export class Desktop {
       }
     }
 
-    const el = this.termWin
-    if (!this.prefersReducedMotion()) {
-      el.classList.add('wm-animate-close')
-      let settled = false
-      const finalize = (): void => {
-        if (settled) return
-        settled = true
-        el.removeEventListener('animationend', onEnd)
-        applyMin()
-      }
-      const onEnd = (e: AnimationEvent): void => {
-        if (e.target === el) finalize()
-      }
-      el.addEventListener('animationend', onEnd)
-      window.setTimeout(finalize, Desktop.WM_UNMOUNT_MS)
-    } else {
-      applyMin()
-    }
+    animateWmThenRemove(this.termWin, applyMin, { reducedMotion: this.prefersReducedMotion() })
   }
 
   /** Dismiss terminal (hidden tile). Unlike minimize, does not auto-open app launchers. */
@@ -867,8 +817,7 @@ export class Desktop {
       this.termWin.classList.remove('wm-animate-close')
       this.termWin.classList.remove('minimized')
       this.termWin.classList.add('terminal-closed')
-      this.showingDesktop = false
-      this.launcherOpen = false
+      closeLauncherOverlayFlags(this.launcherOverlay)
       this.termWin.classList.remove('active')
       if (this.windows.length > 0) {
         this.focusWindow(this.windows[0])
@@ -878,96 +827,35 @@ export class Desktop {
       this.sync()
     }
 
-    const el = this.termWin
-    if (
-      !this.prefersReducedMotion() &&
-      el.isConnected &&
-      !this.termWin.classList.contains('minimized')
-    ) {
-      el.classList.add('wm-animate-close')
-      let settled = false
-      const finalize = (): void => {
-        if (settled) return
-        settled = true
-        el.removeEventListener('animationend', onEnd)
-        applyClose()
-      }
-      const onEnd = (e: AnimationEvent): void => {
-        if (e.target === el) finalize()
-      }
-      el.addEventListener('animationend', onEnd)
-      window.setTimeout(finalize, Desktop.WM_UNMOUNT_MS)
-    } else {
+    if (this.prefersReducedMotion() || !this.termWin.isConnected || this.termWin.classList.contains('minimized')) {
       applyClose()
+    } else {
+      animateWmThenRemove(this.termWin, applyClose, { reducedMotion: false })
     }
   }
 
   // ── private: show desktop ───────────────────────────────────────────────────
 
   private toggleShowDesktop(): void {
-    this.showingDesktop = !this.showingDesktop
-    if (!this.showingDesktop) this.launcherOpen = false
+    toggleShowDesktopFlags(this.launcherOverlay)
     this.sync()
   }
 
-  /**
-   * Launcher overlay: Ctrl+D (show-desktop), Applications button, or both.
-   * Minimizing all windows does not auto-open the launcher.
-   */
-  /**
-   * Show or hide the launcher overlay and update ARIA attributes.
-   *
-   * The overlay is shown when either `showingDesktop` (Ctrl+D) or `launcherOpen` (Applications
-   * button) is true. Both flags are checked together so a single sync call always leaves the
-   * DOM in a consistent state regardless of which path triggered it.
-   */
   private syncLauncherVisibility(): void {
-    const show = this.showingDesktop || this.launcherOpen
-    this.desktop.classList.toggle('launchers-visible', show)
-
-    const shell = document.getElementById('launcher-shell')
-    /*
-     * Hiding `#launcher-shell` with aria-hidden while focus stays on a `.desktop-icon`
-     * trips the browser a11y warning (focused node under aria-hidden ancestor). Blur first.
-     */
-    if (shell && !show) {
-      const ae = document.activeElement
-      if (ae instanceof HTMLElement && shell.contains(ae)) ae.blur()
-    }
-
-    if (shell) shell.setAttribute('aria-hidden', show ? 'false' : 'true')
-
-    document.getElementById('btn-applications')?.setAttribute(
-      'aria-expanded',
-      show ? 'true' : 'false',
-    )
-
-    if (!show) {
-      const input = document.getElementById('launcher-search') as HTMLInputElement | null
-      if (input?.value) {
-        input.value = ''
-        document.querySelectorAll('#desktop-icons .desktop-icon').forEach(btn => {
-          (btn as HTMLElement).style.display = ''
-        })
-      }
-    }
+    syncLauncherOverlayDom(launcherOverlayVisible(this.launcherOverlay), this.desktop)
   }
 
   /** Close launcher overlay from any source (bar, Ctrl+D, Escape, backdrop). */
   private closeLauncherOverlay(): void {
-    if (!this.showingDesktop && !this.launcherOpen) return
-    this.showingDesktop = false
-    this.launcherOpen = false
+    if (!closeLauncherOverlayFlags(this.launcherOverlay)) return
     this.sync()
   }
 
   private toggleLauncherFromButton(): void {
-    const visible = this.showingDesktop || this.launcherOpen
-    if (visible) {
+    if (!openLauncherFromButtonFlags(this.launcherOverlay)) {
       this.closeLauncherOverlay()
       return
     }
-    this.launcherOpen = true
     this.sync()
     requestAnimationFrame(() => document.getElementById('launcher-search')?.focus())
   }
@@ -984,27 +872,13 @@ export class Desktop {
       'keydown',
       ev => {
         if (ev.key !== 'Escape') return
-        if (!this.showingDesktop && !this.launcherOpen) return
+        if (!launcherOverlayVisible(this.launcherOverlay)) return
         if (ev.ctrlKey || ev.altKey || ev.metaKey) return
         ev.preventDefault()
         this.closeLauncherOverlay()
       },
       true,
     )
-  }
-
-  private initLauncherSearch(): void {
-    const input = document.getElementById('launcher-search') as HTMLInputElement | null
-    if (!input) return
-    input.addEventListener('input', () => {
-      const q = input.value.trim().toLowerCase()
-      document.querySelectorAll('#desktop-icons .desktop-icon').forEach(btn => {
-        const label =
-          btn.querySelector('.desktop-icon-label')?.textContent?.toLowerCase() ?? ''
-        ;(btn as HTMLElement).style.display =
-          !q || label.includes(q) ? '' : 'none'
-      })
-    })
   }
 
   // ── desktop icons (wallpaper layer launchers) ───────────────────────────────
@@ -1357,51 +1231,15 @@ export class Desktop {
    * opening / restoring the terminal (the permanent left anchor).
    */
   private focusSpatial(dir: 'h' | 'j' | 'k' | 'l'): void {
-    const focusedWin = this.focusedId
-      ? this.windows.find(w => w.command === this.focusedId)
-      : null
-
-    // Nothing focused: j/l enter the pane; h opens terminal; k is a no-op.
-    if (!focusedWin) {
-      if (dir === 'l' || dir === 'j') {
-        if (this.windows[0]) this.focusWindow(this.windows[0])
-      } else if (dir === 'h') {
-        void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
-      }
-      return
-    }
-
-    const cr = focusedWin.el.getBoundingClientRect()
-    const cx = cr.left + cr.width  / 2
-    const cy = cr.top  + cr.height / 2
-
-    let best: TiledWin | null = null
-    let bestDist = Infinity
-
-    for (const win of this.windows) {
-      if (win === focusedWin) continue
-      const r  = win.el.getBoundingClientRect()
-      const wx = r.left + r.width  / 2
-      const wy = r.top  + r.height / 2
-      const dx = wx - cx
-      const dy = wy - cy
-
-      // Require the centre to be clearly in the intended direction.
-      const valid =
-        (dir === 'h' && dx < -20) ||
-        (dir === 'l' && dx >  20) ||
-        (dir === 'k' && dy < -20) ||
-        (dir === 'j' && dy >  20)
-      if (!valid) continue
-
-      const dist = Math.hypot(dx, dy)
-      if (dist < bestDist) { bestDist = dist; best = win }
-    }
-
-    if (best) {
-      this.focusWindow(best)
-    } else if (dir === 'h' && this.focusedId !== 'terminal') {
-      // Nothing to the left of the current content window → jump to terminal.
+    const action = pickSpatialFocusAction(
+      this.windows.map(w => ({ id: w.command, rect: w.el.getBoundingClientRect() })),
+      this.focusedId,
+      dir,
+    )
+    if (action.type === 'focus') {
+      const win = this.windows.find(w => w.command === action.id)
+      if (win) this.focusWindow(win)
+    } else if (action.type === 'open-terminal') {
       void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
     }
   }

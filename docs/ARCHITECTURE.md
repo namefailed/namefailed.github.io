@@ -110,7 +110,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-479 tests across 33 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+489 tests across 35 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|
@@ -125,6 +125,8 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `desktop-tiles.test.ts` | Tile layout, drag snap, persistence |
 | `desktop.test.ts` | Window manager: focus, keyboard chords, tile limit |
 | `desktop-window-spec.test.ts` | Portfolio/tool WindowSpec builders |
+| `desktop-spatial-focus.test.ts` | Ctrl+H/J/K/L spatial focus geometry |
+| `desktop-launcher-overlay.test.ts` | Launcher overlay flag state machine |
 | `folder-popup-layout.test.ts` | Folder popup placement vs viewport edges |
 | `live-site-screenshot.test.ts` | mShots preview URL builder |
 | `prefers-reduced-motion.test.ts` | Reduced-motion media query probe |
