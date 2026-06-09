@@ -19,12 +19,12 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
   {
     id: 'open',
     glyph: '◐',
-    html: 'Click <strong>Portfolio</strong> for résumé, projects, about & contact in one window',
+    html: 'Click <strong>Portfolio</strong>, <strong>Apps</strong>, or <strong>Games</strong> to open separate apps',
   },
   {
     id: 'hire',
     glyph: '◎',
-    html: 'Hiring managers: use <strong>Classic résumé view</strong> in the footer or top bar',
+    html: 'Hiring managers: the <strong>Portfolio</strong> folder has résumé, projects, about & contact',
   },
   {
     id: 'terminal',

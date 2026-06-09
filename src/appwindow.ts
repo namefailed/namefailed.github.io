@@ -91,10 +91,6 @@ export interface WindowSpec {
   resumeBody?: string[]
   /** Thumbnail/metadata list for `projects` tile layout. */
   projectCards?: readonly PortfolioProjectEntry[]
-  /** Tabbed portfolio hub — résumé / projects / about / contact in one window. */
-  portfolioHub?: boolean
-  hubWhoamiLines?: string[]
-  hubContactLines?: string[]
   /** Initial VFS path for the p5 viewer. */
   p5SketchPath?: string
 }
@@ -140,10 +136,7 @@ export class AppWindow {
 
     this.el.appendChild(this.bodyEl)
 
-    if (opts.portfolioHub) {
-      this.el.classList.add('portfolio-hub-window')
-      this.renderPortfolioHub(opts)
-    } else if (opts.command === 'resume') {
+    if (opts.command === 'resume') {
       this.el.classList.add('resume-window')
       this.renderResume(opts.content, opts.resumeSkills, opts.resumeLead, opts.resumeBody)
     } else if (opts.command === 'links') {
@@ -164,94 +157,6 @@ export class AppWindow {
     this.bodyEl.innerHTML = lines
       .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
       .join('')
-  }
-
-  /** Tabbed hub for recruiters — one window, four sections. */
-  private renderPortfolioHub(opts: AppWindowOptions): void {
-    type TabId = 'resume' | 'projects' | 'whoami' | 'links'
-    const tabs: Array<{ id: TabId; label: string; panelClass: string }> = [
-      { id: 'resume', label: 'Résumé', panelClass: 'resume-window' },
-      { id: 'projects', label: 'Projects', panelClass: 'projects-window' },
-      { id: 'whoami', label: 'About', panelClass: 'whoami-window' },
-      { id: 'links', label: 'Contact', panelClass: 'contact-window' },
-    ]
-
-    this.bodyEl.classList.add('portfolio-hub-body')
-
-    const nav = document.createElement('nav')
-    nav.className = 'portfolio-hub-tabs'
-    nav.setAttribute('role', 'tablist')
-    nav.setAttribute('aria-label', 'Portfolio sections')
-
-    const panelsWrap = document.createElement('div')
-    panelsWrap.className = 'portfolio-hub-panels'
-
-    const panelInners = new Map<TabId, HTMLElement>()
-    let active: TabId = 'resume'
-
-    for (const t of tabs) {
-      const btn = document.createElement('button')
-      btn.type = 'button'
-      btn.className = 'portfolio-hub-tab'
-      btn.dataset.tab = t.id
-      btn.setAttribute('role', 'tab')
-      btn.textContent = t.label
-      nav.appendChild(btn)
-
-      const panel = document.createElement('section')
-      panel.className = `portfolio-hub-panel ${t.panelClass}`
-      panel.dataset.tab = t.id
-      panel.setAttribute('role', 'tabpanel')
-
-      const inner = document.createElement('div')
-      inner.className = 'portfolio-hub-panel-inner'
-      panel.appendChild(inner)
-      panelInners.set(t.id, inner)
-      panelsWrap.appendChild(panel)
-    }
-
-    const showTab = (id: TabId): void => {
-      active = id
-      for (const btn of nav.querySelectorAll<HTMLButtonElement>('.portfolio-hub-tab')) {
-        const on = btn.dataset.tab === id
-        btn.classList.toggle('portfolio-hub-tab--active', on)
-        btn.setAttribute('aria-selected', on ? 'true' : 'false')
-        btn.tabIndex = on ? 0 : -1
-      }
-      for (const panel of panelsWrap.querySelectorAll<HTMLElement>('.portfolio-hub-panel')) {
-        const on = panel.dataset.tab === id
-        panel.hidden = !on
-      }
-    }
-
-    nav.addEventListener('click', e => {
-      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.portfolio-hub-tab')
-      if (!btn?.dataset.tab) return
-      showTab(btn.dataset.tab as TabId)
-    })
-
-    const shellBody = this.bodyEl
-    const renderInto = (target: HTMLElement, fn: () => void): void => {
-      this.bodyEl = target
-      fn()
-      this.bodyEl = shellBody
-    }
-
-    renderInto(panelInners.get('resume')!, () => {
-      this.renderResume(opts.content, opts.resumeSkills, opts.resumeLead, opts.resumeBody)
-    })
-    renderInto(panelInners.get('projects')!, () => {
-      if (opts.projectCards?.length) this.renderProjectCards(opts.projectCards)
-    })
-    renderInto(panelInners.get('whoami')!, () => {
-      this.renderAboutMe(opts.hubWhoamiLines ?? [])
-    })
-    renderInto(panelInners.get('links')!, () => {
-      this.renderContact(opts.hubContactLines ?? [])
-    })
-
-    shellBody.append(nav, panelsWrap)
-    showTab(active)
   }
 
   /**

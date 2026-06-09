@@ -14,30 +14,15 @@ import { DEFAULT_BROWSER_URL } from './browser-url'
 import { FS_HOME } from './os-fs'
 import { tileTitleForPortfolioCommand, TILED_WINDOW_COMMANDS } from './launcher-catalog'
 
-const PORTFOLIO_WINDOW_COMMANDS = new Set(['resume', 'projects', 'whoami', 'links', 'portfolio'])
+const PORTFOLIO_WINDOW_COMMANDS = new Set(['resume', 'projects', 'whoami', 'links'])
 
 export function isPortfolioWindowCommand(cmd: string): boolean {
   return PORTFOLIO_WINDOW_COMMANDS.has(cmd)
 }
 
-/** Tabbed hub — résumé, projects, about, contact in one tile (Portfolio folder / dock). */
-export function portfolioHubWindowSpec(): WindowSpec {
-  return {
-    command: 'portfolio',
-    title: 'Portfolio',
-    portfolioHub: true,
-    ...resumeWindowSplitPayload(),
-    projectCards: PORTFOLIO_PROJECTS,
-    hubWhoamiLines: whoamiAboutLines(),
-    hubContactLines: linksAndContactLines(),
-  }
-}
-
 /** Build a spec for portfolio folder tiles and other WM open paths. */
 export function windowSpecForCommand(cmd: string): WindowSpec {
   switch (cmd) {
-    case 'portfolio':
-      return portfolioHubWindowSpec()
     case 'resume':
       return {
         command: 'resume',

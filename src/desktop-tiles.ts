@@ -152,11 +152,7 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
   for (const def of folderDefs) {
     const pos = layout[def.cmd] ?? defaultTileLayout()[def.cmd]!
     const el  = createFolderTile(pos, def)
-    const onFolderActivate =
-      def.cmd === 'portfolio-folder'
-        ? () => opts.onActivate('portfolio')
-        : () => toggleFolderPopup(el, def, opts.onActivate)
-    attachTileDrag(el, def.cmd, onFolderActivate)
+    attachTileDrag(el, def.cmd, () => toggleFolderPopup(el, def, opts.onActivate))
     opts.host.appendChild(el)
     folderEls.push(el)
   }

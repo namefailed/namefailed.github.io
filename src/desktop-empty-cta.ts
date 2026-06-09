@@ -22,15 +22,15 @@ export function mountDesktopEmptyCta(
   const openBtn = document.createElement('button')
   openBtn.type = 'button'
   openBtn.className = 'desktop-empty-hint-action'
-  openBtn.textContent = 'Portfolio'
-  openBtn.addEventListener('click', () => onActivate('portfolio'))
+  openBtn.textContent = 'Résumé'
+  openBtn.addEventListener('click', () => onActivate('resume'))
 
   const classic = document.createElement('a')
   classic.className = 'desktop-empty-hint-action desktop-empty-hint-action--link'
   classic.href = resolveStaticPortfolioHref()
   classic.textContent = 'Classic view'
 
-  hint.append('Open ', openBtn, ' for résumé & work · ', classic)
+  hint.append('Open ', openBtn, ' or use the Portfolio folder · ', classic)
   host.appendChild(hint)
 }
 

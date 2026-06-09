@@ -14,8 +14,6 @@ export function tileTitleForPortfolioCommand(cmd: string): string {
       return 'work & roadmap'
     case 'whoami':
       return 'about me · personal'
-    case 'portfolio':
-      return 'Portfolio · résumé & work'
     default:
       return cmd
   }
@@ -27,12 +25,11 @@ export function tileTitleForPortfolioCommand(cmd: string): string {
  * All others are portfolio/tool commands that `openWindow` understands.
  */
 export const PINNED_DOCK_CMDS: readonly string[] = [
-  'portfolio', 'resume', 'projects', 'whoami', 'links', 'terminal', 'explorer', 'edit',
+  'resume', 'projects', 'whoami', 'links', 'terminal', 'explorer', 'edit',
 ]
 
 /** Same set as `terminal.ts` WINDOW_COMMANDS — opens a right-pane tile */
 export const TILED_WINDOW_COMMANDS = new Set([
-  'portfolio',
   'resume',
   'links',
   'projects',
@@ -67,7 +64,6 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   { kind: 'app', cmd: 'p5',       label: 'p5.js',    glyph: 'p5' },
   { kind: 'app', cmd: 'paint',    label: 'Paint',    glyph: '◐' },
   { kind: 'app', cmd: 'pong',     label: 'Pong',     glyph: '◎' },
-  { kind: 'app', cmd: 'portfolio', label: 'Portfolio', glyph: '◆' },
   { kind: 'app', cmd: 'projects', label: 'Projects', glyph: '{}' },
   { kind: 'app', cmd: 'resume',   label: 'Resume',   glyph: 'R' },
   { kind: 'app', cmd: 'snake',    label: 'Snake',    glyph: '≈' },
