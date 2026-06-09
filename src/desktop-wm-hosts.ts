@@ -10,7 +10,7 @@ import type { SpatialDirection } from './desktop-spatial-focus'
 import { toggleMaximizeFocused as applyToggleMaximizeFocused } from './desktop-wm-maximize'
 import type { WmLifecycleContext } from './desktop-wm-lifecycle'
 import type { WmMaximizeContext } from './desktop-wm-maximize'
-import type { TerminalColumnHost } from './desktop-wm-terminal'
+import { isLegacyTerminalColumnActive, type TerminalColumnHost } from './desktop-wm-terminal'
 import type { TileLimitHost } from './desktop-wm-tile-limit'
 
 /** Minimal surface Desktop exposes to WM host factories. */
@@ -138,19 +138,33 @@ export function keyboardHost(self: DesktopWmSelf): DesktopKeyboardHost {
       if (self.getFocusedId()) {
         const w = self.windows.find(x => x.command === self.getFocusedId())
         if (w) self.closeWindow(w)
-      } else if (!self.termWin.classList.contains('terminal-closed')) {
-        self.closeTerminal()
+        return
       }
+      if (isLegacyTerminalColumnActive(self.termWin)) {
+        self.closeTerminal()
+        return
+      }
+      const termTile = self.windows.find(w => w.command === 'terminal')
+      if (termTile) self.closeWindow(termTile)
     },
     minimizeFocusedOrTerminal: () => {
       if (self.getFocusedId()) {
         const w = self.windows.find(x => x.command === self.getFocusedId())
         if (w) self.minimizeWindow(w)
-      } else {
-        self.minimizeTerminal()
+        return
       }
+      if (isLegacyTerminalColumnActive(self.termWin)) {
+        self.minimizeTerminal()
+        return
+      }
+      const termTile = self.windows.find(w => w.command === 'terminal')
+      if (termTile) self.minimizeWindow(termTile)
     },
-    toggleMaximizeFocused: () => applyToggleMaximizeFocused(maximizeContext(self), self.getFocusedId()),
+    toggleMaximizeFocused: () => applyToggleMaximizeFocused(
+      maximizeContext(self),
+      self.getFocusedId(),
+      isLegacyTerminalColumnActive(self.termWin),
+    ),
     toggleShowDesktop: () => self.toggleShowDesktop(),
   }
 }

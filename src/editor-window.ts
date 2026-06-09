@@ -1,5 +1,7 @@
 /** Modal editor over the fake VFS (normal / insert / ex); not the terminal one-line vim widget. */
 
+import { parseEditorExCommand } from './editor-ex-commands'
+import { editorPathsEqual, editorWindowTitle } from './editor-window-meta'
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
 import { createWindowChrome } from './window-chrome'
 
@@ -385,7 +387,7 @@ export class EditorWindow {
 
   /** Path matches the file currently loaded in this tile. */
   pathMatches(userPath: string): boolean {
-    return this.absPath === vfsNormalize(userPath)
+    return editorPathsEqual(this.absPath, userPath)
   }
 
   loadFile(path: string): void {
@@ -447,56 +449,46 @@ export class EditorWindow {
   }
 
   private runExCommand(raw: string): void {
-    let line = raw.trim()
-    if (line.startsWith(':')) line = line.slice(1).trim()
-
-    const lower = line.toLowerCase()
-    if (lower === 'w' || lower === 'write') {
-      this.saveFile()
-      this.leaveCmd()
-      return
-    }
-    if (lower === 'q' || lower === 'quit') {
-      if (this.dirty) {
-        this.flashStatus('No write since last change (use :q! to force)', true)
+    const action = parseEditorExCommand(raw)
+    switch (action.type) {
+      case 'write':
+        this.saveFile()
         this.leaveCmd()
         return
-      }
-      this.onClose()
-      return
-    }
-    if (lower === 'q!' || lower === 'quit!') {
-      this.onClose()
-      return
-    }
-    if (lower === 'wq' || lower === 'x' || lower === 'xit') {
-      if (this.saveFile()) {
+      case 'quit':
+        if (this.dirty) {
+          this.flashStatus('No write since last change (use :q! to force)', true)
+          this.leaveCmd()
+          return
+        }
         this.onClose()
-      }
-      return
+        return
+      case 'quit-force':
+        this.onClose()
+        return
+      case 'write-quit':
+        if (this.saveFile()) this.onClose()
+        return
+      case 'run-p5':
+        this.runInP5()
+        this.leaveCmd()
+        return
+      case 'edit':
+        this.loadFile(action.path)
+        this.leaveCmd()
+        return
+      case 'help':
+        this.flashStatus(
+          ':w :wq :q :q! :e path :run (F5 → play in p5) — NORMAL: hjkl ^ 0 $ · G gg · f F t T ; , · >> << · ~ s C Y · r J D · x X · dd yy p · u · ^R · Ctrl-f/b page · i I a A o O · w b e · counts · Esc',
+          false,
+        )
+        this.leaveCmd()
+        return
+      case 'unknown':
+        this.flashStatus(`Not an editor command: ${action.line}`, true)
+        this.leaveCmd()
+        return
     }
-    if (lower === 'run' || lower === 'p5') {
-      this.runInP5()
-      this.leaveCmd()
-      return
-    }
-    const em = /^e(?:dit)?\s+(.+)$/.exec(line)
-    if (em) {
-      this.loadFile(em[1].trim())
-      this.leaveCmd()
-      return
-    }
-    if (line === '' || lower === 'help') {
-      this.flashStatus(
-        ':w :wq :q :q! :e path :run (F5 → play in p5) — NORMAL: hjkl ^ 0 $ · G gg · f F t T ; , · >> << · ~ s C Y · r J D · x X · dd yy p · u · ^R · Ctrl-f/b page · i I a A o O · w b e · counts · Esc',
-        false,
-      )
-      this.leaveCmd()
-      return
-    }
-
-    this.flashStatus(`Not an editor command: ${line}`, true)
-    this.leaveCmd()
   }
 
   private leaveCmd(): void {
@@ -558,8 +550,7 @@ export class EditorWindow {
   }
 
   private syncTitle(): void {
-    const path = vfsFormatPath(this.absPath)
-    this.titleEl.textContent = `edit — ${path}${this.dirty ? ' +' : ''}`
+    this.titleEl.textContent = editorWindowTitle(this.absPath, this.dirty)
   }
 
   private syncStatus(): void {

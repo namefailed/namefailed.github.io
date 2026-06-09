@@ -10,6 +10,11 @@ import {
   type LauncherOverlayFlags,
 } from './desktop-launcher-overlay'
 
+/** True when the static left-column shell is shown (not `terminal-closed`). */
+export function isLegacyTerminalColumnActive(termWin: HTMLElement): boolean {
+  return !termWin.classList.contains('terminal-closed')
+}
+
 export interface TerminalColumnHost {
   termWin: HTMLElement
   launcherOverlay: LauncherOverlayFlags
