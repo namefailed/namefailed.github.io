@@ -32,9 +32,11 @@ import {
   unmaximizeTerminal as applyUnmaximizeTerminal,
 } from './desktop-wm-maximize'
 import { enforceTileLimit as applyTileLimit } from './desktop-wm-tile-limit'
+import type { TerminalWindow } from './terminal'
 import {
   closeTerminalColumn,
   initYasbLauncherChrome,
+  isLegacyTerminalColumnActive,
   minimizeTerminalColumn,
   wireTerminalTitlebar,
 } from './desktop-wm-terminal'
@@ -113,25 +115,23 @@ export class Desktop {
     this.reducedMotionMQ  = window.matchMedia('(prefers-reduced-motion: reduce)')
     this.layout           = new BspLayout(this.rightPane)
 
-    // Terminal window clicks → focus terminal
-    termWin.addEventListener('mousedown', () => this.focusTerminal())
-
-    wireTerminalTitlebar(termWin, {
-      onMinimize: () => this.minimizeTerminal(),
-      onMaximize: () => this.toggleMaximizeTerminal(),
-      onClose: () => this.closeTerminal(),
-    })
-
-    // Horizontal splitter between terminal and right pane
-    new Splitter({
-      el:          this.hSplitter,
-      orientation: 'h',
-      target:      this.termWin,
-      container:   this.panes,
-      min:         280,
-      max:         () => Math.max(280, this.panes.clientWidth - 320),
-      onResize:    () => this.fitTerminal(),
-    })
+    if (isLegacyTerminalColumnActive(termWin)) {
+      termWin.addEventListener('mousedown', () => this.focusTerminal())
+      wireTerminalTitlebar(termWin, {
+        onMinimize: () => this.minimizeTerminal(),
+        onMaximize: () => this.toggleMaximizeTerminal(),
+        onClose: () => this.closeTerminal(),
+      })
+      new Splitter({
+        el:          this.hSplitter,
+        orientation: 'h',
+        target:      this.termWin,
+        container:   this.panes,
+        min:         280,
+        max:         () => Math.max(280, this.panes.clientWidth - 320),
+        onResize:    () => this.fitTerminal(),
+      })
+    }
 
     // Global keyboard shortcuts
     document.addEventListener('keydown', ev => this.handleGlobal(ev), true)
@@ -387,7 +387,14 @@ export class Desktop {
     this.syncTaskbar()
     this.syncDockVisibility()
     this.syncFocusedTitle()
-    requestAnimationFrame(() => this.fitTerminal())
+    requestAnimationFrame(() => this.fitOpenTerminal())
+  }
+
+  /** Refit xterm in the open terminal tile (legacy column uses `fitTerminal` callback). */
+  private fitOpenTerminal(): void {
+    const termTile = this.windows.find(w => w.command === 'terminal')
+    if (termTile) (termTile as TerminalWindow).fit()
+    this.fitTerminal()
   }
 
   /** All windows accessible from the dock: open (by tile order) then minimized. */

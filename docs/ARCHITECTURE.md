@@ -33,6 +33,8 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 | `desktop-wm-tile-limit.ts` | Cap visible tiles (bump oldest to dock) |
 | `desktop-wm-sync.ts` | Shell `dataset.*` mirrors for CSS |
 | `desktop-ps-snapshot.ts` | Simulated `ps` rows for terminal MOTD |
+| `editor-ex-commands.ts` | Modal editor `:w` / `:q` / `:e` ex-mode parsing |
+| `editor-window-meta.ts` | Editor path compare + title string helpers |
 | `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
 | `bootstrap-shell.ts` | Boot sequence orchestration |
 | `launcher-catalog.ts` | Launcher grid definitions, dock membership, lazy-chunk prefetch triggers |
@@ -125,7 +127,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-522 tests across 42 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+530 tests across 44 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|

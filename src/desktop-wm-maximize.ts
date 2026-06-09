@@ -21,9 +21,11 @@ export interface WmMaximizeContext {
 
 export function maximizeTargetKind(
   focusedId: string | null,
+  legacyTerminalVisible = true,
 ): 'terminal' | 'content' | 'none' {
-  if (focusedId === null) return 'terminal'
-  return 'content'
+  if (focusedId !== null) return 'content'
+  if (legacyTerminalVisible) return 'terminal'
+  return 'none'
 }
 
 export function maximizeTerminal(ctx: WmMaximizeContext): void {
@@ -85,8 +87,9 @@ export function unmaximizeContent(ctx: WmMaximizeContext, win: TiledWin): void {
 export function toggleMaximizeFocused(
   ctx: WmMaximizeContext,
   focusedId: string | null,
+  legacyTerminalVisible = true,
 ): void {
-  const kind = maximizeTargetKind(focusedId)
+  const kind = maximizeTargetKind(focusedId, legacyTerminalVisible)
   if (kind === 'terminal') {
     maximizeTerminal(ctx)
     return
