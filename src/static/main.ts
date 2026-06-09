@@ -419,7 +419,12 @@ function mount(): void {
   backLink.href = homeHref
   backLink.className = 'plain-back'
   backLink.textContent = '← Full desktop experience'
-  bannerInner.append(backLink, el('p', 'plain-banner-meta', 'Portfolio · mobile view'))
+  const bannerMeta = el('div', 'plain-banner-meta-wrap')
+  bannerMeta.append(
+    el('p', 'plain-banner-title', 'Classic portfolio'),
+    el('p', 'plain-banner-sub', 'Same content — optimized for reading'),
+  )
+  bannerInner.append(backLink, bannerMeta)
   banner.appendChild(bannerInner)
 
   // ── Hero ───────────────────────────────────────────────────────────────

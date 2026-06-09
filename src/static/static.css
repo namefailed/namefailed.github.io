@@ -172,9 +172,25 @@ a:hover { color: var(--plain-accent); }
   transform: translateX(-1px) scale(0.98);
 }
 
-.plain-banner-meta {
+.plain-banner-meta-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  text-align: right;
+}
+
+.plain-banner-title {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--plain-text);
+  letter-spacing: 0.04em;
+}
+
+.plain-banner-sub {
+  margin: 0;
+  font-size: 0.72rem;
   color: var(--plain-dim);
   letter-spacing: 0.03em;
 }

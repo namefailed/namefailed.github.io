@@ -36,6 +36,7 @@ import { windowSpawnEcho } from './cli-window-echo'
 import { randomPick } from './random-pick'
 import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog'
 import { createWindowChrome } from './window-chrome'
+import { resolveStaticPortfolioHref } from './static-portfolio-href'
 
 /**
  * Lines shown as the terminal's welcome message (motd).
@@ -53,22 +54,6 @@ export function terminalMotdLines(): string[] {
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
-
-/** Resolves `/static/` for http(s); uses `static/index.html` next to `index.html` for `file:` pages. */
-function resolveStaticPortfolioHref(): string {
-  const configuredBase = import.meta.env.BASE_URL ?? '/'
-  const pathSegments = `${configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`}static/`
-
-  if (typeof window === 'undefined') return '/static/'
-  try {
-    if (window.location.protocol === 'file:') {
-      return new URL('static/index.html', window.location.href).href
-    }
-    return new URL(pathSegments, window.location.origin).href
-  } catch {
-    return new URL('static/index.html', window.location.href).href
-  }
-}
 
 export class TerminalApp {
   private xterm: Terminal
