@@ -389,12 +389,12 @@
 .rubik-app .rubik-help-summary::marker { content: ''; }
 
 .rubik-app .rubik-help-summary::before {
-  content: 'Γû╕ ';
+  content: '▸ ';
   display: inline-block;
   transition: transform 120ms ease;
 }
 .rubik-app details.rubik-help[open] .rubik-help-summary::before {
-  content: 'Γû╛ ';
+  content: '▾ ';
 }
 
 .rubik-app .rubik-help-list {
