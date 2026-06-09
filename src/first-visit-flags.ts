@@ -8,6 +8,7 @@
 import { storageRemove, storageSet } from './storage'
 import { BOOT_SPLASH_KEY } from './boot-splash'
 import { GUIDE_KEY } from './welcome-guide'
+import { EMPTY_HINT_KEY } from './desktop-empty-cta'
 
 /** Legacy — old bundles auto-opened terminal once when unset. */
 export const FIRST_RUN_KEY = 'mrgrey-first-run-done'
@@ -49,6 +50,7 @@ function ensureLegacyOnboardingObserver(): void {
 export function clearFirstVisitFlags(): void {
   storageRemove(BOOT_SPLASH_KEY)
   storageRemove(GUIDE_KEY)
+  storageRemove(EMPTY_HINT_KEY)
   for (const key of SUPPRESSED_LEGACY_KEYS) {
     storageRemove(key)
   }

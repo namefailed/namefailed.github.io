@@ -7,6 +7,7 @@ import {
 } from './first-visit-flags'
 import { BOOT_SPLASH_KEY } from './boot-splash'
 import { GUIDE_KEY } from './welcome-guide'
+import { EMPTY_HINT_KEY } from './desktop-empty-cta'
 
 class MockStorage implements Storage {
   private data = new Map<string, string>()
@@ -39,6 +40,7 @@ beforeAll(() => {
 const allFirstVisitKeys = [
   BOOT_SPLASH_KEY,
   GUIDE_KEY,
+  EMPTY_HINT_KEY,
   ...SUPPRESSED_LEGACY_KEYS,
 ]
 
