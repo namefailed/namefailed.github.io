@@ -37,6 +37,27 @@ function rotFaceCW(face: number[]): void {
   face[8] = orig[2]
 }
 
+/**
+ * Rotate a face array 90° counter-clockwise in-place.
+ *
+ * The R and L faces are stored "mirror-indexed" relative to U/D/F/B (their
+ * column axis runs opposite the others in the 3D lattice), so a geometric
+ * clockwise turn of those faces corresponds to a CCW array rotation. See
+ * rubik-stickers-layout.test.ts for the geometry that pins this down.
+ */
+function rotFaceCCW(face: number[]): void {
+  const orig = face.slice()
+  face[0] = orig[2]
+  face[1] = orig[5]
+  face[2] = orig[8]
+  face[3] = orig[1]
+  face[4] = orig[4]
+  face[5] = orig[7]
+  face[6] = orig[0]
+  face[7] = orig[3]
+  face[8] = orig[6]
+}
+
 export function cloneCube(cube: CubeFaces): CubeFaces {
   return {
     U: [...cube.U],
@@ -60,22 +81,24 @@ export function isSolved(cube: CubeFaces): boolean {
   )
 }
 
-/** U clockwise */
+/** U clockwise (look down from top) */
 export function moveU(cube: CubeFaces): void {
   rotFaceCW(cube.U)
+  // Top ring (y=+1): cubie at the right-front swings to the front-left, so each
+  // triple reverses as it crosses to the next face. Cycle R→F→L→B→R.
   const saved = [cube.F[0], cube.F[1], cube.F[2]]
-  cube.F[0] = cube.R[0]
+  cube.F[0] = cube.R[2]   // R[2] → F[0]
   cube.F[1] = cube.R[1]
-  cube.F[2] = cube.R[2]
-  cube.R[0] = cube.B[0]
+  cube.F[2] = cube.R[0]   // R[0] → F[2]
+  cube.R[0] = cube.B[2]   // B[2] → R[0]
   cube.R[1] = cube.B[1]
-  cube.R[2] = cube.B[2]
-  cube.B[0] = cube.L[0]
+  cube.R[2] = cube.B[0]
+  cube.B[0] = cube.L[2]   // L[2] → B[0]
   cube.B[1] = cube.L[1]
-  cube.B[2] = cube.L[2]
-  cube.L[0] = saved[0]
+  cube.B[2] = cube.L[0]
+  cube.L[0] = saved[2]    // F[2] → L[0]
   cube.L[1] = saved[1]
-  cube.L[2] = saved[2]
+  cube.L[2] = saved[0]
 }
 
 /** U counter-clockwise (3× clockwise) */
@@ -86,19 +109,20 @@ export function moveUi(cube: CubeFaces): void {
 /** D clockwise (view from bottom) */
 export function moveD(cube: CubeFaces): void {
   rotFaceCW(cube.D)
+  // Bottom ring (y=-1): cycle F→R→B→L→F, each triple reversing as it crosses.
   const saved = [cube.F[6], cube.F[7], cube.F[8]]
-  cube.F[6] = cube.L[6]
+  cube.F[6] = cube.L[8]   // L[8] → F[6]
   cube.F[7] = cube.L[7]
-  cube.F[8] = cube.L[8]
-  cube.L[6] = cube.B[6]
+  cube.F[8] = cube.L[6]   // L[6] → F[8]
+  cube.L[6] = cube.B[8]   // B[8] → L[6]
   cube.L[7] = cube.B[7]
-  cube.L[8] = cube.B[8]
-  cube.B[6] = cube.R[6]
+  cube.L[8] = cube.B[6]
+  cube.B[6] = cube.R[8]   // R[8] → B[6]
   cube.B[7] = cube.R[7]
-  cube.B[8] = cube.R[8]
-  cube.R[6] = saved[0]
+  cube.B[8] = cube.R[6]
+  cube.R[6] = saved[2]    // F[8] → R[6]
   cube.R[7] = saved[1]
-  cube.R[8] = saved[2]
+  cube.R[8] = saved[0]
 }
 
 /** D counter-clockwise */
@@ -108,7 +132,8 @@ export function moveDi(cube: CubeFaces): void {
 
 /** R clockwise (look from right) */
 export function moveR(cube: CubeFaces): void {
-  rotFaceCW(cube.R)
+  // R/L faces are mirror-indexed in the 3D lattice → geometric CW = array CCW.
+  rotFaceCCW(cube.R)
   const saved = [cube.U[2], cube.U[5], cube.U[8]]
   cube.U[2] = cube.F[2]
   cube.U[5] = cube.F[5]
@@ -131,18 +156,21 @@ export function moveRi(cube: CubeFaces): void {
 
 /** L clockwise (look from left) */
 export function moveL(cube: CubeFaces): void {
-  rotFaceCW(cube.L)
+  // R/L faces are mirror-indexed in the 3D lattice → geometric CW = array CCW.
+  rotFaceCCW(cube.L)
+  // Left ring (x=-1): cycle U→F→D→B→U. The U↔B legs reverse (B is stored with
+  // a flipped column axis); the F and D legs are straight.
   const saved = [cube.U[0], cube.U[3], cube.U[6]]
-  cube.U[0] = cube.B[8]
+  cube.U[0] = cube.B[8]   // B[8] → U[0]
   cube.U[3] = cube.B[5]
-  cube.U[6] = cube.B[2]
-  cube.B[8] = cube.D[6]
+  cube.U[6] = cube.B[2]   // B[2] → U[6]
+  cube.B[8] = cube.D[0]   // D[0] → B[8]
   cube.B[5] = cube.D[3]
-  cube.B[2] = cube.D[0]
-  cube.D[6] = cube.F[0]
+  cube.B[2] = cube.D[6]   // D[6] → B[2]
+  cube.D[0] = cube.F[0]   // F[0] → D[0]
   cube.D[3] = cube.F[3]
-  cube.D[0] = cube.F[6]
-  cube.F[0] = saved[0]
+  cube.D[6] = cube.F[6]
+  cube.F[0] = saved[0]    // U[0] → F[0]
   cube.F[3] = saved[1]
   cube.F[6] = saved[2]
 }
