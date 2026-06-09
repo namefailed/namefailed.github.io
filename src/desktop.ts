@@ -116,6 +116,9 @@ export class Desktop {
         host: workspace,
         onActivate: cmd => void this.openWindow(windowSpecForCommand(cmd)),
       })
+      window.addEventListener('mrgrey-guide-dismissed', () => {
+        syncDesktopEmptyCta(workspace, this.windows.length)
+      })
     }
 
     this.sync()

@@ -1,60 +1,44 @@
 /**
- * Non-modal desktop hint when no tiles are open — quick paths for recruiters.
+ * Subtle desktop hint when no tiles are open — sits under the folder row, no modal chrome.
  */
 
+import { GRID_CELL } from './desktop-tiles'
 import { resolveStaticPortfolioHref } from './static-portfolio-href'
+import { GUIDE_KEY } from './welcome-guide'
+import { storageGet } from './storage'
 
 export function mountDesktopEmptyCta(
   host: HTMLElement,
   onActivate: (cmd: string) => void,
 ): void {
-  if (host.querySelector('.desktop-empty-cta')) return
+  if (host.querySelector('.desktop-empty-hint')) return
 
-  const classicHref = resolveStaticPortfolioHref()
+  const hint = document.createElement('p')
+  hint.className = 'desktop-empty-hint'
+  hint.setAttribute('role', 'status')
+  hint.style.left = `${GRID_CELL}px`
+  hint.style.top = `${GRID_CELL * 2 + 8}px`
 
-  const bar = document.createElement('div')
-  bar.className = 'desktop-empty-cta'
-  bar.setAttribute('role', 'region')
-  bar.setAttribute('aria-label', 'Quick start')
-
-  const lead = document.createElement('p')
-  lead.className = 'desktop-empty-cta-lead'
-  lead.textContent = 'Open to work — pick a starting point:'
-
-  const actions = document.createElement('div')
-  actions.className = 'desktop-empty-cta-actions'
-
-  const mkBtn = (label: string, cmd: string, primary = false): HTMLButtonElement => {
-    const btn = document.createElement('button')
-    btn.type = 'button'
-    btn.className = primary ? 'desktop-empty-cta-btn desktop-empty-cta-btn--primary' : 'desktop-empty-cta-btn'
-    btn.textContent = label
-    btn.addEventListener('click', () => onActivate(cmd))
-    return btn
-  }
+  const openBtn = document.createElement('button')
+  openBtn.type = 'button'
+  openBtn.className = 'desktop-empty-hint-action'
+  openBtn.textContent = 'Portfolio'
+  openBtn.addEventListener('click', () => onActivate('portfolio'))
 
   const classic = document.createElement('a')
-  classic.className = 'desktop-empty-cta-link'
-  classic.href = classicHref
-  classic.textContent = 'Classic résumé view'
+  classic.className = 'desktop-empty-hint-action desktop-empty-hint-action--link'
+  classic.href = resolveStaticPortfolioHref()
+  classic.textContent = 'Classic view'
 
-  actions.append(
-    mkBtn('Portfolio', 'portfolio', true),
-    mkBtn('Résumé', 'resume'),
-    mkBtn('Projects', 'projects'),
-    mkBtn('Contact', 'links'),
-    classic,
-  )
-
-  bar.append(lead, actions)
-  host.appendChild(bar)
+  hint.append('Open ', openBtn, ' for résumé & work · ', classic)
+  host.appendChild(hint)
 }
 
-/** Show when the WM has zero open tiles; hide once anything is tiled. */
+/** Show when the WM has zero open tiles and the welcome guide is dismissed. */
 export function syncDesktopEmptyCta(host: HTMLElement, openWindowCount: number): void {
-  const bar = host.querySelector<HTMLElement>('.desktop-empty-cta')
-  if (!bar) return
-  const show = openWindowCount === 0
-  bar.hidden = !show
-  bar.classList.toggle('desktop-empty-cta--visible', show)
+  const hint = host.querySelector<HTMLElement>('.desktop-empty-hint')
+  if (!hint) return
+  const guideOpen = storageGet(GUIDE_KEY) !== '1'
+  const show = openWindowCount === 0 && !guideOpen
+  hint.hidden = !show
 }

@@ -13,8 +13,14 @@ import { storageGet, storageSet, storageRemove } from './storage'
 import { FS_HOME, vfsListEntries, vfsReadRaw } from './os-fs'
 
 export const WALLPAPER_KEY = 'mrgrey-wallpaper'
-/** Default wallpaper — calm mocha minimal (shown on first boot). */
-export const WALLPAPER_DEFAULT = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/mocha.png'
+/** Default wallpaper — calm minimal (must exist in catppuccin-wallpapers repo). */
+export const WALLPAPER_DEFAULT =
+  'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/dark-cat.png'
+
+/** Legacy broken default — migrate on load (404 on GitHub). */
+const BROKEN_WALLPAPER_URLS = new Set([
+  'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/mocha.png',
+])
 
 export interface WallpaperOption {
   name: string
@@ -173,5 +179,10 @@ export function clearWallpaper(): void {
  *  Falls back to WALLPAPER_DEFAULT when no preference has been saved. */
 export function loadSavedWallpaper(): void {
   const saved = storageGet(WALLPAPER_KEY)
-  applyWallpaper(saved || WALLPAPER_DEFAULT)
+  const value =
+    saved && !BROKEN_WALLPAPER_URLS.has(saved.trim()) ? saved : WALLPAPER_DEFAULT
+  applyWallpaper(value)
+  if (saved && BROKEN_WALLPAPER_URLS.has(saved.trim())) {
+    storageSet(WALLPAPER_KEY, WALLPAPER_DEFAULT)
+  }
 }

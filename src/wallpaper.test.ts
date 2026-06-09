@@ -48,9 +48,9 @@ describe('WALLPAPER_KEY', () => {
     expect(WALLPAPER_KEY).toBe('mrgrey-wallpaper')
   })
 
-  it('WALLPAPER_DEFAULT is the calm mocha minimal wallpaper URL', () => {
+  it('WALLPAPER_DEFAULT is the dark-cat minimal wallpaper URL', () => {
     expect(WALLPAPER_DEFAULT).toBe(
-      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/mocha.png',
+      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/dark-cat.png',
     )
   })
 })
@@ -144,6 +144,15 @@ describe('loadSavedWallpaper', () => {
   it('applies the default wallpaper when no wallpaper is stored', () => {
     loadSavedWallpaper()
     expect(mockEl.style.backgroundImage).toBe(`url("${WALLPAPER_DEFAULT}")`)
+  })
+
+  it('migrates broken legacy default URL to WALLPAPER_DEFAULT', () => {
+    const broken =
+      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/mocha.png'
+    localStorage.setItem(WALLPAPER_KEY, broken)
+    loadSavedWallpaper()
+    expect(mockEl.style.backgroundImage).toBe(`url("${WALLPAPER_DEFAULT}")`)
+    expect(localStorage.getItem(WALLPAPER_KEY)).toBe(WALLPAPER_DEFAULT)
   })
 })
 

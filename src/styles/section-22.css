@@ -770,99 +770,45 @@
   }
 }
 
-/* ── Desktop empty-state CTA (non-modal) ─────────────────────────────────── */
+/* ── Desktop empty hint (one line under folders — no floating card) ─────── */
 
-.desktop-empty-cta {
+.desktop-empty-hint {
   position: absolute;
-  left: 50%;
-  bottom: calc(var(--workspace-dock-reserve, 88px) + 24px);
-  transform: translateX(-50%);
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  max-width: min(92vw, 520px);
-  padding: 14px 18px 16px;
-  border-radius: 14px;
-  background: rgba(17, 17, 27, 0.72);
-  border: 1px solid rgba(var(--th-accent-rgb), 0.28);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.42);
-  backdrop-filter: blur(10px);
+  z-index: 3;
+  max-width: min(340px, calc(100vw - 48px));
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: var(--th-subtext1, #bac2de);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   pointer-events: auto;
 }
 
-.desktop-empty-cta[hidden] {
+.desktop-empty-hint[hidden] {
   display: none;
 }
 
-.desktop-empty-cta-lead {
+.desktop-empty-hint-action {
   margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--th-text, #cdd6f4);
-  text-align: center;
-}
-
-.desktop-empty-cta-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-
-.desktop-empty-cta-btn {
-  margin: 0;
-  padding: 7px 14px;
+  padding: 0;
   font: inherit;
-  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  color: var(--th-text);
-  background: rgba(var(--th-overlay-rgb), 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  color: var(--th-text, #cdd6f4);
+  background: none;
+  border: none;
   cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease,
-    transform 0.15s ease;
+  text-decoration: underline;
+  text-decoration-color: rgba(var(--th-accent-rgb), 0.45);
+  text-underline-offset: 2px;
 }
 
-.desktop-empty-cta-btn:hover {
-  border-color: rgba(var(--th-accent-rgb), 0.45);
-  background: rgba(var(--th-accent-rgb), 0.14);
-}
-
-.desktop-empty-cta-btn--primary {
-  color: var(--th-badge-fg, #1e1e2e);
-  background: rgba(var(--th-accent-rgb), 0.92);
-  border-color: rgba(var(--th-accent-rgb), 0.95);
-}
-
-.desktop-empty-cta-btn--primary:hover {
-  background: rgba(var(--th-accent-rgb), 1);
-}
-
-.desktop-empty-cta-link {
-  align-self: center;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--th-subtext1, #bac2de);
-  text-decoration: none;
-  padding: 4px 8px;
-}
-
-.desktop-empty-cta-link:hover {
+.desktop-empty-hint-action:hover {
   color: var(--th-accent, #cba6f7);
+  text-decoration-color: rgba(var(--th-accent-rgb), 0.85);
 }
 
-@media (max-width: 520px) {
-  .desktop-empty-cta {
-    bottom: calc(var(--workspace-dock-reserve, 88px) + 12px);
-    padding: 12px 14px 14px;
-  }
+.desktop-empty-hint-action--link {
+  display: inline;
 }

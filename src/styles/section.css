@@ -278,9 +278,9 @@ html.retro-fx::before {
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(17, 17, 27, 0.38) 0%,
-    rgba(17, 17, 27, 0.22) 45%,
-    rgba(17, 17, 27, 0.48) 100%
+    rgba(17, 17, 27, 0.12) 0%,
+    rgba(17, 17, 27, 0.06) 50%,
+    rgba(17, 17, 27, 0.2) 100%
   );
 }
 

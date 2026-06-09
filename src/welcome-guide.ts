@@ -136,6 +136,7 @@ export function mountWelcomeGuide(): void {
     }
     if (delay > 0) window.setTimeout(go, delay)
     else go()
+    window.dispatchEvent(new Event('mrgrey-guide-dismissed'))
   }
 
   const markDone = (tipId: string, thenDismiss = true): void => {
