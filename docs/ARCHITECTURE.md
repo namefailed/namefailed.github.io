@@ -22,8 +22,8 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 | `desktop-open-window.ts` | Lazy tile open dispatch (editor, games, portfolio, terminal tile) |
 | `desktop-taskbar.ts` | Dock rendering, YASB title, auto-hide hover zone |
 | `desktop-wm-lifecycle.ts` | Tiled close / minimize / restore animations |
-| `desktop-wm-maximize.ts` | Terminal column vs content maximize |
-| `desktop-wm-terminal.ts` | Legacy left-column terminal chrome + YASB launcher buttons |
+| `desktop-wm-maximize.ts` | Right-pane content maximize only |
+| `desktop-wm-terminal.ts` | YASB launcher chrome (terminal is a lazy tile) |
 | `desktop-keyboard-handler.ts` | Ctrl+chord dispatch |
 | `desktop-spatial-focus.ts` | Ctrl+H/J/K/L geometry |
 | `desktop-launcher-overlay.ts` | Show-desktop / Applications overlay flags + DOM sync |
@@ -34,6 +34,7 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 | `desktop-wm-sync.ts` | Shell `dataset.*` mirrors for CSS |
 | `desktop-ps-snapshot.ts` | Simulated `ps` rows for terminal MOTD |
 | `editor-ex-commands.ts` | Modal editor `:w` / `:q` / `:e` ex-mode parsing |
+| `editor-vim-ops.ts` | Pure caret/line helpers for vim motions (`j`/`k`, `:N`, counts) |
 | `editor-window-meta.ts` | Editor path compare + title string helpers |
 | `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
 | `bootstrap-shell.ts` | Boot sequence orchestration |
@@ -127,7 +128,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-530 tests across 44 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+535 tests across 45 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|

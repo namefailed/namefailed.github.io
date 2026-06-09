@@ -1,7 +1,6 @@
 /**
  * Turns the HTML shell into the live desktop.
- * The terminal is now a lazy-loaded tile opened via the desktop tile or Ctrl+T.
- * Matrix rain defers via idle callback so first paint stays cheap.
+ * Terminal is a lazy-loaded tile (Ctrl+T or dock). Matrix rain defers via idle callback.
  */
 import { runBootSplash } from './boot-splash'
 import { initThemeFromStorage } from './theme'
@@ -21,17 +20,13 @@ export async function bootstrapShellUi(): Promise<void> {
   initSystray()
   syncSettingsSoundToggle()
 
-  const terminalWin = document.getElementById('terminal-window')
   const desktopEl = document.getElementById('desktop')
   const matrixCanvas = document.getElementById('matrix-bg') as HTMLCanvasElement | null
 
-  if (!terminalWin || !desktopEl) {
-    console.error('[bootstrap-shell] Missing #terminal-window or #desktop.')
+  if (!desktopEl) {
+    console.error('[bootstrap-shell] Missing #desktop.')
     return
   }
-
-  // Hide the static terminal pane — terminal is now a lazy tile.
-  terminalWin.classList.add('terminal-closed')
 
   const scheduleMatrixInit = (): void => {
     const canvas = matrixCanvas
@@ -48,5 +43,5 @@ export async function bootstrapShellUi(): Promise<void> {
   }
   scheduleMatrixInit()
 
-  new Desktop(desktopEl, terminalWin, () => {})
+  new Desktop(desktopEl)
 }

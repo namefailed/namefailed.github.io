@@ -45,10 +45,6 @@
   will-change: transform, opacity, filter;
 }
 
-#terminal-window.wm-animate-close {
-  transform-origin: 50% 92%;
-}
-
 .app-window {
   display: flex;
   flex-direction: column;
@@ -67,14 +63,12 @@
     filter var(--ui-duration-med) var(--ui-easing-smooth);
 }
 
-.content-window.app-window:not(.active):not(.wm-animate-close):not(.wm-animate-mount),
-#terminal-window.app-window:not(.active):not(.wm-animate-close):not(.wm-animate-mount) {
+.content-window.app-window:not(.active):not(.wm-animate-close):not(.wm-animate-mount) {
   transform: translateY(0) scale(0.997);
   filter: saturate(0.93);
 }
 
-.content-window.app-window:not(.active):not(.wm-animate-close).maximized,
-#terminal-window.app-window:not(.active):not(.wm-animate-close).maximized {
+.content-window.app-window:not(.active):not(.wm-animate-close).maximized {
   transform: none;
   filter: none;
 }
@@ -84,12 +78,8 @@
   filter: none;
 }
 
-/*
- * Active window — accent focus ring (terminal uses the same `.app-window` stack;
- * keep `#terminal-window.app-window.active` pinned so tiling refactors can't drift ring parity).
- */
-.app-window.active,
-#terminal-window.app-window.active {
+/* Active window — accent focus ring */
+.app-window.active {
   border-color: var(--th-accent);
   transform: translateY(0) scale(1);
   filter: saturate(1);

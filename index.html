@@ -239,50 +239,10 @@
             </div>
           </div>
 
-          <!-- Tiling area: terminal + splitter + right-pane -->
+          <!-- Tiling area: lazy-loaded window tiles (terminal + portfolio/tools/games) -->
           <div id="panes">
-
-          <!-- Master pane: interactive terminal (always left) -->
-          <div class="app-window active" id="terminal-window">
-            <div class="win-titlebar">
-              <div class="win-title-left">
-                <span class="win-title">namefailed@dev — ~/terminal</span>
-              </div>
-              <div class="win-traffic">
-                <span class="dot dot-min" role="button" tabindex="0" title="minimize (ctrl+m)" aria-label="Minimize window"></span>
-                <span class="dot dot-max" role="button" tabindex="0" title="maximize / restore (ctrl+f)" aria-label="Maximize window"></span>
-                <span class="dot dot-close" role="button" tabindex="0" title="close (ctrl+q)" aria-label="Close window"></span>
-              </div>
-            </div>
-            <div class="terminal-stack">
-              <div id="terminal"></div>
-              <div class="terminal-status-bar" aria-label="Shell status">
-                <div class="terminal-hints" role="note" aria-label="Terminal tips">
-                  <span class="terminal-hint-line">
-                    <strong class="terminal-hint-strong">Overwhelmed</strong>? Try
-                    <kbd class="terminal-hint-kbd">"static"</kbd>.
-                    <span class="terminal-hint-sep" aria-hidden="true">·</span>
-                    Fullscreen <kbd class="terminal-hint-kbd">F11</kbd> for the best experience.
-                  </span>
-                </div>
-                <footer id="vim-mode-line" class="vim-mode-line mode-insert" aria-label="Vim input mode">
-                  <span class="vim-mode-glyph" aria-hidden="true">◆</span>
-                  <span class="vim-mode-core">
-                    <span class="vim-mode-dash">—</span>
-                    <span id="vim-mode-text" class="vim-mode-text">INSERT</span>
-                    <span class="vim-mode-dash">—</span>
-                  </span>
-                </footer>
-              </div>
-            </div>
+            <div id="right-pane"></div>
           </div>
-
-          <!-- Horizontal splitter between terminal and right pane -->
-          <div id="h-splitter" class="splitter splitter-h"></div>
-
-          <!-- Slave pane: content windows appended here by desktop.ts -->
-          <div id="right-pane"></div>
-        </div>
         </div>
       </div>
 

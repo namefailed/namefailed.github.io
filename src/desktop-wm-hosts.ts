@@ -10,7 +10,6 @@ import type { SpatialDirection } from './desktop-spatial-focus'
 import { toggleMaximizeFocused as applyToggleMaximizeFocused } from './desktop-wm-maximize'
 import type { WmLifecycleContext } from './desktop-wm-lifecycle'
 import type { WmMaximizeContext } from './desktop-wm-maximize'
-import { isLegacyTerminalColumnActive, type TerminalColumnHost } from './desktop-wm-terminal'
 import type { TileLimitHost } from './desktop-wm-tile-limit'
 
 /** Minimal surface Desktop exposes to WM host factories. */
@@ -20,14 +19,13 @@ export interface DesktopWmSelf {
   readonly launcherOverlay: LauncherOverlayFlags
   readonly desktop: HTMLElement
   readonly panes: HTMLElement
-  readonly termWin: HTMLElement
   get layoutMaxVisible(): number
   getFocusedId(): string | null
   setFocusedId(value: string | null): void
   getMaximizedId(): string | null
   setMaximizedId(value: string | null): void
   prefersReducedMotion(): boolean
-  fitTerminal(): void
+  fitOpenTerminal(): void
   closeLauncherOverlay(): void
   closeWindow(win: TiledWin): void
   focusWindow(win: TiledWin): void
@@ -35,7 +33,6 @@ export interface DesktopWmSelf {
   minimizeWindow(win: TiledWin): void
   toggleMaximizeContent(win: TiledWin): void
   unmaximizeContent(win: TiledWin): void
-  unmaximizeTerminal(): void
   enforceTileLimit(): void
   appendToRightPane(win: TiledWin): void
   attachVerticalSplitters(): void
@@ -44,8 +41,6 @@ export interface DesktopWmSelf {
   openWindow(spec: WindowSpec): Promise<void>
   focusTaskbarIndex(index: number): void
   focusSpatial(dir: SpatialDirection): void
-  closeTerminal(): void
-  minimizeTerminal(): void
   toggleShowDesktop(): void
   focusTerminalIfAlreadyVisible(): void
 }
@@ -87,31 +82,13 @@ export function maximizeContext(self: DesktopWmSelf): WmMaximizeContext {
   return {
     getMaximizedId: () => self.getMaximizedId(),
     setMaximizedId: id => { self.setMaximizedId(id) },
-    termWin: self.termWin,
     panes: self.panes,
     desktop: self.desktop,
     findOpenWindow: cmd => self.windows.find(w => w.command === cmd),
     unmaximizeContent: win => self.unmaximizeContent(win),
     syncDockVisibility: () => self.syncDockVisibility(),
-    fitTerminal: () => self.fitTerminal(),
+    onAfterMaximizeLayout: () => self.fitOpenTerminal(),
     attachVerticalSplitters: () => self.attachVerticalSplitters(),
-    sync: () => self.sync(),
-  }
-}
-
-export function terminalColumnHost(self: DesktopWmSelf): TerminalColumnHost {
-  return {
-    termWin: self.termWin,
-    launcherOverlay: self.launcherOverlay,
-    prefersReducedMotion: () => self.prefersReducedMotion(),
-    getMaximizedId: () => self.getMaximizedId(),
-    unmaximizeTerminal: () => self.unmaximizeTerminal(),
-    hasOpenWindows: () => self.windows.length > 0,
-    focusFirstWindow: () => self.focusWindow(self.windows[0]!),
-    clearFocusAndSync: () => {
-      self.setFocusedId(null)
-      self.sync()
-    },
     sync: () => self.sync(),
   }
 }
@@ -127,6 +104,10 @@ export function tileLimitHost(self: DesktopWmSelf): TileLimitHost {
   }
 }
 
+function terminalTile(self: DesktopWmSelf): TiledWin | undefined {
+  return self.windows.find(w => w.command === 'terminal')
+}
+
 export function keyboardHost(self: DesktopWmSelf): DesktopKeyboardHost {
   return {
     openTerminal: () => {
@@ -140,11 +121,7 @@ export function keyboardHost(self: DesktopWmSelf): DesktopKeyboardHost {
         if (w) self.closeWindow(w)
         return
       }
-      if (isLegacyTerminalColumnActive(self.termWin)) {
-        self.closeTerminal()
-        return
-      }
-      const termTile = self.windows.find(w => w.command === 'terminal')
+      const termTile = terminalTile(self)
       if (termTile) self.closeWindow(termTile)
     },
     minimizeFocusedOrTerminal: () => {
@@ -153,18 +130,10 @@ export function keyboardHost(self: DesktopWmSelf): DesktopKeyboardHost {
         if (w) self.minimizeWindow(w)
         return
       }
-      if (isLegacyTerminalColumnActive(self.termWin)) {
-        self.minimizeTerminal()
-        return
-      }
-      const termTile = self.windows.find(w => w.command === 'terminal')
+      const termTile = terminalTile(self)
       if (termTile) self.minimizeWindow(termTile)
     },
-    toggleMaximizeFocused: () => applyToggleMaximizeFocused(
-      maximizeContext(self),
-      self.getFocusedId(),
-      isLegacyTerminalColumnActive(self.termWin),
-    ),
+    toggleMaximizeFocused: () => applyToggleMaximizeFocused(maximizeContext(self), self.getFocusedId()),
     toggleShowDesktop: () => self.toggleShowDesktop(),
   }
 }

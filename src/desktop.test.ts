@@ -327,7 +327,7 @@ beforeAll(() => {
 // Import after globals are stubbed
 const { Desktop } = await import('./desktop')
 
-function mountDesktop(): { desktop: InstanceType<typeof Desktop>; root: FakeEl; rightPane: FakeEl; termWin: FakeEl } {
+function mountDesktop(): { desktop: InstanceType<typeof Desktop>; root: FakeEl; rightPane: FakeEl } {
   idMap.clear()
   docCaptureKeydown.length = 0
   fakeBody.children.length = 0
@@ -335,24 +335,10 @@ function mountDesktop(): { desktop: InstanceType<typeof Desktop>; root: FakeEl; 
   const root = mk('desktop')
   const panes = mk('panes')
   const rightPane = mk('right-pane')
-  const termWin = mk('terminal-window')
-  termWin.className = 'app-window terminal-closed'
-  const tbar = new FakeEl('div')
-  tbar.className = 'win-titlebar'
-  tbar.innerHTML = `
-    <div class="win-title-left"><span class="win-title">terminal</span></div>
-    <div class="win-traffic">
-      <span class="dot dot-min"></span>
-      <span class="dot dot-max"></span>
-      <span class="dot dot-close"></span>
-    </div>
-  `
-  termWin.appendChild(tbar)
 
   const taskbar = mk('wm-taskbar')
   const taskbarDock = mk('wm-taskbar-dock')
   taskbar.appendChild(taskbarDock)
-  mk('h-splitter')
   mk('yasb-focused')
   mk('yasb-clock-text')
   mk('desktop-icons')
@@ -361,13 +347,11 @@ function mountDesktop(): { desktop: InstanceType<typeof Desktop>; root: FakeEl; 
   mk('launcher-search')
   mk('launcher-shell')
 
-  panes.appendChild(termWin)
   panes.appendChild(rightPane)
   root.appendChild(panes)
 
-  const fitTerminal = vi.fn()
-  const desktop = new Desktop(root as unknown as HTMLElement, termWin as unknown as HTMLElement, fitTerminal)
-  return { desktop, root, rightPane, termWin }
+  const desktop = new Desktop(root as unknown as HTMLElement)
+  return { desktop, root, rightPane }
 }
 
 const resumeSpec = () => windowSpecForCommand('resume')

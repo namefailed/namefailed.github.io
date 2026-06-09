@@ -1038,36 +1038,7 @@ a.yasb-btn-classic:hover {
   pointer-events: none;
 }
 
-/* Terminal fully closed (not minimized): no tile, content uses full width */
-#desktop[data-terminal-closed="1"] #terminal-window {
-  display: none !important;
-}
-
-#desktop[data-terminal-closed="1"] #h-splitter {
-  display: none !important;
-}
-
-#desktop[data-terminal-closed="1"] #right-pane {
-  flex: 1;
-  min-width: 0;
-}
-/* ── Maximize (terminal or single content window fills #panes) ─────────────── */
-
-#panes.max-terminal #h-splitter,
-#panes.max-terminal #right-pane {
-  display: none !important;
-}
-
-#panes.max-terminal #terminal-window {
-  flex: 1 1 auto !important;
-  width: auto !important;
-  min-width: 0 !important;
-}
-
-#panes.max-content #terminal-window,
-#panes.max-content #h-splitter {
-  display: none !important;
-}
+/* ── Maximize (single content window fills #panes) ─────────────────────────── */
 
 /* Keep #right-pane in place — don't move the iframe element (causes reload).
    Stretch right-pane to fill all available space instead. */

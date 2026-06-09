@@ -849,19 +849,6 @@
     flex-direction: column;
   }
 
-  #terminal-window {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 auto !important;
-    min-height: 160px;
-    max-height: min(42vh, 320px);
-  }
-
-  /* Width-based splitter is meaningless when the column is stacked */
-  #h-splitter {
-    display: none;
-  }
-
   #right-pane {
     flex: 1;
     min-height: 120px;
