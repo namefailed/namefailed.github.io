@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pickSpatialFocusAction } from './desktop-spatial-focus'
+import { applySpatialFocusAction, pickSpatialFocusAction } from './desktop-spatial-focus'
 
 const win = (id: string, left: number, top: number) => ({
   id,
@@ -36,5 +36,31 @@ describe('pickSpatialFocusAction', () => {
 
   it('no-ops k when nothing is focused', () => {
     expect(pickSpatialFocusAction(layout, null, 'k')).toEqual({ type: 'noop' })
+  })
+})
+
+describe('applySpatialFocusAction', () => {
+  it('delegates focus and open-terminal to host', () => {
+    const calls: string[] = []
+    applySpatialFocusAction(
+      { type: 'focus', id: 'resume' },
+      ['resume'],
+      {
+        focusWindow: cmd => calls.push(`focus:${cmd}`),
+        openTerminal: () => calls.push('open-terminal'),
+      },
+    )
+    expect(calls).toEqual(['focus:resume'])
+
+    calls.length = 0
+    applySpatialFocusAction(
+      { type: 'open-terminal' },
+      [],
+      {
+        focusWindow: cmd => calls.push(`focus:${cmd}`),
+        openTerminal: () => calls.push('open-terminal'),
+      },
+    )
+    expect(calls).toEqual(['open-terminal'])
   })
 })

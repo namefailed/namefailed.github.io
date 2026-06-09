@@ -65,3 +65,18 @@ export function pickSpatialFocusAction(
   if (dir === 'h' && focusedId !== 'terminal') return { type: 'open-terminal' }
   return { type: 'noop' }
 }
+
+export function applySpatialFocusAction(
+  action: SpatialFocusAction,
+  openCommands: readonly string[],
+  host: {
+    focusWindow(command: string): void
+    openTerminal(): void
+  },
+): void {
+  if (action.type === 'focus') {
+    if (openCommands.includes(action.id)) host.focusWindow(action.id)
+    return
+  }
+  if (action.type === 'open-terminal') host.openTerminal()
+}

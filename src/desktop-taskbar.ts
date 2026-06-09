@@ -2,6 +2,7 @@
  * Taskbar dock rendering, YASB focused title, and auto-hide hover zone.
  */
 
+import type { MinimizedEntry, TiledWin } from './desktop-open-window'
 import {
   attachLazyPrefetchHandlers,
   LAUNCHER_ICON_ROWS,
@@ -51,6 +52,52 @@ export function extraDockCommands(
 ): string[] {
   const pinnedSet = new Set(pinned)
   return dockOrder.filter(cmd => !pinnedSet.has(cmd))
+}
+
+/** Open windows first (tile order), then minimized — as live window refs. */
+export function resolveDockWindows(
+  windows: readonly TiledWin[],
+  minimized: readonly MinimizedEntry[],
+): TiledWin[] {
+  const order = orderedDockCommands(
+    windows.map(w => w.command),
+    minimized.map(m => m.win.command),
+  )
+  const byCmd = new Map<string, TiledWin>()
+  for (const w of windows) byCmd.set(w.command, w)
+  for (const { win } of minimized) {
+    if (!byCmd.has(win.command)) byCmd.set(win.command, win)
+  }
+  return order.map(cmd => byCmd.get(cmd)!).filter(Boolean)
+}
+
+export function buildTaskbarDockSnapshot(
+  focusedId: string | null,
+  openCommands: readonly string[],
+  minimizedCommands: readonly string[],
+): TaskbarDockSnapshot {
+  const dockOrder = orderedDockCommands(openCommands, minimizedCommands)
+  return {
+    focusedId,
+    openCommands,
+    minimizedCommands,
+    extraCommands: extraDockCommands(dockOrder),
+  }
+}
+
+export type TaskbarPinnedAction =
+  | { type: 'minimize-terminal-tile' }
+  | { type: 'open-terminal-tile' }
+  | { type: 'open-command'; cmd: string }
+
+export function taskbarPinnedAction(
+  cmd: string,
+  hasTerminalTile: boolean,
+  terminalFocused: boolean,
+): TaskbarPinnedAction {
+  if (cmd !== 'terminal') return { type: 'open-command', cmd }
+  if (hasTerminalTile && terminalFocused) return { type: 'minimize-terminal-tile' }
+  return { type: 'open-terminal-tile' }
 }
 
 export function focusedTitleLabel(
