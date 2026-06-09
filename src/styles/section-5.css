@@ -1,0 +1,111 @@
+/* ── Window chrome (shared by all windows) ─────────────────────────────────── */
+
+@keyframes wm-window-mount {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) translateZ(-12px) scale(0.9) rotateX(4deg);
+    filter: brightness(1.22) saturate(0.82) blur(10px);
+  }
+  58% {
+    opacity: 1;
+    transform: translateY(-3px) translateZ(0) scale(1.016) rotateX(-0.5deg);
+    filter: brightness(1.06) saturate(1.06) blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateZ(0) scale(1) rotateX(0deg);
+    filter: brightness(1) saturate(1) blur(0);
+  }
+}
+
+@keyframes wm-window-close {
+  from {
+    opacity: 1;
+    transform: translateY(0) translateZ(0) scale(1) rotateX(0deg);
+    filter: brightness(1) blur(0) saturate(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px) translateZ(-20px) scale(0.91) rotateX(3deg);
+    filter: brightness(0.94) blur(10px) saturate(0.88);
+  }
+}
+
+.wm-animate-mount {
+  animation: wm-window-mount var(--ui-duration-wm-in) var(--ui-easing-out-back) both;
+  pointer-events: none;
+  transform-origin: 50% 8%;
+  will-change: transform, opacity, filter;
+}
+
+.wm-animate-close {
+  animation: wm-window-close var(--ui-duration-wm-out) var(--ui-easing-smooth) forwards;
+  pointer-events: none;
+  transform-origin: 52% 100%;
+  will-change: transform, opacity, filter;
+}
+
+#terminal-window.wm-animate-close {
+  transform-origin: 50% 92%;
+}
+
+.app-window {
+  display: flex;
+  flex-direction: column;
+  background: var(--th-surface1);
+  border-radius: 8px;
+  border: 1px solid var(--th-win-border);
+  box-shadow:
+    0  0  0  1px rgba(0, 0, 0, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  transform: translateZ(0);
+  transition:
+    border-color var(--ui-duration-med) var(--ui-easing-smooth),
+    box-shadow var(--ui-duration-slow) var(--ui-easing-emph),
+    transform var(--ui-duration-slow) var(--ui-easing-emph),
+    filter var(--ui-duration-med) var(--ui-easing-smooth);
+}
+
+.content-window.app-window:not(.active):not(.wm-animate-close):not(.wm-animate-mount),
+#terminal-window.app-window:not(.active):not(.wm-animate-close):not(.wm-animate-mount) {
+  transform: translateY(0) scale(0.997);
+  filter: saturate(0.93);
+}
+
+.content-window.app-window:not(.active):not(.wm-animate-close).maximized,
+#terminal-window.app-window:not(.active):not(.wm-animate-close).maximized {
+  transform: none;
+  filter: none;
+}
+
+.app-window.maximized:not(.wm-animate-mount):not(.wm-animate-close) {
+  transform: none;
+  filter: none;
+}
+
+/*
+ * Active window — accent focus ring (terminal uses the same `.app-window` stack;
+ * keep `#terminal-window.app-window.active` pinned so tiling refactors can't drift ring parity).
+ */
+.app-window.active,
+#terminal-window.app-window.active {
+  border-color: var(--th-accent);
+  transform: translateY(0) scale(1);
+  filter: saturate(1);
+  box-shadow:
+    0  0  0  1px rgba(0, 0, 0, 0.4),
+    0 14px 44px rgba(0, 0, 0, 0.68),
+    0  0  0  2px rgba(var(--th-accent-rgb), 0.38),
+    0  0 28px rgba(var(--th-accent-rgb), 0.22);
+}
+
+/* Hidden (minimized) */
+.app-window.minimized { display: none; }
+
+/* Content windows share the right pane equally */
+.content-window {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}

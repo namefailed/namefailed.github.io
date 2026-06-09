@@ -14,6 +14,7 @@ import {
 } from './os-fs'
 import { setWallpaper } from './wallpaper'
 import { storageGet, storageSetJson } from './storage'
+import { createWindowChrome } from './window-chrome'
 
 /** Returns true when a filename has an image extension. */
 function isImageFile(name: string): boolean {
@@ -98,36 +99,16 @@ export class FileExplorerWindow {
 
     this.absPath = vfsNormalize(opts.initialPath)
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window file-explorer-app'
+    const chrome = createWindowChrome({
+      title: 'files',
+      onClose: () => this.onClose(),
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
+    })
+    this.el = chrome.el
+    this.el.classList.add('file-explorer-app')
     this.el.tabIndex = -1
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">files</span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onClose()
-    })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
-    bar.addEventListener('mousedown', () => opts.onFocus())
 
     const mkIcon = (
       glyph: string,
@@ -249,7 +230,6 @@ export class FileExplorerWindow {
     stack.appendChild(this.bodyEl)
     stack.appendChild(foot)
 
-    this.el.appendChild(bar)
     this.el.appendChild(stack)
 
     this.loadFePrefs()

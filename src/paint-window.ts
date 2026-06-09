@@ -1,5 +1,7 @@
 /** Canvas raster tools: brush, eraser-to-bg, line, fill; mouse + touch. */
 
+import { createWindowChrome } from './window-chrome'
+
 export interface PaintWindowOptions {
   onClose: () => void
   onMinimize: () => void
@@ -36,35 +38,15 @@ export class PaintWindow {
     this.onMaximize = opts.onMaximize
     this.onFocus = opts.onFocus
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window paint-app'
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">paint</span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onClose()
+    const chrome = createWindowChrome({
+      title: 'paint',
+      onClose: () => this.onClose(),
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
     })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
-    bar.addEventListener('mousedown', () => opts.onFocus())
+    this.el = chrome.el
+    this.el.classList.add('paint-app')
 
     const toolbar = document.createElement('div')
     toolbar.className = 'paint-toolbar'
@@ -184,7 +166,6 @@ export class PaintWindow {
     stack.appendChild(toolbar)
     stack.appendChild(this.wrap)
 
-    this.el.appendChild(bar)
     this.el.appendChild(stack)
 
     const resize = (): void => {

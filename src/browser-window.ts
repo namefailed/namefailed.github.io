@@ -5,6 +5,7 @@
 
 import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
 import { storageGet, storageSet } from './storage'
+import { createWindowChrome } from './window-chrome'
 
 export { DEFAULT_BROWSER_URL, normalizeBrowserUrl }
 
@@ -77,35 +78,15 @@ export class BrowserWindow {
 
     this.currentUrl = normalizeBrowserUrl(opts.initialUrl)
 
-    this.el = document.createElement('div')
-    this.el.className = 'app-window content-window browser-app'
-    this.el.addEventListener('mousedown', () => opts.onFocus())
-
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left">
-        <span class="win-title">browse</span>
-      </div>
-      <div class="win-traffic">
-        <span class="dot dot-min" title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max" title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onClose()
+    const chrome = createWindowChrome({
+      title: 'browse',
+      onClose: () => this.onClose(),
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: opts.onFocus,
     })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
-    bar.addEventListener('mousedown', () => opts.onFocus())
+    this.el = chrome.el
+    this.el.classList.add('browser-app')
 
     const toolbar = document.createElement('div')
     toolbar.className = 'browser-toolbar'
@@ -243,7 +224,6 @@ export class BrowserWindow {
     stack.appendChild(this.statusEl)
     stack.appendChild(this.frame)
 
-    this.el.appendChild(bar)
     this.el.appendChild(stack)
 
     this.applyFrameUrl(this.currentUrl)

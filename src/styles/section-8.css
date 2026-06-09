@@ -1,0 +1,42 @@
+/* ── Terminal area ─────────────────────────────────────────────────────────── */
+
+#terminal {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Bottom: 0 — the status bar border-top is the separator; a bottom gap creates a black strip */
+  padding: var(--ui-space-4) var(--ui-space-4) 0;
+  box-sizing: border-box;
+}
+
+#terminal .terminal-surface {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  /* Use --th-surface1 (= xterm theme.background) so any FitAddon remainder strip is invisible */
+  background-color: var(--th-surface1);
+}
+
+/* Lazy TerminalWindow tile — mirrors #terminal layout so FitAddon gets correct dimensions */
+.terminal-host {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--ui-space-4) var(--ui-space-4) 0;
+  box-sizing: border-box;
+}
+
+.terminal-host .terminal-surface {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--th-surface1);
+}

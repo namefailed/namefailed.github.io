@@ -1,0 +1,225 @@
+/* ── Title bar ─────────────────────────────────────────────────────────────── */
+
+.win-titlebar {
+  flex-shrink: 0;
+  height: 34px;
+  background: var(--th-mantle);
+  border-bottom: 1px solid var(--th-titlebar-border);
+  transition: border-bottom-color var(--ui-duration-med) var(--ui-easing-standard);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px;
+  user-select: none;
+  cursor: default;
+  position: relative;
+  z-index: 1;
+}
+
+.app-window.active .win-titlebar {
+  border-bottom-color: color-mix(in srgb, var(--th-accent) 32%, var(--th-titlebar-border));
+}
+
+.win-title-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Terminal: xterm + unified status strip (hints left, vim mode right) */
+.terminal-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.terminal-status-bar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  min-height: 28px;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 16px 10px;
+  box-sizing: border-box;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--th-overlay-rgb), 0.35) 0%,
+    var(--th-mantle) 100%
+  );
+  border-top: 2px solid var(--th-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-top-color var(--ui-duration-med) var(--ui-easing-standard),
+    opacity var(--ui-duration-fast) var(--ui-easing-standard);
+}
+
+.terminal-status-bar:has(.vim-mode-line.mode-insert) {
+  border-top-color: var(--th-badge-insert);
+}
+
+.terminal-status-bar:has(.vim-mode-line.mode-normal) {
+  border-top-color: var(--th-badge-normal);
+}
+
+.terminal-status-bar:has(.vim-mode-line.mode-visual) {
+  border-top-color: var(--th-badge-visual);
+}
+
+/* Terminal vim rail only — editor footer also uses .vim-mode-line for markup/motifs */
+.terminal-status-bar .vim-mode-line {
+  flex: 1 1 120px;
+  min-width: 5.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 0 12px;
+  border: none;
+  border-left: 1px solid rgba(var(--th-overlay-rgb), 0.55);
+  background: rgba(var(--th-overlay-rgb), 0.22);
+  box-shadow: none;
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.06em;
+}
+
+.vim-mode-glyph {
+  color: var(--th-accent);
+  font-size: var(--ui-text-2xs);
+  opacity: 0.85;
+}
+
+.vim-mode-core {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.vim-mode-dash {
+  color: var(--th-subtext);
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.vim-mode-text {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: var(--ui-text-xs);
+  color: var(--th-text);
+}
+
+.vim-mode-line.mode-insert .vim-mode-text {
+  color: var(--th-badge-insert);
+}
+
+.vim-mode-line.mode-normal .vim-mode-text {
+  color: var(--th-badge-normal);
+}
+
+.vim-mode-line.mode-visual .vim-mode-text {
+  color: var(--th-badge-visual);
+}
+
+.vim-mode-line--off {
+  border-top-width: 1px;
+  border-top-color: var(--th-subtext);
+  opacity: 0.72;
+}
+
+.vim-mode-line--off .vim-mode-text {
+  color: var(--th-text-muted);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  font-size: var(--ui-text-2xs);
+}
+
+.vim-mode-line--off .vim-mode-dash {
+  display: none;
+}
+
+.vim-mode-line--off .vim-mode-glyph {
+  opacity: 0.45;
+}
+
+.terminal-hints {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  align-self: stretch;
+  margin: 0;
+}
+
+.terminal-hint-line {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--ui-text-2xs);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--th-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal-hint-strong {
+  font-weight: 700;
+  color: var(--th-text);
+}
+
+.terminal-hint-sep {
+  flex-shrink: 0;
+  padding: 0 0.28em;
+  color: var(--th-subtext);
+  opacity: 0.65;
+  font-weight: 600;
+  user-select: none;
+}
+
+.terminal-hint-kbd {
+  display: inline-block;
+  padding: 0.05em 0.4em 0.06em;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--th-sky, var(--th-accent));
+  background: rgba(var(--th-overlay-rgb), 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+/* ── Traffic lights (Windows-style: right side, min · max · close) ─────────── */
+
+.win-traffic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.dot:hover { filter: brightness(1.2); transform: scale(1.1); }
+
+.dot-close { background: var(--th-dot-close); }
+.dot-min   { background: var(--th-dot-min); }
+.dot-max   { background: var(--th-dot-max); }

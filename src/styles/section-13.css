@@ -1,0 +1,204 @@
+/* ── Mini-vim editor (edit command) ───────────────────────────────────────── */
+
+.editor-app .editor-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editor-textarea-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-textarea-wrap > .editor-textarea {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Block caret drawn in NORMAL (mirrors xterm `cursorStyle: 'block'` — textarea caret APIs are unreliable). */
+.editor-block-caret {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+  box-sizing: border-box;
+  border: 1px solid rgba(var(--th-accent-rgb), 0.4);
+  background: rgba(var(--th-accent-rgb), 0.22);
+  animation: editor-block-caret-blink 1.06s step-end infinite;
+}
+
+@keyframes editor-block-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.editor-textarea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  resize: none;
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: var(--ui-space-4) var(--ui-space-4) var(--ui-space-4) var(--ui-space-5);
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: var(--ui-text-md);
+  line-height: var(--ui-line-normal);
+  tab-size: 2;
+  background: var(--th-surface1);
+  color: var(--th-text);
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  scrollbar-color: var(--th-scroll-thumb) rgba(0, 0, 0, 0.18);
+}
+
+.editor-textarea:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--th-accent-rgb), 0.2),
+    inset 3px 0 0 rgba(var(--th-accent-rgb), 0.45);
+}
+
+.editor-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+.editor-textarea::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+.editor-textarea::-webkit-scrollbar-thumb {
+  background: var(--th-scroll-thumb);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.editor-textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--th-scroll-thumb-hover);
+}
+
+.editor-cmdline {
+  display: none;
+  flex-shrink: 0;
+  width: 100%;
+  margin: 0;
+  padding: var(--ui-space-2) var(--ui-space-4);
+  box-sizing: border-box;
+  border: none;
+  border-top: 1px solid var(--th-titlebar-border);
+  background: var(--th-mantle);
+  color: var(--th-text);
+  font-family: inherit;
+  font-size: var(--ui-text-sm);
+  letter-spacing: 0.03em;
+}
+
+.editor-cmdline:focus-visible {
+  outline: var(--ui-focus-ring);
+  outline-offset: -2px;
+}
+
+.editor-status {
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+  padding: var(--ui-space-2) var(--ui-space-4);
+  font-size: var(--ui-text-xs);
+  letter-spacing: 0.04em;
+  color: var(--th-text-muted);
+  background: rgba(var(--th-overlay-rgb), 0.42);
+  border-top: 1px solid var(--th-titlebar-border);
+}
+
+/* Editor: interactive vi-like mode line (shares motif with terminal vim bar) */
+.editor-status.vim-mode-line {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow: hidden;
+  border-left: none;
+  border-top: 2px solid var(--th-accent);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--th-overlay-rgb), 0.32) 0%,
+    var(--th-mantle) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.editor-status.vim-mode-line.mode-insert {
+  border-top-color: var(--th-badge-insert);
+}
+
+.editor-status.vim-mode-line.mode-normal {
+  border-top-color: var(--th-badge-normal);
+}
+
+.editor-status.vim-mode-line.mode-command {
+  border-top-color: rgba(var(--th-accent-rgb), 0.85);
+}
+
+.editor-status.vim-mode-line.mode-command .vim-mode-text {
+  color: var(--th-accent);
+}
+
+.editor-mode-meta {
+  flex: 0 0 auto;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  color: var(--th-subtext);
+}
+
+.editor-mode-path {
+  flex: 1 1 0;
+  min-width: 2rem;
+  color: var(--th-text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.editor-mode-dirty {
+  flex: 0 0 auto;
+  color: var(--th-badge-insert);
+  font-size: var(--ui-text-sm);
+  line-height: 1;
+}
+
+.editor-mode-hints {
+  flex: 0 1 42%;
+  min-width: 0;
+  opacity: 0.58;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: auto;
+  font-size: var(--ui-text-2xs);
+  letter-spacing: 0.04em;
+}
+
+.editor-status.editor-status--msg {
+  display: block;
+  border-top-width: 1px;
+  color: var(--th-accent);
+}

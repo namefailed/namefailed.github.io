@@ -1,0 +1,521 @@
+/* ── Welcome guide (first-visit clippy card) ─────────────────────────────────── */
+
+.welcome-guide {
+  position: fixed;
+  /* Align with desktop content edge: monitor inset + monitor padding + dock height + wm gap */
+  bottom: calc(1vh + var(--ui-monitor-pad) + var(--ui-gap-wm) + var(--ui-reserve-dock) + var(--ui-gap-wm));
+  left: calc(1vw + var(--ui-monitor-pad) + var(--ui-gap-wm) + var(--ui-reserve-dock));
+  width: 272px;
+  background: var(--th-surface0, #313244);
+  border: 1px solid var(--th-surface1, #45475a);
+  border-radius: 8px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.12);
+  z-index: 9000;
+  font-size: 12px;
+  color: var(--th-text, #cdd6f4);
+  animation: wg-in 0.38s var(--ui-easing-spring) both;
+}
+
+@keyframes wg-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)     scale(1); }
+}
+
+.welcome-guide--out {
+  animation: wg-out 0.32s var(--ui-easing-smooth) forwards !important;
+}
+
+@keyframes wg-out {
+  from { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 0; transform: translateY(10px) scale(0.95); }
+}
+
+.welcome-guide-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--th-surface1, #45475a);
+}
+
+.welcome-guide-glyph {
+  color: var(--th-accent, #cba6f7);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.welcome-guide-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--th-text, #cdd6f4);
+}
+
+.welcome-guide-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--th-subtext0, #a6adc8);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color var(--ui-duration-fast), background var(--ui-duration-fast);
+}
+
+.welcome-guide-close:hover {
+  color: var(--th-text, #cdd6f4);
+  background: rgba(var(--th-overlay-rgb), 0.15);
+}
+
+.welcome-guide-body {
+  padding: 16px;
+}
+
+.welcome-guide-intro {
+  margin: 0 0 12px;
+  color: var(--th-subtext1, #bac2de);
+  line-height: 1.5;
+  font-size: 11px;
+}
+
+.welcome-guide-tips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.welcome-guide-tip {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--th-text, #cdd6f4);
+  line-height: 1.45;
+  font-size: 11.5px;
+  transition: color 0.25s;
+}
+
+.wg-bullet {
+  color: var(--th-accent, #cba6f7);
+  flex-shrink: 0;
+  font-size: 11px;
+  min-width: 11px;
+  text-align: center;
+  transition: color 0.25s;
+}
+
+.welcome-guide-tip code {
+  background: rgba(var(--th-overlay-rgb), 0.2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--th-green, #a6e3a1);
+}
+
+.welcome-guide-tip kbd {
+  background: rgba(var(--th-overlay-rgb), 0.18);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 10.5px;
+  border: 1px solid rgba(var(--th-overlay-rgb), 0.3);
+}
+
+.wg-tip--done {
+  color: var(--th-green, #a6e3a1);
+}
+
+.wg-tip--done .wg-bullet {
+  color: var(--th-green, #a6e3a1);
+}
+
+@keyframes desktop-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.desktop-tile {
+  position: absolute;
+  width: 76px;
+  padding: 8px 4px 6px;
+  text-align: center;
+  background: rgba(30, 30, 46, 0.82);
+  border: 1px solid rgba(69, 71, 90, 0.7);
+  border-radius: 10px;
+  color: #cdd6f4;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: grab;
+  user-select: none;
+  backdrop-filter: blur(6px);
+  z-index: 1; /* behind tiling panes (z-index: 2), above matrix (z-index: 0) */
+  transition: transform 90ms ease, border-color 130ms ease, box-shadow 130ms ease,
+    background 130ms ease;
+  animation: desktop-tile-in 0.55s var(--ui-easing-out-back) both;
+}
+
+/* Same entrance timing for all folder tiles — stagger made Games feel like a different control */
+.desktop-tile--folder.desktop-tile--portfolio,
+.desktop-tile--folder.desktop-tile--fun,
+.desktop-tile--folder.desktop-tile--games {
+  animation-delay: 0.12s;
+}
+.desktop-tile:hover,
+.desktop-tile:focus-visible {
+  background: rgba(49, 50, 68, 0.92);
+  border-color: rgba(245, 194, 231, 0.6);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,194,231,0.12);
+  outline: none;
+}
+.desktop-tile--dragging {
+  cursor: grabbing;
+  transform: scale(1.05);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+  z-index: 100;
+}
+.desktop-tile--portfolio {
+  border-color: rgba(var(--th-accent-rgb), 0.45);
+}
+.desktop-tile--portfolio:hover,
+.desktop-tile--portfolio:focus-visible {
+  border-color: rgba(var(--th-accent-rgb), 0.9);
+}
+.desktop-tile-glyph {
+  display: block;
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--th-accent);
+  margin-bottom: 3px;
+  line-height: 1;
+}
+.desktop-tile--fun .desktop-tile-glyph {
+  color: var(--th-teal);
+}
+
+/* Folder tiles — base uses teal (apps/games); portfolio variant overrides to accent (pink) */
+.desktop-tile--folder {
+  border-color: rgba(var(--th-teal-rgb), 0.45);
+}
+.desktop-tile--folder:hover,
+.desktop-tile--folder:focus-visible {
+  border-color: rgba(var(--th-teal-rgb), 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-teal-rgb), 0.12);
+}
+.desktop-tile--folder.desktop-tile--portfolio {
+  border-color: rgba(var(--th-accent-rgb), 0.45);
+}
+.desktop-tile--folder.desktop-tile--portfolio:hover,
+.desktop-tile--folder.desktop-tile--portfolio:focus-visible {
+  border-color: rgba(var(--th-accent-rgb), 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-accent-rgb), 0.12);
+}
+/* Games folder — blue accent */
+.desktop-tile--folder.desktop-tile--games {
+  border-color: rgba(var(--th-blue-rgb), 0.45);
+}
+.desktop-tile--folder.desktop-tile--games:hover,
+.desktop-tile--folder.desktop-tile--games:focus-visible {
+  border-color: rgba(var(--th-blue-rgb), 0.9);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--th-blue-rgb), 0.12);
+}
+
+/* 2×2 mini-grid of game icons inside folder tile */
+.folder-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 0 auto 4px;
+  width: 44px;
+}
+.folder-tile-mini {
+  background: rgba(69, 71, 90, 0.6);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  font-size: 8px;
+  color: var(--th-teal);
+}
+/* Portfolio folder preview icons use accent (pink) */
+.desktop-tile--portfolio .folder-tile-mini {
+  color: var(--th-accent);
+}
+/* Games folder preview icons use blue */
+.desktop-tile--games .folder-tile-mini {
+  color: var(--th-blue);
+}
+/* ── Folder popup (Portfolio / Apps / Games) ─────────────── */
+.folder-popup {
+  position: fixed;
+  background: rgba(24, 24, 37, 0.94);
+  border: 1px solid rgba(69, 71, 90, 0.8);
+  border-radius: 14px;
+  padding: 14px 12px 10px;
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  animation: folder-popup-in-above 160ms cubic-bezier(0.34, 1.24, 0.54, 1) both;
+}
+
+.folder-popup[data-placement='below'] {
+  animation-name: folder-popup-in-below;
+}
+
+@keyframes folder-popup-in-above {
+  from { transform: scale(0.88) translateY(6px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);   opacity: 1; }
+}
+
+@keyframes folder-popup-in-below {
+  from { transform: scale(0.88) translateY(-6px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+.folder-popup-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #585b70;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.folder-popup-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.folder-popup-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px 6px;
+  border-radius: 10px;
+  background: rgba(49, 50, 68, 0.6);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  color: #cdd6f4;
+  transition: border-color 120ms, background 120ms;
+  min-width: 64px;
+}
+.folder-popup-item:hover,
+.folder-popup-item:focus-visible {
+  border-color: rgba(var(--th-teal-rgb), 0.7);
+  background: rgba(49, 50, 68, 0.9);
+  outline: none;
+}
+.folder-popup-item-glyph {
+  font-size: 22px;
+  color: var(--th-teal);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+/* Portfolio folder popup: glyphs and hover use accent (pink) */
+.folder-popup[data-opened-by="portfolio-folder"] .folder-popup-item-glyph {
+  color: var(--th-accent);
+}
+.folder-popup[data-opened-by="portfolio-folder"] .folder-popup-item:hover,
+.folder-popup[data-opened-by="portfolio-folder"] .folder-popup-item:focus-visible {
+  border-color: rgba(var(--th-accent-rgb), 0.7);
+}
+/* Games folder popup: glyphs and hover use blue */
+.folder-popup[data-opened-by="games-folder"] .folder-popup-item-glyph {
+  color: var(--th-blue);
+}
+.folder-popup[data-opened-by="games-folder"] .folder-popup-item:hover,
+.folder-popup[data-opened-by="games-folder"] .folder-popup-item:focus-visible {
+  border-color: rgba(var(--th-blue-rgb), 0.7);
+}
+.folder-popup-item-label {
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: center;
+}
+/* ─── hint bubbles ────────────────────────────────────────── */
+.hint-bubble {
+  position: absolute;
+  background: var(--th-surface1);
+  border: 1px solid rgba(var(--th-accent-rgb, 203,166,247), 0.35);
+  color: var(--th-text, #cdd6f4);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 50;
+  animation: hint-pop 220ms ease;
+}
+.hint-bubble-close {
+  background: transparent;
+  border: 0;
+  color: var(--th-subtext0, #a6adc8);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 4px;
+  opacity: 0.7;
+  transition: opacity var(--ui-duration-fast), color var(--ui-duration-fast);
+}
+.hint-bubble-close:hover { opacity: 1; color: var(--th-text, #cdd6f4); }
+
+@keyframes hint-pop {
+  from { transform: translateY(4px) scale(0.95); opacity: 0; }
+  to   { transform: translateY(0)   scale(1);    opacity: 1; }
+}
+/* ─── p5.js first-open tip card ──────────────────────────────── */
+.p5-tip {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  width: 238px;
+  z-index: 20;
+  background: var(--th-surface1);
+  border: 1px solid var(--th-surface2, #585b70);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--th-accent-rgb, 203,166,247), 0.06);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  animation: wg-in 0.28s var(--ui-easing-smooth) both;
+  pointer-events: auto;
+}
+
+.p5-tip--out {
+  animation: wg-out 0.28s var(--ui-easing-smooth) forwards !important;
+}
+
+.p5-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--th-surface1, #45475a);
+}
+
+.p5-tip-glyph {
+  color: var(--th-accent, #cba6f7);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.p5-tip-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--th-text, #cdd6f4);
+}
+
+.p5-tip-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--th-subtext0, #a6adc8);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color var(--ui-duration-fast), background var(--ui-duration-fast);
+}
+.p5-tip-close:hover {
+  color: var(--th-text, #cdd6f4);
+  background: rgba(var(--th-overlay-rgb), 0.15);
+}
+
+.p5-tip-body {
+  padding: 10px 14px 8px;
+}
+
+.p5-tip-intro {
+  margin: 0 0 8px;
+  color: var(--th-subtext1, #bac2de);
+  line-height: 1.5;
+  font-size: 11px;
+}
+
+.p5-tip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p5-tip-list li {
+  color: var(--th-text, #cdd6f4);
+  line-height: 1.4;
+  font-size: 11px;
+}
+
+.p5-tip-list strong {
+  color: var(--th-accent, #cba6f7);
+  font-weight: 600;
+}
+
+.p5-tip-footer {
+  padding: 6px 14px 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.p5-tip-gotit {
+  background: rgba(var(--th-accent-rgb, 203,166,247), 0.12);
+  border: 1px solid rgba(var(--th-accent-rgb, 203,166,247), 0.3);
+  color: var(--th-accent, #cba6f7);
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background var(--ui-duration-fast), border-color var(--ui-duration-fast);
+}
+.p5-tip-gotit:hover {
+  background: rgba(var(--th-accent-rgb, 203,166,247), 0.2);
+  border-color: rgba(var(--th-accent-rgb, 203,166,247), 0.5);
+}
+/* ─── settings panel action buttons ──────────────────────────── */
+.yasb-settings-action {
+  background: transparent;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  width: 100%;
+  text-align: center;
+}
+.yasb-settings-action:hover { border-color: #f5c2e7; }
+.yasb-settings-action--danger {
+  border-color: rgba(243, 139, 168, 0.35);
+  color: #f38ba8;
+}
+.yasb-settings-action--danger:hover {
+  border-color: #f38ba8;
+  background: rgba(243, 139, 168, 0.1);
+}

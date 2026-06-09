@@ -1,0 +1,12 @@
+/* ── Window title (left, truncated like Windows) ───────────────────────────── */
+
+.win-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--th-subtext);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

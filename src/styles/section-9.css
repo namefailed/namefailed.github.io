@@ -1,0 +1,57 @@
+/* ── xterm overrides ───────────────────────────────────────────────────────── */
+/*
+ * xterm's bundled CSS sets `.xterm .xterm-viewport { background-color: #000 }`.
+ * That rule has specificity 0-2-0 (two classes).  Our overrides must match or
+ * exceed that depth so the theme colour wins regardless of cascade order.
+ */
+
+.xterm { height: 100%; }
+
+/* xterm injects its stylesheet at runtime (appended <style> tag), so even equal-specificity
+ * rules in our static CSS lose to it in cascade order. !important is the correct override. */
+.xterm .xterm-viewport {
+  overflow-y: auto !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+  scrollbar-color: var(--th-scroll-thumb) rgba(0, 0, 0, 0.2);
+  /* Fills any sub-row gap between the canvas bottom edge and the viewport edge. */
+  background-color: var(--th-surface1) !important;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 0 6px 6px 0;
+}
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background: var(--th-scroll-thumb);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--th-scroll-thumb-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+html.retro-fx #terminal::before,
+html.retro-fx .terminal-host::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 1;
+}
+
+html.retro-fx .xterm-screen {
+  filter:
+    drop-shadow(0 0 8px rgba(var(--th-blue-rgb), 0.12))
+    drop-shadow(0 0 2px rgba(var(--th-accent-rgb), 0.10));
+  animation: phosphor-flicker 6s infinite;
+}
