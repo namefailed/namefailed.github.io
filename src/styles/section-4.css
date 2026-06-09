@@ -1,4 +1,4 @@
-/* ── Splitters (drag-to-resize handles) ───────────────────────────────────── */
+/* ── Splitters (BSP column + within-column drag handles) ───────────────────── */
 
 .splitter {
   flex: 0 0 var(--ui-gap-wm);
@@ -8,7 +8,6 @@
   touch-action: none;
 }
 
-.splitter-h { cursor: col-resize; }
 .splitter-v { cursor: col-resize; flex-basis: var(--ui-gap-wm); }
 
 /* Visible grip bar in the middle of each splitter */
@@ -21,16 +20,6 @@
     background var(--ui-duration-fast) var(--ui-easing-smooth),
     box-shadow var(--ui-duration-med) var(--ui-easing-emph),
     transform var(--ui-duration-med) var(--ui-easing-spring);
-}
-
-.splitter-h::before {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 4px;
-  height: clamp(36px, 28%, var(--ui-touch-min));
-  border-radius: 3px;
-  box-shadow: 0 0 0 1px rgba(var(--th-overlay-rgb), 0.35);
 }
 
 .splitter-v::before {

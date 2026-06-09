@@ -1,5 +1,5 @@
 /**
- * Pointer-based splitters (`h`: terminal vs stack width; `v`: height above pane). Mouse + touch.
+ * Pointer-based splitters for BSP tiling (`h`: column width; `v`: row height). Mouse + touch.
  */
 
 export type SplitterOrientation = 'h' | 'v'
