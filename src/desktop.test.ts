@@ -3,13 +3,7 @@
  * Uses a lightweight DOM shim — Vitest runs in Node, not jsdom.
  */
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
-import {
-  PORTFOLIO_PROJECTS,
-  linksAndContactLines,
-  resumeWindowSplitPayload,
-  whoamiAboutLines,
-} from './content/portfolio'
-import { tileTitleForPortfolioCommand } from './launcher-catalog'
+import { windowSpecForCommand } from './desktop-window-spec'
 
 vi.mock('./os-sound', () => ({ playOsSound: vi.fn() }))
 vi.mock('./welcome-guide', () => ({ mountWelcomeGuide: vi.fn() }))
@@ -376,38 +370,11 @@ function mountDesktop(): { desktop: InstanceType<typeof Desktop>; root: FakeEl; 
   return { desktop, root, rightPane, termWin }
 }
 
-function resumeSpec() {
-  return {
-    command: 'resume' as const,
-    title: tileTitleForPortfolioCommand('resume'),
-    ...resumeWindowSplitPayload(),
-  }
-}
+const resumeSpec = () => windowSpecForCommand('resume')
+const whoamiSpec = () => windowSpecForCommand('whoami')
+const linksSpec = () => windowSpecForCommand('links')
 
-function whoamiSpec() {
-  return {
-    command: 'whoami' as const,
-    title: tileTitleForPortfolioCommand('whoami'),
-    content: whoamiAboutLines(),
-  }
-}
-
-function linksSpec() {
-  return {
-    command: 'links' as const,
-    title: tileTitleForPortfolioCommand('links'),
-    content: linksAndContactLines(),
-  }
-}
-
-function projectsSpec() {
-  return {
-    command: 'projects' as const,
-    title: tileTitleForPortfolioCommand('projects'),
-    content: [] as string[],
-    projectCards: PORTFOLIO_PROJECTS,
-  }
-}
+const projectsSpec = () => windowSpecForCommand('projects')
 
 function ctrlKey(key: string): void {
   const ev = {
