@@ -1,6 +1,6 @@
 /**
- * Speech-bubble hints anchored to portfolio tiles on first visit.
- * Persistent until clicked or until "Show hints again" is invoked.
+ * Speech-bubble hints anchored to desktop folder tiles on first visit.
+ * Persistent until dismissed; cleared by `cookies clear` / first-visit reset.
  */
 
 import { escapeHtml } from './window-chrome'
@@ -12,10 +12,9 @@ export interface Hint {
 }
 
 export const HINTS: Hint[] = [
-  { targetCmd: 'resume',   text: '← start here · full resume' },
-  { targetCmd: 'projects', text: "← things I've built" },
-  { targetCmd: 'whoami',   text: '← whoami, in detail' },
-  { targetCmd: 'links',    text: '← reach out' },
+  { targetCmd: 'portfolio-folder', text: '← résumé, projects, contact' },
+  { targetCmd: 'apps-folder',      text: '← terminal, editor, files' },
+  { targetCmd: 'games-folder',     text: '← cube, snake, p5 sketches' },
 ]
 
 const KEY_PREFIX = 'mrgrey-hint-'

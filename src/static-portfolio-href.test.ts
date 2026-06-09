@@ -1,5 +1,38 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { resolveStaticPortfolioHref } from './static-portfolio-href'
+import { resolveDesktopShellHref, resolveStaticPortfolioHref } from './static-portfolio-href'
+
+describe('resolveDesktopShellHref', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('returns / when window is undefined', () => {
+    vi.stubGlobal('window', undefined)
+    expect(resolveDesktopShellHref()).toBe('/')
+  })
+
+  it('resolves http origin root', () => {
+    vi.stubGlobal('window', {
+      location: {
+        protocol: 'https:',
+        origin: 'https://mrgrey.site',
+        href: 'https://mrgrey.site/static/',
+      },
+    })
+    expect(resolveDesktopShellHref()).toBe('https://mrgrey.site/')
+  })
+
+  it('resolves file: protocol to parent index.html', () => {
+    vi.stubGlobal('window', {
+      location: {
+        protocol: 'file:',
+        href: 'file:///C:/Users/dev/static/index.html',
+      },
+    })
+    expect(resolveDesktopShellHref()).toContain('index.html')
+    expect(resolveDesktopShellHref()).not.toContain('static')
+  })
+})
 
 describe('resolveStaticPortfolioHref', () => {
   afterEach(() => {

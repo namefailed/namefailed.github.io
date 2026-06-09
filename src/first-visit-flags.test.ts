@@ -48,14 +48,13 @@ describe('clearFirstVisitFlags', () => {
     expect(() => clearFirstVisitFlags()).not.toThrow()
   })
 
-  it('covers exactly boot-splash, guide, toasts, and all 4 hint keys', () => {
-    // Sanity check: the union is the full set we expect for the intro flow
+  it('covers exactly boot-splash, guide, toasts, and all folder hint keys', () => {
     const hintKeys = HINTS.map(h => hintKey(h.targetCmd))
     expect(allFirstVisitKeys).toContain(BOOT_SPLASH_KEY)
     expect(allFirstVisitKeys).toContain(GUIDE_KEY)
     expect(allFirstVisitKeys).toContain(INTRO_TOASTS_KEY)
-    expect(hintKeys.length).toBe(4)
-    expect(allFirstVisitKeys.length).toBe(7) // 3 + 4 hints
+    expect(hintKeys.length).toBe(3)
+    expect(allFirstVisitKeys.length).toBe(6) // 3 + 3 hints
   })
 
   it('does not remove unrelated keys (e.g. theme, wallpaper, apt)', () => {

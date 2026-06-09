@@ -37,6 +37,7 @@ import { randomPick } from './random-pick'
 import { EDITOR_LAUNCH_ALIASES, TILED_WINDOW_COMMANDS } from './launcher-catalog'
 import { createWindowChrome } from './window-chrome'
 import { resolveStaticPortfolioHref } from './static-portfolio-href'
+import { prefersReducedMotion } from './prefers-reduced-motion'
 
 /**
  * Lines shown as the terminal's welcome message (motd).
@@ -154,10 +155,10 @@ export class TerminalApp {
 
   /** Animate the MOTD banner line-by-line, then drop to the prompt. */
   private async showMotd(): Promise<void> {
-    // Reveal each banner line with a brief pause for a typewriter feel
+    const reduced = prefersReducedMotion()
     for (const line of BANNER) {
       this.xterm.writeln(line)
-      await sleep(55)
+      if (!reduced) await sleep(55)
     }
     // Subtitle + help hint appear instantly after the banner completes
     this.xterm.writeln('')

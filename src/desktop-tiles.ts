@@ -6,6 +6,7 @@
 
 import { storageGet, storageSet, storageRemove } from './storage'
 import { computeFolderPopupPosition } from './folder-popup-layout'
+import { mountHintBubbles } from './hint-bubbles'
 
 export const ZONE_PORTFOLIO = 'portfolio' as const
 export const ZONE_TOOLS = 'tools' as const
@@ -156,6 +157,22 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
     opts.host.appendChild(el)
     folderEls.push(el)
   }
+
+  mountHintBubbles({
+    host: opts.host,
+    resolveAnchor: (cmd) => {
+      const tile = opts.host.querySelector<HTMLElement>(`[data-cmd="${cmd}"]`)
+      if (!tile) return null
+      const hostRect = opts.host.getBoundingClientRect()
+      const tileRect = tile.getBoundingClientRect()
+      return new DOMRect(
+        tileRect.left - hostRect.left,
+        tileRect.top - hostRect.top,
+        tileRect.width,
+        tileRect.height,
+      )
+    },
+  })
 
   // Close popup when clicking outside any folder tile
   document.addEventListener('pointerdown', (e) => {

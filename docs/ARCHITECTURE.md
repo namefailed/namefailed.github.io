@@ -49,7 +49,7 @@ Three.js ships exclusively in the `rubik-window` lazy chunk (~139 kB gzipped). I
 | `ansi.ts` | ANSI-to-HTML conversion for rendering terminal output |
 | `ascii.ts` | ASCII art strings used in boot splash and neofetch |
 | `boot-splash.ts` | Scripted boot animation lines |
-| `hint-bubbles.ts` | Dismissable first-visit hint overlays |
+| `hint-bubbles.ts` | Dismissable first-visit hints on desktop folder tiles |
 | `intro-toasts.ts` | Auto-dismiss toast notifications on first visit |
 | `matrix-bg.ts` | Canvas matrix rain animation with visibility pause optimization |
 | `random-pick.ts` | Seeded random / weighted pick utilities |
@@ -110,7 +110,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-422 tests across 27 test files (428 unit assertions; plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+470 tests across 32 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|
@@ -124,7 +124,11 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `content/portfolio.test.ts` | Portfolio content assembly |
 | `desktop-tiles.test.ts` | Tile layout, drag snap, persistence |
 | `desktop.test.ts` | Window manager: focus, keyboard chords, tile limit |
+| `folder-popup-layout.test.ts` | Folder popup placement vs viewport edges |
+| `live-site-screenshot.test.ts` | mShots preview URL builder |
+| `prefers-reduced-motion.test.ts` | Reduced-motion media query probe |
 | `static/static-motion.test.ts` | Brochure typewriter/counter + reduced motion |
+| `static-portfolio-href.test.ts` | Classic portfolio path resolution |
 | `first-visit-flags.test.ts` | First-visit onboarding flags |
 | `hint-bubbles.test.ts` | Hint bubble show/dismiss logic |
 | `intro-toasts.test.ts` | Toast sequencing |
@@ -135,6 +139,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 | `random-pick.test.ts` | Random/weighted pick |
 | `retro-fx.test.ts` | CRT toggle |
 | `rubik-model.test.ts` | Cube model: all moves, inverses, scramble, algorithms |
+| `rubik-stickers-layout.test.ts` | 3D sticker layout ↔ model move lock |
 | `storage.test.ts` | localStorage wrapper, JSON serialization |
 | `terminal-motd.test.ts` | MOTD rendering |
 | `theme-control.test.ts` | Theme pack apply/persist |
@@ -146,7 +151,7 @@ Run tests: `npm test` · coverage: `npm run test:coverage` · lint: `npm run lin
 
 ## Stylesheets
 
-Desktop shell CSS lives under `src/styles/` (36 section files). `src/style.css` is an `@import` hub only — regenerate with `node scripts/split-style-css.mjs` after editing the monolith backup if needed.
+Desktop shell CSS lives under `src/styles/` (`section.css` plus `section-2.css` … `section-22.css`). `src/style.css` is an `@import` hub only — regenerate with `node scripts/split-style-css.mjs` after editing the monolith backup if needed.
 
 Brochure styles remain in `src/static/static.css` (`--plain-*` tokens).
 

@@ -1,3 +1,19 @@
+/** Resolves the desktop shell URL from `/static/` (or `file:` brochure pages). */
+export function resolveDesktopShellHref(): string {
+  const configuredBase = import.meta.env.BASE_URL ?? '/'
+  const basePath = configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`
+
+  if (typeof window === 'undefined') return '/'
+  try {
+    if (window.location.protocol === 'file:') {
+      return new URL('../index.html', window.location.href).href
+    }
+    return new URL(basePath, window.location.origin).href
+  } catch {
+    return new URL('../index.html', window.location.href).href
+  }
+}
+
 /** Resolves `/static/` for http(s); uses `static/index.html` next to `index.html` for `file:` pages. */
 export function resolveStaticPortfolioHref(): string {
   const configuredBase = import.meta.env.BASE_URL ?? '/'

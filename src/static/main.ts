@@ -10,6 +10,9 @@ import {
   type PlainProject,
   SKILLS_PRIMARY,
 } from './static-data'
+import { liveSiteScreenshotUrl } from '../live-site-screenshot'
+import { resolveDesktopShellHref } from '../static-portfolio-href'
+import { animateCounter, typewriter } from './static-motion'
 
 // ── Data helpers ───────────────────────────────────────────────────────────
 
@@ -23,18 +26,6 @@ function plainProjectsFromPortfolio(): PlainProject[] {
     thumb: p.thumb,
     skipLiveScreenshot: p.skipLiveScreenshot,
   }))
-}
-
-/** WordPress mShots — same source used by the main SPA's portfolio window */
-function liveShotUrl(web: string): string {
-  return `https://s0.wp.com/mshots/v1/${encodeURIComponent(web)}?w=900`
-}
-
-function spaHomeHref(): string {
-  if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
-    return new URL('../index.html', window.location.href).href
-  }
-  return '../'
 }
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
@@ -75,19 +66,6 @@ function mountProgressBar(): void {
   update()
 }
 
-// ── Counter animation ──────────────────────────────────────────────────────
-
-function animateCounter(numEl: HTMLElement, target: number, suffix: string, durationMs = 950): void {
-  const start = performance.now()
-  const step = (now: number) => {
-    const t = Math.min(1, (now - start) / durationMs)
-    const eased = 1 - Math.pow(1 - t, 3)
-    numEl.textContent = `${Math.round(eased * target)}${suffix}`
-    if (t < 1) requestAnimationFrame(step)
-  }
-  requestAnimationFrame(step)
-}
-
 // ── Stats strip ────────────────────────────────────────────────────────────
 
 function statsStrip(): HTMLElement {
@@ -115,25 +93,6 @@ function statsStrip(): HTMLElement {
     obs.observe(wrap)
   }
   return wrap
-}
-
-// ── Typewriter ─────────────────────────────────────────────────────────────
-
-function typewriter(target: HTMLElement, text: string, speedMs = 22): void {
-  target.textContent = ''
-  const cursor = el('span', 'plain-cursor')
-  target.appendChild(cursor)
-  let i = 0
-  const tick = () => {
-    if (i < text.length) {
-      cursor.insertAdjacentText('beforebegin', text[i++]!)
-      setTimeout(tick, speedMs + Math.random() * 14)
-    } else {
-      setTimeout(() => cursor.classList.add('plain-cursor--done'), 2400)
-    }
-  }
-  // Start after the fade-in transition completes (~550ms + margin)
-  setTimeout(tick, 750)
 }
 
 // ── Avatar ─────────────────────────────────────────────────────────────────
@@ -220,7 +179,7 @@ function projectCard(project: PlainProject, delay = 0): HTMLElement {
       ? project.thumb
       : `/${project.thumb}`
     : null
-  const liveShot = project.url && !project.skipLiveScreenshot ? liveShotUrl(project.url) : null
+  const liveShot = project.url && !project.skipLiveScreenshot ? liveSiteScreenshotUrl(project.url) : null
 
   if (thumbPath || liveShot) {
     // Wrap in <a> when a live URL is available so the whole image is clickable
@@ -400,7 +359,7 @@ function mount(): void {
 
   mountProgressBar()
 
-  const homeHref = spaHomeHref()
+  const homeHref = resolveDesktopShellHref()
 
   const NAV_SECTIONS: NavSection[] = [
     { id: 'sec-skills',     label: 'Skills'     },

@@ -5,6 +5,7 @@
 
 import { escapeHtml } from './window-chrome'
 import { storageGet, storageSet } from './storage'
+import { prefersReducedMotion } from './prefers-reduced-motion'
 
 export type BootLineKind = 'info' | 'ok' | 'warn' | 'err'
 
@@ -42,7 +43,7 @@ export const BOOT_LINES: BootLine[] = [
 
   { ts: '0.812', kind: 'ok',   text: 'sound subsystem armed (web-audio)',            section: 'system services' },
   { ts: '0.867', kind: 'ok',   text: 'systray + toasts initialized',                 section: 'system services' },
-  { ts: '0.912', kind: 'ok',   text: 'hint manager: 4 first-visit bubbles queued',   section: 'system services' },
+  { ts: '0.912', kind: 'ok',   text: 'hint manager: 3 folder bubbles queued',      section: 'system services' },
   { ts: '0.978', kind: 'ok',   text: 'toast cascade: 4 messages scheduled',         section: 'system services' },
 
   { ts: '1.103', kind: 'info', text: 'all subsystems green' },
@@ -113,9 +114,10 @@ export async function runBootSplash(opts: BootSplashOptions = {}): Promise<void>
     try { await document.fonts.load('400 1em "JetBrains Mono"') } catch { /* use fallback */ }
   }
 
-  const lineInterval = opts.lineInterval ?? 180
-  const holdMs       = opts.holdMs       ?? 700
-  const fadeMs       = opts.fadeMs       ?? 320
+  const reduced = prefersReducedMotion()
+  const lineInterval = reduced ? 0 : (opts.lineInterval ?? 180)
+  const holdMs       = reduced ? 0 : (opts.holdMs       ?? 700)
+  const fadeMs       = reduced ? 0 : (opts.fadeMs       ?? 320)
 
   const root = document.createElement('div')
   root.className = 'boot-splash'
@@ -146,13 +148,18 @@ export async function runBootSplash(opts: BootSplashOptions = {}): Promise<void>
   root.appendChild(footer)
   document.body.appendChild(root)
 
-  // Reveal lines sequentially
-  for (let i = 0; i < rows.length; i++) {
-    await wait(lineInterval)
-    rows[i].classList.add('boot-line--in')
+  if (reduced) {
+    for (const row of rows) row.classList.add('boot-line--in')
+    footer.classList.add('boot-footer--in')
     body.scrollTop = body.scrollHeight
+  } else {
+    for (let i = 0; i < rows.length; i++) {
+      await wait(lineInterval)
+      rows[i].classList.add('boot-line--in')
+      body.scrollTop = body.scrollHeight
+    }
+    footer.classList.add('boot-footer--in')
   }
-  footer.classList.add('boot-footer--in')
 
   await wait(holdMs)
   root.classList.add('boot-splash--out')

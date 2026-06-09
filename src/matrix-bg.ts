@@ -3,6 +3,7 @@
 import { getMatrixRainPalette } from './theme-control'
 import { storageGet, storageSet } from './storage'
 import { WALLPAPER_KEY, WALLPAPER_DEFAULT } from './wallpaper'
+import { prefersReducedMotion } from './prefers-reduced-motion'
 
 const STORAGE_KEY = 'mrgrey-matrix-bg'
 
@@ -105,6 +106,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const stored = readStoredMatrix()
   // Default OFF — wallpaper provides the backdrop; user opts in via settings
   let enabled = stored !== null ? stored : false
+  const reduceMotion = prefersReducedMotion()
 
   // Use whatever wallpaper is currently set; fall back to the default asset.
   // CSS gradient strings are valid wallpaper values but can't be used as img.src —
@@ -140,7 +142,14 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   let canvasVisible = enabled
 
   function shouldRun(): boolean {
-    return enabled && docVisible && canvasVisible
+    return enabled && docVisible && canvasVisible && !reduceMotion
+  }
+
+  function paintStaticBackdrop(): void {
+    if (width < 2 || height < 2) return
+    drawBackdrop(ctx, width, height, bgImg)
+    ctx.fillStyle = readCssVar('--th-matrix-fade', 'rgba(17, 17, 27, 0.11)')
+    ctx.fillRect(0, 0, width, height)
   }
 
   function layout(): void {
@@ -225,6 +234,11 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
 
   function startLoop(): void {
     stopLoop()
+    if (!enabled) return
+    if (reduceMotion) {
+      paintStaticBackdrop()
+      return
+    }
     if (!shouldRun()) return
     raf = requestAnimationFrame(loop)
   }
@@ -246,6 +260,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
 
   const ro = new ResizeObserver(() => {
     layout()
+    if (reduceMotion && enabled) paintStaticBackdrop()
   })
   ro.observe(root)
 
