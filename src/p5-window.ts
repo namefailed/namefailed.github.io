@@ -381,7 +381,7 @@ export class P5Window {
     cancelBtn.addEventListener('click', () => modal.remove())
 
     const okBtn = document.createElement('button')
-    okBtn.className = 'os-toolbar-btn p5-vfs-modal-ok'
+    okBtn.className = 'os-toolbar-btn os-toolbar-btn--accent'
     okBtn.textContent = 'Open'
     const doOpen = (): void => {
       const path = input.value.trim()

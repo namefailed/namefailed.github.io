@@ -114,7 +114,7 @@ Returning visitors get a fresh tree; old data is orphaned under the previous key
 
 ### Edit desktop CSS
 
-Desktop styles live in `src/styles/section*.css`, imported via `src/style.css`.
+Desktop styles live in `src/styles/*.css` (semantic names like `01-foundation.css`, `21-p5.css`), imported via `src/style.css`.
 
 Regenerate split files from monolith backup (if used):
 

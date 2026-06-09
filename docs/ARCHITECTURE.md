@@ -203,7 +203,7 @@ Vite entry points (`vite.config.ts`):
 
 | Area | Location |
 |------|----------|
-| Desktop | `src/styles/section.css` + `section-2.css` … `section-22.css` via `src/style.css` |
+| Desktop | `src/styles/01-foundation.css` … `23-boot-splash.css` via `src/style.css` |
 | Brochure | `src/static/static.css` (`--plain-*` tokens) |
 
 Regenerate split CSS: `node scripts/split-style-css.mjs`

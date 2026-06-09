@@ -46,6 +46,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
       `SQLite catalog, webhooks, and CLI. Rust + Tauri + egui. Open source (MIT/Apache-2.0).`,
     ],
     repo: 'https://github.com/namefailed/phoneme',
+    web: 'https://mrgrey.site/phoeme/',
     thumb: 'img/portfolio-phoneme.png',
     previewKind: 'app',
     thumbPosition: 'center center',

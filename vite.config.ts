@@ -17,6 +17,7 @@ export default defineConfig({
       input: {
         main: path.resolve(repoRoot, 'index.html'),
         static: path.resolve(repoRoot, 'static/index.html'),
+        phoeme: path.resolve(repoRoot, 'phoeme/index.html'),
       },
     },
     chunkSizeWarningLimit: 900,
@@ -24,6 +25,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    setupFiles: ['src/test/vitest-dom-setup.ts'],
     clearMocks: true,
     coverage: {
       provider: 'v8',

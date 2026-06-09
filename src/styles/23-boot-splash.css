@@ -1,0 +1,99 @@
+/* ── Boot splash ───────────────────────────────────────────────────────────── */
+
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--th-surface1);
+  color: var(--th-text);
+  font-family: var(--ui-font-mono);
+  display: flex;
+  flex-direction: column;
+}
+
+.boot-splash--out {
+  animation: boot-fade-out 320ms ease forwards;
+}
+
+.boot-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 48px 16px;
+}
+
+.boot-logo {
+  /* display:table + margin:auto centres the block without per-line centering.
+     white-space:pre preserves the ASCII art structure; text-align:left keeps
+     each line anchored to the left of the block so column widths stay intact. */
+  display: table;
+  margin: 0 auto 12px;
+  font-family: var(--ui-font-mono);
+  font-size: clamp(10px, 1.6vw, 18px);
+  line-height: 1.15;
+  white-space: pre;
+  color: var(--th-accent);
+  text-align: left;
+  font-weight: 400;
+  text-shadow: 0 0 12px rgba(var(--th-accent-rgb), 0.18);
+}
+
+.boot-logo-sub {
+  text-align: center;
+  color: var(--th-teal);
+  font-size: 13px;
+  letter-spacing: 4px;
+  margin-bottom: 24px;
+}
+
+.boot-section {
+  color: var(--th-subtext);
+  margin-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 10px;
+  /* Start hidden — boot-line--in reveals it in sequence alongside boot-line rows */
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.boot-line {
+  color: var(--th-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.boot-line--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.boot-ts   { color: var(--th-subtext); }
+.boot-info { color: var(--th-teal); }
+.boot-ok   { color: var(--th-dot-max); }
+.boot-warn { color: var(--th-dot-min); }
+.boot-err  { color: var(--th-dot-close); }
+
+.boot-footer {
+  border-top: 1px solid var(--th-surface0);
+  padding: 14px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  background: var(--th-mantle);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.boot-footer--in { opacity: 1; }
+.boot-footer-welcome { color: var(--th-accent); font-weight: bold; }
+.boot-footer-hint    { color: var(--th-subtext); font-style: italic; }
+.boot-footer-hint b  { color: var(--th-badge-visual); }
+
+@keyframes boot-fade-out {
+  to { opacity: 0; }
+}

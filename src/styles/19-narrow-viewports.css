@@ -1,0 +1,131 @@
+/* ── Narrow viewports (phones) ─────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  #panes {
+    flex-direction: column;
+  }
+
+  #right-pane {
+    flex: 1;
+    min-height: 120px;
+    width: 100%;
+  }
+
+  .yasb-inner {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .yasb-cluster.yasb-center {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+    justify-content: center;
+  }
+
+  .wm-task-btn {
+    min-height: 36px;
+    padding: 6px 8px;
+  }
+
+  .wm-task-label {
+    max-width: 72px;
+  }
+
+  .yasb-btn,
+  .yasb-clock-btn,
+  .yasb-sound-btn {
+    min-height: var(--ui-touch-min);
+  }
+
+  #launcher-panel {
+    margin: var(--ui-space-3);
+    padding: var(--ui-space-6) var(--ui-space-4) var(--ui-space-8);
+    gap: var(--ui-space-5);
+    border-radius: var(--ui-radius-md-inner);
+  }
+
+  .launcher-icon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--ui-space-4);
+  }
+
+  .launcher-search-wrap {
+    max-width: none;
+  }
+
+  .browser-app .browser-toolbar {
+    flex-wrap: wrap;
+    row-gap: var(--ui-space-2);
+    align-items: flex-start;
+  }
+
+  .browser-app .browser-toolbar-nav {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .browser-app .browser-url-row {
+    flex: 1 1 260px;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: var(--ui-space-2);
+  }
+
+  .browser-app .browser-omni {
+    width: 100%;
+  }
+
+  .browser-app .browser-url-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .browser-app .browser-url-actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .browser-app .browser-url-actions .browser-icon-btn {
+    flex: 1;
+    height: max(38px, var(--ui-touch-min, 44px));
+    font-size: 16px;
+  }
+
+  .browser-bookmarks-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .file-explorer-app .fe-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .file-explorer-app .fe-cluster--view {
+    margin-left: 0;
+    flex-basis: 100%;
+    justify-content: stretch;
+  }
+
+  .file-explorer-app .fe-sort-select {
+    flex: 1 1 auto;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .file-explorer-app .fe-path-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .file-explorer-app .fe-path {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+}

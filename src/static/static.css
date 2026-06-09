@@ -407,11 +407,12 @@ a:hover { color: var(--plain-accent); }
 
 .plain-lede {
   text-align: left;
-  margin: 0 0 0.5rem;
+  width: 100%;
+  max-width: var(--plain-max-prose);
+  margin: 0;
   color: var(--plain-muted);
   font-size: 1.02rem;
   line-height: 1.74;
-  align-self: stretch;
 }
 
 /* ── Section headings ────────────────────────────────────────────────────── */
@@ -744,18 +745,41 @@ a:hover { color: var(--plain-accent); }
 /* ── Contact block ───────────────────────────────────────────────────────── */
 
 .plain-contact-block {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   border-radius: var(--plain-radius-card);
   border: 1px solid var(--plain-edge);
   background: var(--plain-surface);
   align-self: stretch;
+  overflow: hidden;
+}
+
+.plain-contact-links {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.15rem;
+  padding: 1.35rem 1.5rem;
+}
+
+.plain-contact-form-section {
+  padding: 1.35rem 1.5rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--plain-edge);
+}
+
+.plain-contact-form-section .contact-form--plain {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .plain-contact-row {
-  display: grid;
-  gap: 0.12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .plain-contact-label {
@@ -770,6 +794,19 @@ a:hover { color: var(--plain-accent); }
 .plain-contact-row a {
   font-weight: 600;
   font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--plain-link);
+  text-decoration: none;
+  word-break: break-word;
+  transition:
+    color 0.15s ease,
+    transform 0.12s var(--plain-ease);
+}
+
+.plain-contact-row a:hover {
+  color: var(--plain-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
@@ -906,7 +943,7 @@ a:hover { color: var(--plain-accent); }
 
   .plain-hero-intro {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     gap: 2.25rem 2.75rem;
     margin-bottom: 0.35rem;
   }
@@ -920,20 +957,26 @@ a:hover { color: var(--plain-accent); }
 
   .plain-avatar-wrap {
     margin-bottom: 0;
+    margin-top: 0.35rem;
   }
 
   .plain-lede {
-    max-width: var(--plain-max-prose);
+    max-width: none;
   }
 
   .plain-skills {
     justify-content: flex-start;
   }
 
-  .plain-contact-block {
-    display: grid;
+  .plain-contact-links {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem 2rem;
+    column-gap: 2.5rem;
+    row-gap: 1.25rem;
+  }
+
+  .plain-contact-row:last-child {
+    grid-column: 1 / -1;
+    max-width: 20rem;
   }
 }
 

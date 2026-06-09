@@ -130,9 +130,21 @@ function linkRow(label: string, href: string, text: string): HTMLElement {
   row.append(el('span', 'plain-contact-label', label))
   const a = document.createElement('a')
   a.href = href
-  a.textContent = text
+  a.textContent = contactLinkText(label, text)
+  if (href.startsWith('http')) {
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+  }
+  if (text !== a.textContent) a.title = text
   row.appendChild(a)
   return row
+}
+
+/** Shorter anchor copy for the classic layout — full string kept in `title`. */
+function contactLinkText(label: string, text: string): string {
+  if (label === 'Phone') return '+1 254-534-9544'
+  if (label === 'LinkedIn') return 'linkedin.com/in/matthew-grey-215615179'
+  return text
 }
 
 // ── Experience card ────────────────────────────────────────────────────────
@@ -360,10 +372,9 @@ function mount(): void {
   heroIntroCopy.appendChild(pill)
 
   heroIntroCopy.appendChild(statsStrip())
+  heroIntroCopy.appendChild(anim(el('p', 'plain-lede', PROFILE.summary), 280))
   heroIntro.appendChild(heroIntroCopy)
   hero.appendChild(heroIntro)
-
-  hero.appendChild(anim(el('p', 'plain-lede', PROFILE.summary), 280))
 
   mountScrollCue(hero)
 
@@ -422,8 +433,11 @@ function mount(): void {
   contactSection.appendChild(sectionHeading('Contact', 'sec-contact'))
 
   const contactBlock = anim(el('div', 'plain-contact-block'), 60)
-  for (const item of CONTACT) contactBlock.appendChild(linkRow(item.label, item.href, item.text))
-  contactBlock.appendChild(mountContactForm('plain'))
+  const contactLinks = el('div', 'plain-contact-links')
+  for (const item of CONTACT) contactLinks.appendChild(linkRow(item.label, item.href, item.text))
+  const contactFormWrap = el('div', 'plain-contact-form-section')
+  contactFormWrap.appendChild(mountContactForm('plain'))
+  contactBlock.append(contactLinks, contactFormWrap)
   contactSection.appendChild(contactBlock)
 
   // ── Footer ─────────────────────────────────────────────────────────────
