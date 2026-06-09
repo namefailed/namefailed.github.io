@@ -5,26 +5,34 @@
  */
 
 import type { WindowSpec } from './appwindow'
-import type { BrowserWindow } from './browser-window'
-import type { EditorWindow } from './editor-window'
-import type { FileExplorerWindow } from './file-explorer-window'
 import {
   dispatchOpenWindow,
   type MinimizedEntry,
   type OpenWindowHost,
   type TiledWin,
 } from './desktop-open-window'
-import type { PaintWindow } from './paint-window'
-import type { PongWindow } from './pong-window'
-import type { SnakeWindow } from './snake-window'
-import type { TerminalWindow } from './terminal'
+import { handleDesktopGlobalKey, type DesktopKeyboardHost } from './desktop-keyboard-handler'
+import { focusSubtarget } from './desktop-wm-focus'
+import {
+  closeTiledWindow,
+  minimizeTiledWindow,
+  restoreMinimizedWindow,
+  type WmLifecycleContext,
+} from './desktop-wm-lifecycle'
+import {
+  maximizeTerminal as applyMaximizeTerminal,
+  toggleMaximizeContent as applyToggleMaximizeContent,
+  toggleMaximizeFocused as applyToggleMaximizeFocused,
+  unmaximizeContent as applyUnmaximizeContent,
+  unmaximizeTerminal as applyUnmaximizeTerminal,
+  type WmMaximizeContext,
+} from './desktop-wm-maximize'
 import { Splitter } from './splitter'
 import {
   attachLazyPrefetchHandlers,
   LAUNCHER_ICON_ROWS,
   TERMINAL_TILE_SENTINEL,
 } from './launcher-catalog'
-import { isDesktopWmChordKey } from './desktop-keyboard-chords'
 import {
   closeLauncherOverlayFlags,
   initLauncherSearchFilter,
@@ -225,6 +233,69 @@ export class Desktop {
    * All heavy tile modules are loaded via dynamic `import()` on first open, keeping the initial
    * bundle lean.
    */
+  private lifecycleContext(): WmLifecycleContext {
+    const self = this
+    return {
+      get windows() { return self.windows },
+      get minimized() { return self.minimized },
+      getFocusedId: () => self.focusedId,
+      prefersReducedMotion: () => self.prefersReducedMotion(),
+      unmaximizeContent: win => self.unmaximizeContent(win),
+      focusTerminalIfAlreadyVisible: () => self.focusTerminalIfAlreadyVisible(),
+      attachVerticalSplitters: () => self.attachVerticalSplitters(),
+      sync: () => self.sync(),
+      appendToRightPane: win => self.appendToRightPane(win),
+      focusWindow: win => self.focusWindow(win),
+      closeLauncherOverlay: () => self.closeLauncherOverlay(),
+    }
+  }
+
+  private maximizeContext(): WmMaximizeContext {
+    const self = this
+    return {
+      getMaximizedId: () => self.maximizedId,
+      setMaximizedId: id => { self.maximizedId = id },
+      termWin: self.termWin,
+      panes: self.panes,
+      desktop: self.desktop,
+      findOpenWindow: cmd => self.windows.find(w => w.command === cmd),
+      unmaximizeContent: win => self.unmaximizeContent(win),
+      syncDockVisibility: () => self.syncDockVisibility(),
+      fitTerminal: () => self.fitTerminal(),
+      attachVerticalSplitters: () => self.attachVerticalSplitters(),
+      sync: () => self.sync(),
+    }
+  }
+
+  private keyboardHost(): DesktopKeyboardHost {
+    const self = this
+    return {
+      openTerminal: () => {
+        void self.openWindow({ command: 'terminal', title: 'terminal', content: [] })
+      },
+      focusTaskbarIndex: index => self.focusTaskbarIndex(index),
+      focusSpatial: dir => self.focusSpatial(dir),
+      closeFocusedOrTerminal: () => {
+        if (self.focusedId) {
+          const w = self.windows.find(x => x.command === self.focusedId)
+          if (w) self.closeWindow(w)
+        } else if (!self.termWin.classList.contains('terminal-closed')) {
+          self.closeTerminal()
+        }
+      },
+      minimizeFocusedOrTerminal: () => {
+        if (self.focusedId) {
+          const w = self.windows.find(x => x.command === self.focusedId)
+          if (w) self.minimizeWindow(w)
+        } else {
+          self.minimizeTerminal()
+        }
+      },
+      toggleMaximizeFocused: () => applyToggleMaximizeFocused(self.maximizeContext(), self.focusedId),
+      toggleShowDesktop: () => self.toggleShowDesktop(),
+    }
+  }
+
   private openWindowHost(): OpenWindowHost {
     const self = this
     return {
@@ -294,24 +365,7 @@ export class Desktop {
   }
 
   private closeWindow(win: TiledWin): void {
-    if (this.windows.indexOf(win) === -1) return
-    if (win.el.classList.contains('wm-animate-close')) return
-    if (win.isMaximized()) this.unmaximizeContent(win)
-
-    const el = win.el
-    const command = win.command
-    const finalizeClose = (): void => {
-      const i = this.windows.indexOf(win)
-      if (i === -1) return
-      ;(win as { dispose?: () => void }).dispose?.()
-      el.remove()
-      this.windows.splice(i, 1)
-      if (this.focusedId === command) this.focusTerminalIfAlreadyVisible()
-      this.attachVerticalSplitters()
-      this.sync()
-    }
-
-    animateWmThenRemove(el, finalizeClose, { reducedMotion: this.prefersReducedMotion() })
+    closeTiledWindow(this.lifecycleContext(), win)
   }
 
   private focusWindow(win: TiledWin): void {
@@ -321,133 +375,36 @@ export class Desktop {
     this.termWin.classList.remove('active')
     this.windows.forEach(w => w.setActive(w === win))
     this.sync()
-    switch (win.command) {
-      case 'terminal':
-        ;(win as TerminalWindow).focusShell()
-        break
-      case 'edit':
-        ;(win as EditorWindow).focusEditor()
-        break
-      case 'explorer':
-        ;(win as FileExplorerWindow).focusPanel()
-        break
-      case 'browse':
-        ;(win as BrowserWindow).focusAddressBar()
-        break
-      case 'paint':
-      case 'snake':
-      case 'pong':
-        ;(win as PaintWindow | SnakeWindow | PongWindow).focusCanvas()
-        break
-      default:
-        break
-    }
+    focusSubtarget(win)
   }
 
   // ── private: maximize / restore ─────────────────────────────────────────────
 
   private toggleMaximizeTerminal(): void {
-    if (this.maximizedId === TERMINAL_TILE_SENTINEL) {
-      this.unmaximizeTerminal()
-      return
-    }
-    // Clear content maximize first
-    if (this.maximizedId && this.maximizedId !== TERMINAL_TILE_SENTINEL) {
-      const w = this.windows.find(x => x.command === this.maximizedId)
-      if (w) this.unmaximizeContent(w)
-    }
-    this.termWin.classList.add('maximized')
-    this.panes.classList.add('max-terminal')
-    this.maximizedId = TERMINAL_TILE_SENTINEL
-    this.desktop.dataset.maximized = '1'
-    this.syncDockVisibility()
-    requestAnimationFrame(() => this.fitTerminal())
+    applyMaximizeTerminal(this.maximizeContext())
   }
 
   private unmaximizeTerminal(): void {
-    this.termWin.classList.remove('maximized')
-    this.panes.classList.remove('max-terminal')
-    if (this.maximizedId === TERMINAL_TILE_SENTINEL) this.maximizedId = null
-    this.desktop.dataset.maximized = this.maximizedId !== null ? '1' : '0'
-    this.syncDockVisibility()
-    requestAnimationFrame(() => this.fitTerminal())
+    applyUnmaximizeTerminal(this.maximizeContext())
   }
 
   private toggleMaximizeContent(win: TiledWin): void {
-    if (win.isMaximized()) {
-      this.unmaximizeContent(win)
-      return
-    }
-    if (this.maximizedId === TERMINAL_TILE_SENTINEL) this.unmaximizeTerminal()
-    if (this.maximizedId && this.maximizedId !== TERMINAL_TILE_SENTINEL) {
-      const other = this.windows.find(w => w.command === this.maximizedId)
-      if (other) this.unmaximizeContent(other)
-    }
-
-    // Leave win.el in #right-pane — moving it in the DOM reloads iframes (p5).
-    // CSS hides non-maximized siblings and stretches #right-pane to fill #panes.
-    win.el.classList.add('maximized')
-    this.panes.classList.add('max-content')
-    this.maximizedId = win.command
-    this.desktop.dataset.maximized = '1'
-    this.syncDockVisibility()
-    requestAnimationFrame(() => this.fitTerminal())
+    applyToggleMaximizeContent(this.maximizeContext(), win)
   }
 
   private unmaximizeContent(win: TiledWin): void {
-    if (!win.isMaximized()) return
-    win.el.classList.remove('maximized')
-    this.panes.classList.remove('max-content')
-    if (this.maximizedId === win.command) this.maximizedId = null
-    this.attachVerticalSplitters()
-    this.sync()
-  }
-
-  private toggleMaximizeFocused(): void {
-    if (this.focusedId === null) {
-      this.toggleMaximizeTerminal()
-      return
-    }
-    const w = this.windows.find(x => x.command === this.focusedId)
-    if (w) this.toggleMaximizeContent(w)
+    applyUnmaximizeContent(this.maximizeContext(), win)
   }
 
   // ── private: minimize / restore ────────────────────────────────────────────
 
   private minimizeWindow(win: TiledWin): void {
     playOsSound('click')
-    if (this.windows.indexOf(win) === -1) return
-    if (win.el.classList.contains('wm-animate-close')) return
-    if (win.isMaximized()) this.unmaximizeContent(win)
-
-    const el = win.el
-    const finalize = (): void => {
-      const idx = this.windows.indexOf(win)
-      if (idx === -1) return
-      win.setMinimized(true)
-      el.remove()
-      this.windows.splice(idx, 1)
-      this.minimized.push({ win })
-      if (this.focusedId === win.command) this.focusTerminalIfAlreadyVisible()
-      this.attachVerticalSplitters()
-      this.sync()
-    }
-
-    animateWmThenRemove(el, finalize, { reducedMotion: this.prefersReducedMotion() })
+    minimizeTiledWindow(this.lifecycleContext(), win)
   }
 
   private restoreMinimized(entry: MinimizedEntry): void {
-    const i = this.minimized.indexOf(entry)
-    if (i === -1) return
-    this.minimized.splice(i, 1)
-
-    closeLauncherOverlayFlags(this.launcherOverlay)
-
-    entry.win.setMinimized(false)
-    this.appendToRightPane(entry.win)
-    this.windows.push(entry.win)
-    this.attachVerticalSplitters()
-    this.focusWindow(entry.win)
+    restoreMinimizedWindow(this.lifecycleContext(), entry)
   }
 
   private minimizeTerminal(): void {
@@ -713,59 +670,7 @@ export class Desktop {
    *   - `j` → down → next window in column
    */
   private handleGlobal(ev: KeyboardEvent): void {
-    if (!ev.ctrlKey || ev.altKey || ev.metaKey) return
-
-    const key = ev.key.toLowerCase()
-
-    // Reserved keys for the WM — intercept before xterm/vim see them
-    if (!isDesktopWmChordKey(key)) return
-
-    ev.preventDefault()
-    ev.stopImmediatePropagation()
-
-    // Ctrl+T → open terminal app window (or focus if already open)
-    if (key === 't') { void this.openWindow({ command: 'terminal', title: 'terminal', content: [] }); return }
-
-    // Ctrl+1..9 → taskbar slot (launcher order, left → right)
-    const n = parseInt(key, 10)
-    if (n >= 1 && n <= 9) {
-      this.focusTaskbarIndex(n - 1)
-      return
-    }
-
-    // Ctrl+H/J/K/L — vim-style spatial focus (h=left, j=down, k=up, l=right)
-    if (key === 'h') { this.focusSpatial('h'); return }
-    if (key === 'l') { this.focusSpatial('l'); return }
-    if (key === 'k') { this.focusSpatial('k'); return }
-    if (key === 'j') { this.focusSpatial('j'); return }
-
-    // Ctrl+Q → close focused content window, or terminal when it holds focus
-    if (key === 'q') {
-      if (this.focusedId) {
-        const w = this.windows.find(x => x.command === this.focusedId)
-        if (w) this.closeWindow(w)
-      } else if (!this.termWin.classList.contains('terminal-closed')) {
-        this.closeTerminal()
-      }
-      return
-    }
-
-    // Ctrl+M → minimize focused window (terminal if nothing else focused)
-    if (key === 'm') {
-      if (this.focusedId) {
-        const w = this.windows.find(x => x.command === this.focusedId)
-        if (w) this.minimizeWindow(w)
-      } else {
-        this.minimizeTerminal()
-      }
-      return
-    }
-
-    // Ctrl+F → maximize / restore
-    if (key === 'f') { this.toggleMaximizeFocused(); return }
-
-    // Ctrl+D → toggle show-desktop
-    if (key === 'd') { this.toggleShowDesktop(); return }
+    handleDesktopGlobalKey(ev, this.keyboardHost())
   }
 
   /**
