@@ -34,7 +34,8 @@ Personal portfolio site built as an in-browser fake desktop environment. TypeScr
 | `desktop-wm-sync.ts` | Shell `dataset.*` mirrors for CSS |
 | `desktop-ps-snapshot.ts` | Simulated `ps` rows for terminal MOTD |
 | `editor-ex-commands.ts` | Modal editor `:w` / `:q` / `:e` ex-mode parsing |
-| `editor-vim-ops.ts` | Pure caret/line helpers for vim motions (`j`/`k`, `:N`, counts) |
+| `editor-vim-ops.ts` | Pure caret/line/motion helpers for vim motions (`j`/`k`, `:N`, counts, dd/yy) |
+| `editor-vim-keys.ts` | INSERT/NORMAL key-chord helpers (Esc, count prefix) |
 | `editor-window-meta.ts` | Editor path compare + title string helpers |
 | `terminal.ts` | xterm.js façade, scripted boot lines, Vim-style prompt, command dispatch |
 | `bootstrap-shell.ts` | Boot sequence orchestration |
@@ -128,7 +129,7 @@ Sketches are seeded into `~/sketches/` in the VFS (`os-fs.ts`) at first visit.
 
 ## Testing
 
-535 tests across 45 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
+563 tests across 46 test files (plus Playwright smoke e2e). Tests co-located with source: `module.ts` → `module.test.ts`.
 
 | Test File | Coverage |
 |-----------|----------|

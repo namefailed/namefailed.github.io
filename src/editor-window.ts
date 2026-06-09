@@ -1,15 +1,29 @@
 /** Modal editor over the fake VFS (normal / insert / ex); not the terminal one-line vim widget. */
 
 import { parseEditorExCommand } from './editor-ex-commands'
+import { insertModeKeyAction, tryAppendCountDigit } from './editor-vim-keys'
 import {
+  applyReplaceRunsText,
   consumeCountDigits,
   consumeOptionalNat,
+  deleteLineBlockText,
+  deleteThroughEOLText,
+  findNextOnLine,
   firstNonBlankOnLine,
   getLineCol,
   gotoLinePos,
+  joinLinesText,
   lineBounds,
   lineCountTotal,
+  lineEndCaretPos,
+  moveHorizPos,
   moveVertPos,
+  pasteYankText,
+  reverseFindKind,
+  wordBackPos,
+  wordEndForwardPos,
+  wordForwardPos,
+  yankLineBlockText,
 } from './editor-vim-ops'
 import { editorPathsEqual, editorWindowTitle } from './editor-window-meta'
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
@@ -280,54 +294,29 @@ export class EditorWindow {
   }
 
   private deleteLineBlock(nLines: number): void {
-    const t = this.textarea.value
-    const curLineIdx = this.getLineCol().line - 1
-    const lines = t.split('\n')
-    if (!lines.length) return
-    const del = Math.max(1, Math.min(nLines, lines.length - curLineIdx))
-    let a = 0
-    for (let i = 0; i < curLineIdx; i++) a += lines[i].length + 1
-    let b = a
-    for (let i = curLineIdx; i < curLineIdx + del; i++) {
-      b += lines[i].length
-      if (i < lines.length - 1) b += 1
-    }
-    const next = t.slice(0, a) + t.slice(b)
-    this.textarea.value = next
-    const caret = Math.min(a, next.length)
-    this.textarea.setSelectionRange(caret, caret)
-    this.dirty = next !== this.savedText
+    const line = this.getLineCol().line
+    const result = deleteLineBlockText(this.textarea.value, line, nLines)
+    if (!result) return
+    this.textarea.value = result.text
+    this.textarea.setSelectionRange(result.pos, result.pos)
+    this.dirty = result.text !== this.savedText
     this.recordAfterMutation()
     this.syncTitle()
     this.refreshModeMeta()
   }
 
   private yankLineBlock(nLines: number): void {
-    const t = this.textarea.value
-    const curLineIdx = this.getLineCol().line - 1
-    const lines = t.split('\n')
-    if (!lines.length) return
-    const take = Math.max(1, Math.min(nLines, lines.length - curLineIdx))
-    let a = 0
-    for (let i = 0; i < curLineIdx; i++) a += lines[i].length + 1
-    let b = a
-    for (let i = curLineIdx; i < curLineIdx + take; i++) {
-      b += lines[i].length
-      if (i < lines.length - 1) b += 1
-    }
-    this.yankRegister = t.slice(a, b)
-    if (!this.yankRegister.endsWith('\n')) this.yankRegister += '\n'
-    this.flashStatus(`Yanked ${take} line(s)`, false)
+    const result = yankLineBlockText(this.textarea.value, this.getLineCol().line, nLines)
+    if (!result) return
+    this.yankRegister = result.yank
+    this.flashStatus(`Yanked ${result.lineCount} line(s)`, false)
   }
 
   private deleteThroughEOL(): void {
-    const t = this.textarea.value
-    const p = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    const { end } = this.lineBounds(p)
-    const next = t.slice(0, p) + t.slice(end)
-    this.textarea.value = next
-    this.textarea.setSelectionRange(p, p)
-    this.dirty = next !== this.savedText
+    const result = deleteThroughEOLText(this.textarea.value, this.textarea.selectionStart)
+    this.textarea.value = result.text
+    this.textarea.setSelectionRange(result.pos, result.pos)
+    this.dirty = result.text !== this.savedText
     this.recordAfterMutation()
     this.syncTitle()
     this.refreshModeMeta()
@@ -336,24 +325,11 @@ export class EditorWindow {
   /** Join consecutive lines beginning at cursor line (minimal vi `J`): no extra spacing. */
   private joinBelow(): void {
     const span = this.consumeCount(1) + 1
-    const t = this.textarea.value
-    const lines = t.split('\n')
-    const cur = this.getLineCol().line - 1
-    if (cur >= lines.length - 1) return
-    const maxSpan = Math.min(span, lines.length - cur)
-    const merged = lines.slice(cur, cur + maxSpan).join('')
-    let a = 0
-    for (let i = 0; i < cur; i++) a += lines[i].length + 1
-    let b = a
-    for (let i = cur; i < cur + maxSpan; i++) {
-      b += lines[i].length
-      if (i < lines.length - 1) b += 1
-    }
-    const next = t.slice(0, a) + merged + t.slice(b)
-    this.textarea.value = next
-    const caret = Math.min(a + merged.length, next.length)
-    this.textarea.setSelectionRange(caret, caret)
-    this.dirty = next !== this.savedText
+    const result = joinLinesText(this.textarea.value, this.getLineCol().line, span)
+    if (!result) return
+    this.textarea.value = result.text
+    this.textarea.setSelectionRange(result.pos, result.pos)
+    this.dirty = result.text !== this.savedText
     this.recordAfterMutation()
     this.syncTitle()
     this.refreshModeMeta()
@@ -361,16 +337,11 @@ export class EditorWindow {
 
   /** `r` / `{count}r`: replace each of the next `n` glyphs with `ch` (minimal vi semantics). */
   private applyReplaceRuns(n: number, ch: string): void {
-    const t = this.textarea.value
-    const p = this.textarea.selectionStart
-    const take = Math.min(n, Math.max(0, t.length - p))
-    if (take <= 0) return
-    const rep = ch.repeat(take)
-    const next = t.slice(0, p) + rep + t.slice(p + take)
-    this.textarea.value = next
-    const c = Math.max(p, Math.min(p + take - 1, next.length - 1))
-    this.textarea.setSelectionRange(c, c)
-    this.dirty = next !== this.savedText
+    const result = applyReplaceRunsText(this.textarea.value, this.textarea.selectionStart, n, ch)
+    if (!result) return
+    this.textarea.value = result.text
+    this.textarea.setSelectionRange(result.pos, result.pos)
+    this.dirty = result.text !== this.savedText
     this.recordAfterMutation()
     this.syncTitle()
     this.refreshModeMeta()
@@ -721,7 +692,7 @@ export class EditorWindow {
     if (this.mode === 'cmd') return
 
     if (this.mode === 'insert') {
-      if (e.key === 'Escape' || (e.ctrlKey && e.key === '[')) {
+      if (insertModeKeyAction(e.key, { ctrlKey: e.ctrlKey, metaKey: e.metaKey }) === 'leave-normal') {
         e.preventDefault()
         this.recordAfterMutation()
         this.mode = 'normal'
@@ -823,11 +794,10 @@ export class EditorWindow {
       return
     }
 
-    // Count prefix (`3j`, `10G`, `{count}` on `yy`/`dd`, …).
-    if (/^[1-9]$/.test(k) || (k === '0' && this.countDigits !== '')) {
+    const nextDigits = tryAppendCountDigit(this.countDigits, k)
+    if (nextDigits != null) {
       e.preventDefault()
-      this.countDigits += k
-      if (this.countDigits.length > 6) this.countDigits = this.countDigits.slice(0, 6)
+      this.countDigits = nextDigits
       this.refreshModeMeta()
       return
     }
@@ -934,25 +904,17 @@ export class EditorWindow {
 
     // `:` prefix already cleared count
     const pasteAfter = (): void => {
-      const ya = this.yankRegister
-      if (!ya) return
-      let t = this.textarea.value
-      const p = cur()
-      const { end } = this.lineBounds(p)
-      const ins = end < t.length && t[end] === '\n' ? end + 1 : t.length
-      t = t.slice(0, ins) + ya + t.slice(ins)
-      this.textarea.value = t
-      setCur(ins + ya.length - 1)
+      const result = pasteYankText(this.textarea.value, cur(), this.yankRegister, true)
+      if (!result) return
+      this.textarea.value = result.text
+      setCur(result.pos)
     }
 
     const pasteBeforeLine = (): void => {
-      const ya = this.yankRegister
-      if (!ya) return
-      let t = this.textarea.value
-      const { start } = this.lineBounds(cur())
-      t = t.slice(0, start) + ya + t.slice(start)
-      this.textarea.value = t
-      setCur(start + ya.length - 1)
+      const result = pasteYankText(this.textarea.value, cur(), this.yankRegister, false)
+      if (!result) return
+      this.textarea.value = result.text
+      setCur(result.pos)
     }
 
     if (k === 'p' || k === 'P') {
@@ -1012,11 +974,7 @@ export class EditorWindow {
     if (k === '$') {
       e.preventDefault()
       this.consumeCount(1)
-      const { start, end } = this.lineBounds(cur())
-      const t = this.textarea.value
-      let p = end - 1
-      if (p >= start && t[p] === '\n') p--
-      setCur(Math.max(start, p))
+      setCur(lineEndCaretPos(this.textarea.value, cur()))
       return
     }
 
@@ -1101,7 +1059,8 @@ export class EditorWindow {
       e.preventDefault()
       const n = this.consumeCount(1)
       let p = cur()
-      for (let i = 0; i < n; i++) p = this.wordForward(p)
+      const t = this.textarea.value
+      for (let i = 0; i < n; i++) p = wordForwardPos(t, p)
       setCur(p)
       return
     }
@@ -1109,7 +1068,8 @@ export class EditorWindow {
       e.preventDefault()
       const n = this.consumeCount(1)
       let p = cur()
-      for (let i = 0; i < n; i++) p = this.wordBack(p)
+      const t = this.textarea.value
+      for (let i = 0; i < n; i++) p = wordBackPos(t, p)
       setCur(p)
       return
     }
@@ -1118,7 +1078,8 @@ export class EditorWindow {
       e.preventDefault()
       const n = this.consumeCount(1)
       let p = cur()
-      for (let i = 0; i < n; i++) p = this.wordEndForward(p)
+      const t = this.textarea.value
+      for (let i = 0; i < n; i++) p = wordEndForwardPos(t, p)
       setCur(p)
       return
     }
@@ -1201,19 +1162,12 @@ export class EditorWindow {
 
     if (k === 'h') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      let p = cur()
-      for (let i = 0; i < n; i++) p = Math.max(0, p - 1)
-      setCur(p)
+      setCur(moveHorizPos(this.textarea.value, cur(), -1, this.consumeCount(1)))
       return
     }
     if (k === 'l') {
       e.preventDefault()
-      const n = this.consumeCount(1)
-      const max = this.textarea.value.length
-      let p = cur()
-      for (let i = 0; i < n; i++) p = Math.min(max, p + 1)
-      setCur(p)
+      setCur(moveHorizPos(this.textarea.value, cur(), 1, this.consumeCount(1)))
       return
     }
     if (k === 'j') {
@@ -1270,72 +1224,12 @@ export class EditorWindow {
     return lineBounds(this.textarea.value, pos)
   }
 
-  private isWordChar(ch: string): boolean {
-    return /[A-Za-z0-9_]/.test(ch)
-  }
-
-  /** Next word start — vim-like `w` on [A-Za-z0-9_] tokens */
-  private wordForward(pos: number): number {
-    const t = this.textarea.value
-    let p = Math.min(pos, t.length)
-    while (p < t.length && !this.isWordChar(t[p]!)) p++
-    while (p < t.length && this.isWordChar(t[p]!)) p++
-    return p
-  }
-
-  /** Previous word start — vim-like `b` */
-  private wordBack(pos: number): number {
-    const t = this.textarea.value
-    let p = Math.min(pos, t.length)
-    if (p > 0) p--
-    while (p > 0 && !this.isWordChar(t[p]!)) p--
-    while (p > 0 && this.isWordChar(t[p - 1]!)) p--
-    return p
-  }
-
-  /** End of next word — vim-like `e` */
-  private wordEndForward(pos: number): number {
-    const t = this.textarea.value
-    if (t.length === 0) return 0
-    let p = Math.min(Math.max(0, pos), t.length - 1)
-    if (!this.isWordChar(t[p]!)) {
-      while (p < t.length && !this.isWordChar(t[p]!)) p++
-      if (p >= t.length) return t.length - 1
-    }
-    while (p < t.length - 1 && this.isWordChar(t[p + 1]!)) p++
-    return p
+  private findNextOnLine(kind: 'f' | 'F' | 't' | 'T', ch: string, fromPos: number): number | null {
+    return findNextOnLine(this.textarea.value, kind, ch, fromPos)
   }
 
   private reverseFindKind(kind: 'f' | 'F' | 't' | 'T'): 'f' | 'F' | 't' | 'T' {
-    if (kind === 'f') return 'F'
-    if (kind === 'F') return 'f'
-    if (kind === 't') return 'T'
-    return 't'
-  }
-
-  private findNextOnLine(kind: 'f' | 'F' | 't' | 'T', ch: string, fromPos: number): number | null {
-    const t = this.textarea.value
-    const { start, end } = this.lineBounds(fromPos)
-    const line = t.slice(start, end)
-    const rel = fromPos - start
-    if (kind === 'f' || kind === 't') {
-      const slice = line.slice(rel + 1)
-      const j = slice.indexOf(ch)
-      if (j < 0) return null
-      const hit = start + rel + 1 + j
-      return kind === 'f' ? hit : hit - 1
-    }
-    const before = line.slice(0, rel)
-    let j = -1
-    for (let bi = before.length - 1; bi >= 0; bi--) {
-      if (before[bi] === ch) {
-        j = bi
-        break
-      }
-    }
-    if (j < 0) return null
-    const hit = start + j
-    return kind === 'F' ? hit : hit + 1
+    return reverseFindKind(kind)
   }
 
   private repeatFindMotion(
