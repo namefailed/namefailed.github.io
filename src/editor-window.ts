@@ -1,6 +1,16 @@
 /** Modal editor over the fake VFS (normal / insert / ex); not the terminal one-line vim widget. */
 
 import { parseEditorExCommand } from './editor-ex-commands'
+import {
+  consumeCountDigits,
+  consumeOptionalNat,
+  firstNonBlankOnLine,
+  getLineCol,
+  gotoLinePos,
+  lineBounds,
+  lineCountTotal,
+  moveVertPos,
+} from './editor-vim-ops'
 import { editorPathsEqual, editorWindowTitle } from './editor-window-meta'
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
 import { createWindowChrome } from './window-chrome'
@@ -233,45 +243,30 @@ export class EditorWindow {
   }
 
   private consumeCount(defaultN = 1): number {
-    if (!this.countDigits) return Math.max(1, defaultN)
-    const v = parseInt(this.countDigits, 10)
+    const n = consumeCountDigits(this.countDigits, defaultN)
     this.countDigits = ''
-    if (!Number.isFinite(v) || v < 1) return Math.max(1, defaultN)
-    return Math.min(v, 50_000)
+    return n
   }
 
   /** First line touched by `:e` counts as line 1. */
   private consumeOptionalNat(): number | null {
-    if (!this.countDigits) return null
-    const v = parseInt(this.countDigits, 10)
+    const n = consumeOptionalNat(this.countDigits)
     this.countDigits = ''
-    if (!Number.isFinite(v) || v < 1) return null
-    return Math.min(v, 50_000)
+    return n
   }
 
   private lineCountTotal(): number {
-    const t = this.textarea.value
-    if (!t) return 1
-    return Math.max(1, t.split('\n').length)
+    return lineCountTotal(this.textarea.value)
   }
 
   private getLineCol(): { line: number; col: number } {
     const t = this.textarea.value
     const p = Math.min(Math.max(0, this.textarea.selectionStart), t.length)
-    const pref = t.slice(0, p)
-    const line = pref.split('\n').length
-    const li = pref.lastIndexOf('\n')
-    const col = p - (li + 1) + 1
-    return { line, col }
+    return getLineCol(t, p)
   }
 
   private gotoLine(oneBased: number): void {
-    const t = this.textarea.value
-    const lines = t.split('\n')
-    const maxL = Math.max(1, lines.length)
-    const n = Math.max(1, Math.min(oneBased, maxL))
-    let pos = 0
-    for (let i = 0; i < n - 1; i++) pos += lines[i].length + 1
+    const pos = gotoLinePos(this.textarea.value, oneBased)
     this.textarea.setSelectionRange(pos, pos)
     this.refreshModeMeta()
   }
@@ -281,11 +276,7 @@ export class EditorWindow {
   }
 
   private firstNonBlankOnLine(pos: number): number {
-    const t = this.textarea.value
-    const { start, end } = this.lineBounds(pos)
-    let p = start
-    while (p < end && /\s/.test(t[p]!)) p++
-    return p < end ? p : start
+    return firstNonBlankOnLine(this.textarea.value, pos)
   }
 
   private deleteLineBlock(nLines: number): void {
@@ -1276,11 +1267,7 @@ export class EditorWindow {
   }
 
   private lineBounds(pos: number): { start: number; end: number } {
-    const t = this.textarea.value
-    const lineStart = t.lastIndexOf('\n', pos - 1) + 1
-    let lineEnd = t.indexOf('\n', pos)
-    if (lineEnd === -1) lineEnd = t.length
-    return { start: lineStart, end: lineEnd }
+    return lineBounds(this.textarea.value, pos)
   }
 
   private isWordChar(ch: string): boolean {
@@ -1486,19 +1473,7 @@ export class EditorWindow {
   }
 
   private moveVert(delta: -1 | 1): number {
-    const t = this.textarea.value
-    const p = this.textarea.selectionStart
-    const before = t.slice(0, p)
-    const lineStart = before.lastIndexOf('\n') + 1
-    const col = p - lineStart
-    const lines = t.split('\n')
-    const lineIdx = before.split('\n').length - 1
-    const targetLine = Math.max(0, Math.min(lines.length - 1, lineIdx + delta))
-    const targetText = lines[targetLine] ?? ''
-    const newCol = Math.min(col, targetText.length)
-    let pos = 0
-    for (let i = 0; i < targetLine; i++) pos += lines[i].length + 1
-    return pos + newCol
+    return moveVertPos(this.textarea.value, this.textarea.selectionStart, delta)
   }
 
   setActive(active: boolean): void {

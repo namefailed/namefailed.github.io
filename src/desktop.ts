@@ -1,7 +1,7 @@
 /**
- * Tiling shell: terminal column plus portfolio / editor / browser / games tiles (`openWindow`).
- * Tile commands repeat path/URL or toggle per command rules; plain shell commands stay in `commands/index.ts`.
- * Keys: Ctrl+T terminal; Ctrl+1–9 docks; Ctrl+H/K vs L/J along stack; Ctrl+Q/M/F/D close/min/max/show-desktop; Applications = launcher.
+ * Tiling shell: portfolio / editor / browser / games tiles (`openWindow`).
+ * Terminal is a lazy-loaded tile (Ctrl+T or dock). Keys: Ctrl+1–9 docks;
+ * Ctrl+H/K vs L/J along stack; Ctrl+Q/M/F/D close/min/max/show-desktop; Applications = launcher.
  */
 
 import type { WindowSpec } from './appwindow'
@@ -15,7 +15,6 @@ import {
   lifecycleContext,
   maximizeContext,
   openWindowHost,
-  terminalColumnHost,
   tileLimitHost,
   type DesktopWmSelf,
 } from './desktop-wm-hosts'
@@ -26,21 +25,11 @@ import {
   restoreMinimizedWindow,
 } from './desktop-wm-lifecycle'
 import {
-  maximizeTerminal as applyMaximizeTerminal,
   toggleMaximizeContent as applyToggleMaximizeContent,
   unmaximizeContent as applyUnmaximizeContent,
-  unmaximizeTerminal as applyUnmaximizeTerminal,
 } from './desktop-wm-maximize'
 import { enforceTileLimit as applyTileLimit } from './desktop-wm-tile-limit'
-import type { TerminalWindow } from './terminal'
-import {
-  closeTerminalColumn,
-  initYasbLauncherChrome,
-  isLegacyTerminalColumnActive,
-  minimizeTerminalColumn,
-  wireTerminalTitlebar,
-} from './desktop-wm-terminal'
-import { Splitter } from './splitter'
+import { initYasbLauncherChrome } from './desktop-wm-terminal'
 import {
   closeLauncherOverlayFlags,
   initLauncherSearchFilter,
@@ -67,77 +56,41 @@ import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
 import { mountWelcomeGuide } from './welcome-guide'
 import { mountDesktopTiles } from './desktop-tiles'
+import type { TerminalWindow } from './terminal'
 import type { WindowLayout } from './window-layout'
 import { BspLayout } from './bsp-layout'
 
 export type { WindowSpec, PsSnapshotRow }
 
 export class Desktop {
-  private desktop:    HTMLElement
-  private panes:      HTMLElement
-  private rightPane:  HTMLElement
-  private termWin:    HTMLElement
+  private desktop: HTMLElement
+  private panes: HTMLElement
+  private rightPane: HTMLElement
   private taskbarDock: HTMLElement
-  private hSplitter:  HTMLElement
-  private fitTerminal: () => void
-  /**
-   * Cached `prefers-reduced-motion` MediaQueryList — avoids reparsing the query
-   * string on every animation decision and lets us attach a change listener once.
-   */
   private reducedMotionMQ: MediaQueryList
 
-  private windows: TiledWin[] = [] // open (visible) windows, in tile order
-  private minimized:  MinimizedEntry[] = []
-  private focusedId:  string | null    = null   // null = terminal focused
+  private windows: TiledWin[] = []
+  private minimized: MinimizedEntry[] = []
+  /** `null` when no right-pane tile holds focus */
+  private focusedId: string | null = null
   private readonly launcherOverlay: LauncherOverlayFlags = {
     showingDesktop: false,
     launcherOpen: false,
   }
 
-  /** Active tiling layout — swap via `Desktop.createLayout()` (future). */
   private layout: WindowLayout
-
-  /** `null` | terminal sentinel | content window command id */
   private maximizedId: string | null = null
 
-  constructor(
-    desktop:     HTMLElement,
-    termWin:     HTMLElement,
-    fitTerminal: () => void,
-  ) {
-    this.desktop          = desktop
-    this.termWin          = termWin
-    this.fitTerminal      = fitTerminal
-    this.panes            = document.getElementById('panes')!
-    this.rightPane        = document.getElementById('right-pane')!
-    this.taskbarDock      = document.getElementById('wm-taskbar-dock')!
-    this.hSplitter        = document.getElementById('h-splitter')!
-    this.reducedMotionMQ  = window.matchMedia('(prefers-reduced-motion: reduce)')
-    this.layout           = new BspLayout(this.rightPane)
+  constructor(desktop: HTMLElement) {
+    this.desktop = desktop
+    this.panes = document.getElementById('panes')!
+    this.rightPane = document.getElementById('right-pane')!
+    this.taskbarDock = document.getElementById('wm-taskbar-dock')!
+    this.reducedMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)')
+    this.layout = new BspLayout(this.rightPane)
 
-    if (isLegacyTerminalColumnActive(termWin)) {
-      termWin.addEventListener('mousedown', () => this.focusTerminal())
-      wireTerminalTitlebar(termWin, {
-        onMinimize: () => this.minimizeTerminal(),
-        onMaximize: () => this.toggleMaximizeTerminal(),
-        onClose: () => this.closeTerminal(),
-      })
-      new Splitter({
-        el:          this.hSplitter,
-        orientation: 'h',
-        target:      this.termWin,
-        container:   this.panes,
-        min:         280,
-        max:         () => Math.max(280, this.panes.clientWidth - 320),
-        onResize:    () => this.fitTerminal(),
-      })
-    }
-
-    // Global keyboard shortcuts
     document.addEventListener('keydown', ev => this.handleGlobal(ev), true)
-
-    // Window resize → refit terminal
-    window.addEventListener('resize', () => this.fitTerminal())
+    window.addEventListener('resize', () => this.fitOpenTerminal())
 
     mountLauncherIconGrid({ openWindow: spec => void this.openWindow(spec) })
     initLauncherSearchFilter()
@@ -148,14 +101,9 @@ export class Desktop {
       onCloseLauncher: () => this.closeLauncherOverlay(),
     })
     setDesktopRef(this)
-
-    // Mount first-visit welcome guide (non-blocking)
     mountWelcomeGuide()
-
-    // Wire auto-hide hover zone for the dock
     wireDockHoverZone(this.taskbarDock)
 
-    // Mount draggable desktop icon grid (behind tiling panes)
     const workspace = document.getElementById('desktop-workspace')
     if (workspace) {
       mountDesktopTiles({
@@ -167,26 +115,10 @@ export class Desktop {
     this.sync()
   }
 
-  // ── public API ─────────────────────────────────────────────────────────────
-
-  /** Simulated `ps` output: shell plus tiled / minimized windows */
   getPsSnapshot(): PsSnapshotRow[] {
     return buildPsSnapshot(this.windows, this.minimized, this.focusedId)
   }
 
-  /**
-   * Open, focus, or toggle a tiled window.
-   *
-   * Behaviour per command:
-   * - **`edit` / `explorer` / `browse`**: if the window is open and already showing the same
-   *   path/URL, close it (toggle). If it shows a different path, navigate to the new one.
-   *   If minimized, restore it (and navigate if needed).
-   * - **`paint` / `snake` / `pong`**: restore minimized copy, or close if already open.
-   * - **All other commands**: restore minimized, or toggle (close if open, open if closed).
-   *
-   * All heavy tile modules are loaded via dynamic `import()` on first open, keeping the initial
-   * bundle lean.
-   */
   private wm(): DesktopWmSelf {
     const s = this
     return {
@@ -195,14 +127,13 @@ export class Desktop {
       get launcherOverlay() { return s.launcherOverlay },
       get desktop() { return s.desktop },
       get panes() { return s.panes },
-      get termWin() { return s.termWin },
       get layoutMaxVisible() { return s.layout.maxVisible },
       getFocusedId: () => s.focusedId,
       setFocusedId: id => { s.focusedId = id },
       getMaximizedId: () => s.maximizedId,
       setMaximizedId: id => { s.maximizedId = id },
       prefersReducedMotion: () => s.prefersReducedMotion(),
-      fitTerminal: () => s.fitTerminal(),
+      fitOpenTerminal: () => s.fitOpenTerminal(),
       closeLauncherOverlay: () => s.closeLauncherOverlay(),
       closeWindow: win => s.closeWindow(win),
       focusWindow: win => s.focusWindow(win),
@@ -210,7 +141,6 @@ export class Desktop {
       minimizeWindow: win => s.minimizeWindow(win),
       toggleMaximizeContent: win => s.toggleMaximizeContent(win),
       unmaximizeContent: win => s.unmaximizeContent(win),
-      unmaximizeTerminal: () => s.unmaximizeTerminal(),
       enforceTileLimit: () => s.enforceTileLimit(),
       appendToRightPane: win => s.appendToRightPane(win),
       attachVerticalSplitters: () => s.attachVerticalSplitters(),
@@ -219,8 +149,6 @@ export class Desktop {
       openWindow: spec => s.openWindow(spec),
       focusTaskbarIndex: index => s.focusTaskbarIndex(index),
       focusSpatial: dir => s.focusSpatial(dir),
-      closeTerminal: () => s.closeTerminal(),
-      minimizeTerminal: () => s.minimizeTerminal(),
       toggleShowDesktop: () => s.toggleShowDesktop(),
       focusTerminalIfAlreadyVisible: () => s.focusTerminalIfAlreadyVisible(),
     }
@@ -230,40 +158,22 @@ export class Desktop {
     await dispatchOpenWindow(spec, openWindowHost(this.wm()))
   }
 
-  /**
-   * Build a fully-populated WindowSpec for a desktop-tile command.
-   * Portfolio commands (resume/projects/whoami/links) need their content
-   * pre-populated; tool/game commands only need the command key.
-   */
-  /** Open or focus the terminal tile (lazy — lives in the right pane like any other window). */
   focusTerminal(): void {
     void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
   }
 
-  /**
-   * Transfer focus to the terminal tile only if it is already visible (not minimized).
-   * Used after closing/minimizing another window so focus does not go nowhere.
-   */
   private focusTerminalIfAlreadyVisible(): void {
     this.closeLauncherOverlay()
     focusTerminalTileIfVisible(this.windows, {
       focusWindow: win => this.focusWindow(win),
       clearUnfocused: () => {
         this.focusedId = null
-        this.termWin.classList.remove('active')
         this.windows.forEach(w => w.setActive(false))
         this.sync()
       },
     })
   }
 
-  // ── private: window lifecycle ─────────────────────────────────────────────
-
-  /**
-   * Place `win` in the active layout, play its mount animation, and signal
-   * the first-window event.  Windows are never moved after placement so
-   * iframe-backed windows (p5, browse) never reload.
-   */
   private appendToRightPane(win: TiledWin): void {
     mountTiledWindow(this.layout, win, this.windows.length)
   }
@@ -280,20 +190,9 @@ export class Desktop {
     if (this.focusedId !== win.command) playOsSound('focus')
     this.closeLauncherOverlay()
     this.focusedId = win.command
-    this.termWin.classList.remove('active')
     this.windows.forEach(w => w.setActive(w === win))
     this.sync()
     focusSubtarget(win)
-  }
-
-  // ── private: maximize / restore ─────────────────────────────────────────────
-
-  private toggleMaximizeTerminal(): void {
-    applyMaximizeTerminal(maximizeContext(this.wm()))
-  }
-
-  private unmaximizeTerminal(): void {
-    applyUnmaximizeTerminal(maximizeContext(this.wm()))
   }
 
   private toggleMaximizeContent(win: TiledWin): void {
@@ -304,8 +203,6 @@ export class Desktop {
     applyUnmaximizeContent(maximizeContext(this.wm()), win)
   }
 
-  // ── private: minimize / restore ────────────────────────────────────────────
-
   private minimizeWindow(win: TiledWin): void {
     playOsSound('click')
     minimizeTiledWindow(lifecycleContext(this.wm()), win)
@@ -314,18 +211,6 @@ export class Desktop {
   private restoreMinimized(entry: MinimizedEntry): void {
     restoreMinimizedWindow(lifecycleContext(this.wm()), entry)
   }
-
-  private minimizeTerminal(): void {
-    playOsSound('click')
-    minimizeTerminalColumn(terminalColumnHost(this.wm()))
-  }
-
-  /** Dismiss terminal (hidden tile). Unlike minimize, does not auto-open app launchers. */
-  private closeTerminal(): void {
-    closeTerminalColumn(terminalColumnHost(this.wm()))
-  }
-
-  // ── private: show desktop ───────────────────────────────────────────────────
 
   private toggleShowDesktop(): void {
     toggleShowDesktopFlags(this.launcherOverlay)
@@ -336,7 +221,6 @@ export class Desktop {
     syncLauncherOverlayDom(launcherOverlayVisible(this.launcherOverlay), this.desktop)
   }
 
-  /** Close launcher overlay from any source (bar, Ctrl+D, Escape, backdrop). */
   private closeLauncherOverlay(): void {
     if (!closeLauncherOverlayFlags(this.launcherOverlay)) return
     this.sync()
@@ -351,38 +235,16 @@ export class Desktop {
     requestAnimationFrame(() => document.getElementById('launcher-search')?.focus())
   }
 
-  // ── private: vertical splitters between stacked content windows ───────────
-
-  /**
-   * Enforce the layout's maximum number of simultaneously visible tiled windows.
-   * Instantly (no animation) bumps the oldest non-focused window to the minimized dock.
-   * Call this before appending a new window to #right-pane.
-   */
   private enforceTileLimit(): void {
     applyTileLimit(tileLimitHost(this.wm()))
   }
 
-  /** Rebuild layout splitters after any window close, minimize, or restore. */
   private attachVerticalSplitters(): void {
     this.layout.rebuild(this.windows.map(w => w.el))
   }
 
-  // ── private: layout sync ───────────────────────────────────────────────────
-
-  /**
-   * Flush all derived UI state after any change to windows, focus, or launcher visibility.
-   *
-   * Order matters: `syncLauncherVisibility` and `syncTaskbar` both read `this.windows` and
-   * `this.focusedId`, so they must run after those values are updated. `fitTerminal` is deferred
-   * to the next animation frame so the DOM has settled before xterm measures the container.
-   */
   private sync(): void {
-    syncShellDataset(
-      this.desktop,
-      this.termWin,
-      this.windows.length,
-      this.maximizedId !== null,
-    )
+    syncShellDataset(this.desktop, this.windows.length, this.maximizedId !== null)
     this.syncLauncherVisibility()
     this.syncTaskbar()
     this.syncDockVisibility()
@@ -390,25 +252,23 @@ export class Desktop {
     requestAnimationFrame(() => this.fitOpenTerminal())
   }
 
-  /** Refit xterm in the open terminal tile (legacy column uses `fitTerminal` callback). */
   private fitOpenTerminal(): void {
     const termTile = this.windows.find(w => w.command === 'terminal')
     if (termTile) (termTile as TerminalWindow).fit()
-    this.fitTerminal()
   }
 
-  /** All windows accessible from the dock: open (by tile order) then minimized. */
   private dockWindows(): TiledWin[] {
     return resolveDockWindows(this.windows, this.minimized)
   }
 
-  /** Ctrl+1–9: focus the Nth open/minimized window (left to right in dock order). */
   private focusTaskbarIndex(index: number): void {
-    const wins = this.dockWindows()
-    const win = wins[index]
+    const win = this.dockWindows()[index]
     if (!win) return
     const minimized = this.minimized.find(m => m.win === win)
-    if (minimized) { this.restoreMinimized(minimized); return }
+    if (minimized) {
+      this.restoreMinimized(minimized)
+      return
+    }
     this.focusWindow(win)
   }
 
@@ -459,39 +319,17 @@ export class Desktop {
     )
   }
 
-  // ── private: keyboard ──────────────────────────────────────────────────────
-
-  /**
-   * Global keyboard handler (registered on `document` in capture phase so WM shortcuts
-   * intercept before xterm.js or the vim input layer consume the event).
-   *
-   * All WM shortcuts require `Ctrl` and must not combine with `Alt` or `Meta` (avoids
-   * clobbering browser and OS accelerators). Intercepted keys are listed in `WM_KEYS`.
-   *
-   * vim-direction mapping (matches right-pane flex-column layout):
-   *   - `h` → left → focus terminal
-   *   - `l` → right → enter right pane (first window)
-   *   - `k` → up → previous window in column
-   *   - `j` → down → next window in column
-   */
   private handleGlobal(ev: KeyboardEvent): void {
     handleDesktopGlobalKey(ev, keyboardHost(this.wm()))
   }
 
-  /**
-   * Spatial focus navigation: move focus to the nearest window in the given
-   * vim direction (h=left, j=down, k=up, l=right) using bounding-rect geometry.
-   * Pressing H with no window to the left of the current one falls back to
-   * opening / restoring the terminal (the permanent left anchor).
-   */
   private focusSpatial(dir: 'h' | 'j' | 'k' | 'l'): void {
     const action = pickSpatialFocusAction(
       this.windows.map(w => ({ id: w.command, rect: w.el.getBoundingClientRect() })),
       this.focusedId,
       dir,
     )
-    const openCommands = this.windows.map(w => w.command)
-    applySpatialFocusAction(action, openCommands, {
+    applySpatialFocusAction(action, this.windows.map(w => w.command), {
       focusWindow: cmd => {
         const win = this.windows.find(w => w.command === cmd)
         if (win) this.focusWindow(win)
