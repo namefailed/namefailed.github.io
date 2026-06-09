@@ -54,8 +54,12 @@ import { windowSpecForCommand } from './desktop-window-spec'
 import { initYasbClock } from './yasb-clock'
 import { setDesktopRef } from './os-registry'
 import { playOsSound } from './os-sound'
-import { mountWelcomeGuide } from './welcome-guide'
 import { mountDesktopTiles } from './desktop-tiles'
+import { initDesktopPersonalize } from './desktop-personalize'
+import { mountWelcomeGuide } from './welcome-guide'
+import { mountDesktopEmptyCta, syncDesktopEmptyCta } from './desktop-empty-cta'
+import { pushToast } from './os-systray'
+import { taskbarIconMeta } from './desktop-taskbar'
 import type { TerminalWindow } from './terminal'
 import type { WindowLayout } from './window-layout'
 import { BspLayout } from './bsp-layout'
@@ -101,11 +105,13 @@ export class Desktop {
       onCloseLauncher: () => this.closeLauncherOverlay(),
     })
     setDesktopRef(this)
+    initDesktopPersonalize(this.desktop)
     mountWelcomeGuide()
     wireDockHoverZone(this.taskbarDock)
 
     const workspace = document.getElementById('desktop-workspace')
     if (workspace) {
+      mountDesktopEmptyCta(workspace, cmd => void this.openWindow(windowSpecForCommand(cmd)))
       mountDesktopTiles({
         host: workspace,
         onActivate: cmd => void this.openWindow(windowSpecForCommand(cmd)),
@@ -236,7 +242,13 @@ export class Desktop {
   }
 
   private enforceTileLimit(): void {
-    applyTileLimit(tileLimitHost(this.wm()))
+    applyTileLimit({
+      ...tileLimitHost(this.wm()),
+      onWindowBumped: win => {
+        const { label } = taskbarIconMeta(win.command)
+        pushToast(`Window limit (6) — minimized “${label}”`, 4800, 'toast--warn')
+      },
+    })
   }
 
   private attachVerticalSplitters(): void {
@@ -245,6 +257,8 @@ export class Desktop {
 
   private sync(): void {
     syncShellDataset(this.desktop, this.windows.length, this.maximizedId !== null)
+    const workspace = document.getElementById('desktop-workspace')
+    if (workspace) syncDesktopEmptyCta(workspace, this.windows.length)
     this.syncLauncherVisibility()
     this.syncTaskbar()
     this.syncDockVisibility()

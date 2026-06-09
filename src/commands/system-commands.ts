@@ -33,7 +33,7 @@ export const systemCommands: Record<string, Command> = {
         resetTileLayout()
         return [
           `  ${c.green}Virtual home cleared.${c.reset}  ${c.dim}Factory default tree written to storage.${c.reset}`,
-          `  ${c.dim}First-visit flags wiped — boot splash, guide, toasts, hints, tile positions reset.${c.reset}`,
+          `  ${c.dim}Welcome guide reset — tile positions cleared.${c.reset}`,
           `  ${c.dim}Theme, CRT, matrix, apt package markers, etc. unchanged.${c.reset}`,
         ]
       }

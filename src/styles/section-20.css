@@ -15,7 +15,8 @@
   }
 
   #launcher-panel,
-  #launcher-shell {
+  #launcher-shell,
+  #launcher-backdrop {
     transition: none !important;
   }
 

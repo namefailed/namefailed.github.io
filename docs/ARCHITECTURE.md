@@ -160,7 +160,7 @@ Three.js ships **only** in the `rubik-window` lazy chunk.
 | `theme-packs.ts` / `theme-control.ts` | Runtime themes |
 | `ansi.ts` | ANSI → HTML |
 | `matrix-bg.ts` / `retro-fx.ts` / `wallpaper.ts` | Visual effects |
-| `boot-splash.ts` / `welcome-guide.ts` / `hint-bubbles.ts` | Onboarding |
+| `boot-splash.ts` / `welcome-guide.ts` | Onboarding |
 
 ### Rubik model
 

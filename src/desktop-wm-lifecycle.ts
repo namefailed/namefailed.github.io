@@ -32,6 +32,7 @@ export interface WmLifecycleContext {
   appendToRightPane(win: TiledWin): void
   focusWindow(win: TiledWin): void
   closeLauncherOverlay(): void
+  enforceTileLimit(): void
 }
 
 export function closeTiledWindow(ctx: WmLifecycleContext, win: TiledWin): void {
@@ -86,6 +87,8 @@ export function restoreMinimizedWindow(
   ctx.minimized.splice(i, 1)
 
   ctx.closeLauncherOverlay()
+
+  ctx.enforceTileLimit()
 
   entry.win.setMinimized(false)
   ctx.appendToRightPane(entry.win)

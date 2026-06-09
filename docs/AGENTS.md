@@ -157,9 +157,7 @@ WM tests often use `FakeEl` trees — copy pattern from `src/desktop.test.ts` or
 | `portfolio-fe-prefs-v1` | `file-explorer-window.ts` | Explorer prefs |
 | `mrgrey-browser-iframe-tip-dismiss` | `browser-window.ts` | Browser tip permanent dismiss |
 | `mrgrey-boot-seen` | `boot-splash.ts` | Skip boot animation |
-| `mrgrey-guide-seen` | `welcome-guide.ts` | Onboarding guide |
-| `mrgrey-toasts-seen` | `intro-toasts.ts` | Intro toast sequence |
-| `mrgrey-hint-<id>` | `hint-bubbles.ts` | Per-tile hint dismissal |
+| `mrgrey-guide-seen` | `welcome-guide.ts` | Welcome guide card |
 | `mrgrey-p5-tip-seen` | `p5-window.ts` | p5 viewer tip |
 | `mrgrey-pkgs-v1` | `os-packages.ts` | Installed joke packages |
 | `mrgrey-apt-cowsay` | `os-apt.ts` | cowsay install flag |

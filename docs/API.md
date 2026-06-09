@@ -184,8 +184,6 @@ storageSetBool(key: string, value: boolean): boolean
 | `mrgrey-browser-iframe-tip-dismiss` | `browser-window.ts` |
 | `mrgrey-boot-seen` | `boot-splash.ts` |
 | `mrgrey-guide-seen` | `welcome-guide.ts` |
-| `mrgrey-toasts-seen` | `intro-toasts.ts` |
-| `mrgrey-hint-<id>` | `hint-bubbles.ts` |
 | `mrgrey-p5-tip-seen` | `p5-window.ts` |
 | `mrgrey-pkgs-v1` | `os-packages.ts` |
 

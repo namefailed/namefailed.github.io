@@ -10,10 +10,119 @@
  */
 
 import { storageGet, storageSet, storageRemove } from './storage'
+import { FS_HOME, vfsListEntries, vfsReadRaw } from './os-fs'
 
 export const WALLPAPER_KEY = 'mrgrey-wallpaper'
-/** Default wallpaper — Mandelbrot lavender (shown on first boot). */
-export const WALLPAPER_DEFAULT = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/mandelbrot/mandelbrot_full_lavender.png'
+/** Default wallpaper — calm mocha minimal (shown on first boot). */
+export const WALLPAPER_DEFAULT = 'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/mocha.png'
+
+export interface WallpaperOption {
+  name: string
+  label: string
+  url: string
+}
+
+/** Max edge length for personalize-grid previews (full URL still used on the desktop). */
+export const WALLPAPER_THUMB_MAX_PX = 192
+
+/**
+ * Small preview URL for the personalize grid — avoids downloading multi‑MB originals.
+ * Remote http(s) images go through wsrv.nl (webp, cover crop); local/data URLs pass through.
+ */
+export function wallpaperThumbUrl(url: string, maxPx = WALLPAPER_THUMB_MAX_PX): string {
+  const trimmed = url.trim()
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('radial-gradient') ||
+    trimmed.startsWith('linear-gradient')
+  ) {
+    return trimmed
+  }
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) return trimmed
+
+  const params = new URLSearchParams({
+    url: trimmed,
+    w: String(maxPx),
+    h: String(Math.round(maxPx * 0.625)),
+    fit: 'cover',
+    output: 'webp',
+    q: '78',
+  })
+  return `https://wsrv.nl/?${params.toString()}`
+}
+
+/** Category label derived from bundled catppuccin-wallpapers paths. */
+export function wallpaperCategory(option: WallpaperOption): string {
+  const u = option.url
+  if (u.includes('/minimalistic/')) return 'Minimalistic'
+  if (u.includes('/landscapes/')) return 'Landscapes'
+  if (u.includes('/gradients/')) return 'Gradients'
+  if (u.includes('/waves/')) return 'Waves'
+  if (u.includes('/mandelbrot/')) return 'Mandelbrot'
+  if (u.includes('/misc/')) return 'Misc'
+  return 'Other'
+}
+
+const WALLPAPER_CATEGORY_ORDER = [
+  'Minimalistic',
+  'Landscapes',
+  'Gradients',
+  'Waves',
+  'Mandelbrot',
+  'Misc',
+  'Other',
+] as const
+
+/** Options grouped for the personalize dialog (stable category order). */
+export function listWallpaperOptionsByCategory(): ReadonlyArray<{
+  category: string
+  options: WallpaperOption[]
+}> {
+  const buckets = new Map<string, WallpaperOption[]>()
+  for (const opt of listWallpaperOptions()) {
+    const cat = wallpaperCategory(opt)
+    const list = buckets.get(cat) ?? []
+    list.push(opt)
+    buckets.set(cat, list)
+  }
+  return WALLPAPER_CATEGORY_ORDER.filter(c => buckets.has(c)).map(category => ({
+    category,
+    options: buckets.get(category)!,
+  }))
+}
+
+const WALLPAPER_DIR = `${FS_HOME}/Wallpapers`
+
+/** Bundled wallpapers from the virtual ~/Wallpapers folder (same URLs as file explorer). */
+export function listWallpaperOptions(): WallpaperOption[] {
+  const res = vfsListEntries(WALLPAPER_DIR)
+  if (!res.ok) return []
+
+  const out: WallpaperOption[] = []
+  for (const entry of res.entries) {
+    if (entry.kind !== 'f') continue
+    if (!/\.(png|jpe?g|webp|gif)$/i.test(entry.name)) continue
+    const raw = vfsReadRaw(`${WALLPAPER_DIR}/${entry.name}`)
+    if (!raw.ok) continue
+    const url = raw.body.trim()
+    if (!url.startsWith('http') && !url.startsWith('/') && !url.startsWith('data:')) continue
+    out.push({
+      name: entry.name,
+      url,
+      label: entry.name
+        .replace(/\.[^.]+$/, '')
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, ch => ch.toUpperCase()),
+    })
+  }
+  return out
+}
+
+/** Saved wallpaper URL, or the default when nothing is stored yet. */
+export function currentWallpaperValue(): string {
+  return storageGet(WALLPAPER_KEY) || WALLPAPER_DEFAULT
+}
 
 /** Apply a wallpaper value to the #desktop element (the wallpaper layer).
  *  Targets #desktop rather than #desktop-workspace so the matrix canvas and

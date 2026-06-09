@@ -1,12 +1,12 @@
 /**
  * Populated desktop with two zones (Portfolio · Tools & Fun).
  * Tiles are draggable, snap-to-grid; positions persist to localStorage.
- * Game tiles (paint, snake, pong, cube, p5) live inside a "Games" folder tile.
+ * Game tiles (paint, snake, pong, p5) live inside a "Games" folder tile.
  */
 
 import { storageGet, storageSet, storageRemove } from './storage'
 import { computeFolderPopupPosition } from './folder-popup-layout'
-import { mountHintBubbles } from './hint-bubbles'
+import { dismissLegacyOnboardingUi } from './first-visit-flags'
 
 export const ZONE_PORTFOLIO = 'portfolio' as const
 export const ZONE_TOOLS = 'tools' as const
@@ -35,17 +35,16 @@ const TILES: DesktopTile[] = [
   { cmd: 'paint',    label: 'Paint',    glyph: '◐',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'snake',    label: 'Snake',    glyph: '≈',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'pong',     label: 'Pong',     glyph: '◎',  zone: ZONE_TOOLS, accent: 'fun' },
-  { cmd: 'cube',     label: 'Cube',     glyph: '⬡',  zone: ZONE_TOOLS, accent: 'fun' },
   { cmd: 'p5',       label: 'p5.js',    glyph: 'p5', zone: ZONE_TOOLS, accent: 'fun' },
 ]
 
 /** Portfolio content tiles (résumé, projects, about, contact). */
 export const PORTFOLIO_CMDS: ReadonlySet<string> = new Set(['resume', 'projects', 'whoami', 'links'])
 
-/** Games/fun tiles that live inside the Apps folder. */
-export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'cube', 'p5'])
+/** Games/fun tiles inside the Games folder */
+export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'p5'])
 
-/** All 12 tile definitions — used for persistence / tests. */
+/** All 11 tile definitions — used for persistence / tests. */
 export function visibleDesktopTiles(): readonly DesktopTile[] {
   return TILES
 }
@@ -153,26 +152,14 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
   for (const def of folderDefs) {
     const pos = layout[def.cmd] ?? defaultTileLayout()[def.cmd]!
     const el  = createFolderTile(pos, def)
-    attachTileDrag(el, def.cmd, () => toggleFolderPopup(el, def, opts.onActivate))
+    const onFolderActivate =
+      def.cmd === 'portfolio-folder'
+        ? () => opts.onActivate('portfolio')
+        : () => toggleFolderPopup(el, def, opts.onActivate)
+    attachTileDrag(el, def.cmd, onFolderActivate)
     opts.host.appendChild(el)
     folderEls.push(el)
   }
-
-  mountHintBubbles({
-    host: opts.host,
-    resolveAnchor: (cmd) => {
-      const tile = opts.host.querySelector<HTMLElement>(`[data-cmd="${cmd}"]`)
-      if (!tile) return null
-      const hostRect = opts.host.getBoundingClientRect()
-      const tileRect = tile.getBoundingClientRect()
-      return new DOMRect(
-        tileRect.left - hostRect.left,
-        tileRect.top - hostRect.top,
-        tileRect.width,
-        tileRect.height,
-      )
-    },
-  })
 
   // Close popup when clicking outside any folder tile
   document.addEventListener('pointerdown', (e) => {
@@ -181,6 +168,8 @@ export function mountDesktopTiles(opts: MountTilesOptions): void {
     const inFolder = folderEls.some(f => f.contains(e.target as Node))
     if (!inFolder && !popup.contains(e.target as Node)) closeActivePopup()
   }, { capture: true })
+
+  dismissLegacyOnboardingUi()
 }
 
 // ── Tile DOM helpers ─────────────────────────────────────────────────────────

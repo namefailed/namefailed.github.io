@@ -48,7 +48,7 @@ export function terminalMotdLines(): string[] {
     ...BANNER,
     '',
     `  ${c.pink}mrgrey.site${c.reset} — portfolio OS`,
-    `  ${c.dim}Type ${c.reset}help${c.dim} to see available commands.${c.reset}`,
+    `  ${c.dim}Desktop: Portfolio · Apps · Games — type ${c.reset}help${c.dim} for commands.${c.reset}`,
   ]
 }
 
@@ -126,6 +126,11 @@ export class TerminalApp {
     this.xterm.focus()
   }
 
+  /** Release xterm resources when the terminal tile is closed. */
+  dispose(): void {
+    this.xterm.dispose()
+  }
+
   /** Keep xterm palette in sync when theme changes from the system menu (or elsewhere). */
   syncXtermTheme(): void {
     this.refreshTerminalTheme()
@@ -163,7 +168,10 @@ export class TerminalApp {
     // Subtitle + help hint appear instantly after the banner completes
     this.xterm.writeln('')
     this.xterm.writeln(`  ${c.pink}mrgrey.site${c.reset} — portfolio OS`)
-    this.xterm.writeln(`  ${c.dim}Type ${c.reset}help${c.dim} to see available commands.${c.reset}`)
+    this.xterm.writeln(
+      `  ${c.dim}Desktop: ${c.reset}Portfolio${c.dim} · ${c.reset}Apps${c.dim} · ${c.reset}Games` +
+        `${c.dim} folders — or type ${c.reset}help${c.dim} for commands.${c.reset}`,
+    )
     this.xterm.writeln('')
     this.prompt()
   }
@@ -599,7 +607,7 @@ export class TerminalWindow {
     // ── Outer shell ──────────────────────────────────────────────────────────
     const winChrome = createWindowChrome({
       title: 'terminal',
-      onClose: () => { this.themeAbort.abort(); opts.onClose() },
+      onClose: opts.onClose,
       onMinimize: opts.onMinimize,
       onMaximize: opts.onMaximize,
       onFocus: opts.onFocus,
@@ -645,6 +653,12 @@ export class TerminalWindow {
       () => this.app.syncXtermTheme(),
       { signal: this.themeAbort.signal },
     )
+  }
+
+  /** Tear down xterm + theme listener when the tile closes. */
+  dispose(): void {
+    this.themeAbort.abort()
+    this.app.dispose()
   }
 
   async mount(): Promise<void> {

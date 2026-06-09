@@ -39,7 +39,7 @@ beforeAll(() => {
 describe('desktop-tiles catalog', () => {
   it('exposes exactly the 12 visible tiles split across 2 zones', () => {
     const tiles = visibleDesktopTiles()
-    expect(tiles.length).toBe(13)
+    expect(tiles.length).toBe(12)
   })
 
   it('Portfolio zone has 4 hero apps', () => {
@@ -47,15 +47,15 @@ describe('desktop-tiles catalog', () => {
     expect(portfolio.map((t: { cmd: string }) => t.cmd).sort()).toEqual(['links', 'projects', 'resume', 'whoami'])
   })
 
-  it('Tools & Fun zone has 9 apps including p5, pong, cube, browse', () => {
+  it('Tools & Fun zone has 8 apps including p5, pong, browse', () => {
     const fun = visibleDesktopTiles().filter((t: { zone: string }) => t.zone === ZONE_TOOLS)
     const cmds = fun.map((t: { cmd: string }) => t.cmd).sort()
-    expect(cmds).toEqual(['browse', 'cube', 'edit', 'explorer', 'p5', 'paint', 'pong', 'snake', 'terminal'])
+    expect(cmds).toEqual(['browse', 'edit', 'explorer', 'p5', 'paint', 'pong', 'snake', 'terminal'])
   })
 
-  it('GAME_CMDS contains exactly 5 game commands including cube', () => {
-    expect(GAME_CMDS.size).toBe(5)
-    for (const cmd of ['paint', 'snake', 'pong', 'cube', 'p5']) {
+  it('GAME_CMDS contains exactly 4 game commands', () => {
+    expect(GAME_CMDS.size).toBe(4)
+    for (const cmd of ['paint', 'snake', 'pong', 'p5']) {
       expect(GAME_CMDS.has(cmd)).toBe(true)
     }
   })
@@ -82,9 +82,9 @@ describe('desktop-tiles catalog', () => {
     }
   })
 
-  it('gameFolderTiles returns exactly the 5 game tiles including cube', () => {
+  it('gameFolderTiles returns exactly the 4 game tiles', () => {
     const games = gameFolderTiles()
-    expect(games.length).toBe(5)
+    expect(games.length).toBe(4)
     for (const t of games) {
       expect(GAME_CMDS.has(t.cmd)).toBe(true)
     }

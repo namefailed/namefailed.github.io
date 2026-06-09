@@ -4,6 +4,11 @@ import {
   setWallpaper,
   clearWallpaper,
   loadSavedWallpaper,
+  listWallpaperOptions,
+  listWallpaperOptionsByCategory,
+  currentWallpaperValue,
+  wallpaperThumbUrl,
+  wallpaperCategory,
   WALLPAPER_KEY,
   WALLPAPER_DEFAULT,
 } from './wallpaper'
@@ -43,9 +48,9 @@ describe('WALLPAPER_KEY', () => {
     expect(WALLPAPER_KEY).toBe('mrgrey-wallpaper')
   })
 
-  it('WALLPAPER_DEFAULT is the Mandelbrot lavender wallpaper URL', () => {
+  it('WALLPAPER_DEFAULT is the calm mocha minimal wallpaper URL', () => {
     expect(WALLPAPER_DEFAULT).toBe(
-      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/mandelbrot/mandelbrot_full_lavender.png',
+      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/mocha.png',
     )
   })
 })
@@ -139,5 +144,59 @@ describe('loadSavedWallpaper', () => {
   it('applies the default wallpaper when no wallpaper is stored', () => {
     loadSavedWallpaper()
     expect(mockEl.style.backgroundImage).toBe(`url("${WALLPAPER_DEFAULT}")`)
+  })
+})
+
+describe('listWallpaperOptions', () => {
+  it('lists image files from ~/Wallpapers with http URLs', () => {
+    const options = listWallpaperOptions()
+    expect(options.length).toBeGreaterThan(10)
+    expect(options.some(o => o.name === 'mandelbrot-lavender.png')).toBe(true)
+    expect(options.every(o => o.url.startsWith('https://'))).toBe(true)
+    expect(options.every(o => o.label.length > 0)).toBe(true)
+  })
+})
+
+describe('currentWallpaperValue', () => {
+  it('returns saved value when set', () => {
+    localStorage.setItem(WALLPAPER_KEY, '/custom.jpg')
+    expect(currentWallpaperValue()).toBe('/custom.jpg')
+  })
+
+  it('falls back to default when unset', () => {
+    expect(currentWallpaperValue()).toBe(WALLPAPER_DEFAULT)
+  })
+})
+
+describe('wallpaperThumbUrl', () => {
+  it('proxies remote URLs through wsrv for small webp previews', () => {
+    const url =
+      'https://raw.githubusercontent.com/zhichaoh/catppuccin-wallpapers/main/minimalistic/cats.png'
+    const thumb = wallpaperThumbUrl(url)
+    expect(thumb).toMatch(/^https:\/\/wsrv\.nl\/\?/)
+    expect(thumb).toContain('output=webp')
+    expect(thumb).toContain(encodeURIComponent(url))
+  })
+
+  it('passes local and data URLs through unchanged', () => {
+    expect(wallpaperThumbUrl('/img/wall.jpg')).toBe('/img/wall.jpg')
+    expect(wallpaperThumbUrl('data:image/png;base64,abc')).toBe('data:image/png;base64,abc')
+  })
+})
+
+describe('listWallpaperOptionsByCategory', () => {
+  it('groups bundled wallpapers with stable category labels', () => {
+    const groups = listWallpaperOptionsByCategory()
+    expect(groups.length).toBeGreaterThan(3)
+    expect(groups.some(g => g.category === 'Minimalistic')).toBe(true)
+    expect(groups.some(g => g.category === 'Mandelbrot')).toBe(true)
+    const total = groups.reduce((n, g) => n + g.options.length, 0)
+    expect(total).toBe(listWallpaperOptions().length)
+  })
+
+  it('derives category from URL path', () => {
+    const sample = listWallpaperOptions().find(o => o.name === 'cats.png')
+    expect(sample).toBeDefined()
+    expect(wallpaperCategory(sample!)).toBe('Minimalistic')
   })
 })

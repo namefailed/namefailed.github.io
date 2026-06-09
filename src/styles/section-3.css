@@ -29,7 +29,7 @@
   transform-style: preserve-3d;
 }
 
-/* BSP column — a vertical flex container for up to 2 stacked content windows */
+/* BSP column — a vertical flex container for up to 3 stacked content windows */
 .bsp-col {
   flex: 1;
   min-width: 200px;

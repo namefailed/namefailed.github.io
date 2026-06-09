@@ -18,6 +18,10 @@ export type PortfolioProjectEntry = {
    * 403/HTML so the `<img>` never paints a frame; we then rely on {@link thumb} (or placeholder).
    */
   skipLiveScreenshot?: boolean
+  /** CSS object-position for bundled screenshots (default: center top). */
+  thumbPosition?: string
+  /** Override auto-detected preview badge (website / app / portfolio / client). */
+  previewKind?: 'website' | 'app' | 'portfolio' | 'client'
 }
 
 export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
@@ -30,6 +34,21 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     ],
     web: 'https://vertalo.com',
     thumb: 'img/portfolio-vertalo.png',
+    thumbPosition: 'center top',
+    skipLiveScreenshot: true,
+  },
+  {
+    title: 'Phoneme',
+    period: 'phoneme · 2025–2026',
+    lines: [
+      `Local-first voice transcription for Windows — global hotkey, speak, release, paste anywhere.`,
+      `Offline Whisper by default; optional cloud STT/LLM cleanup, meeting mode with dual-track capture,`,
+      `SQLite catalog, webhooks, and CLI. Rust + Tauri + egui. Open source (MIT/Apache-2.0).`,
+    ],
+    repo: 'https://github.com/namefailed/phoneme',
+    thumb: 'img/portfolio-phoneme.png',
+    previewKind: 'app',
+    thumbPosition: 'center center',
     skipLiveScreenshot: true,
   },
   {
@@ -42,8 +61,9 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     ],
     repo: 'https://github.com/namefailed/namefailed.github.io',
     web: 'https://mrgrey.site',
-    thumb: 'img/legacy/portfolio-mrgrey.svg',
-    /* mShots often 403 / non-image for personal domains — card art is the bundled SVG */
+    thumb: 'img/portfolio-mrgrey.png',
+    previewKind: 'portfolio',
+    thumbPosition: 'center top',
     skipLiveScreenshot: true,
   },
   {
@@ -91,6 +111,10 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
       `End-to-end for small businesses: discovery, design handoff, build,`,
       `deploy, iterate. HTML/CSS/JS/React + WordPress where it fits.`,
     ],
+    thumb: 'img/portfolio-freelance.png',
+    previewKind: 'client',
+    thumbPosition: 'center center',
+    skipLiveScreenshot: true,
   },
 ]
 

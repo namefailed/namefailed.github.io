@@ -1,17 +1,19 @@
 /**
  * Binary-space-partition tiling layout.
  *
- * Two-column layout.  Windows fill columns using a "shorter column first,
- * prefer right on tie" rule so that the open sequence is:
+ * Two-column layout.  Windows alternate left → right → left … and stack
+ * vertically within each column (up to three per side):
  *
- *   W1 → left   W2 → right   W3 → right   W4 → left   W5 → right   W6 → left …
+ *   W1 → left   W2 → right   W3 → left   W4 → right   W5 → left   W6 → right
  *
- * Visually for four windows:
+ * Visually for six windows:
  *
  *   ┌─────────┬─────────┐
  *   │   W1    │   W2    │
  *   ├─────────┼─────────┤
- *   │   W4    │   W3    │
+ *   │   W3    │   W4    │
+ *   ├─────────┼─────────┤
+ *   │   W5    │   W6    │
  *   └─────────┴─────────┘
  *
  * Within-column windows are separated by a drag handle that lets the user
@@ -28,15 +30,18 @@
 import { Splitter } from './splitter'
 import type { WindowLayout } from './window-layout'
 
+/** Max stacked windows per column (3 tall × 2 wide). */
+export const BSP_MAX_PER_COLUMN = 3
+
 export class BspLayout implements WindowLayout {
   /** Stable identifier consumed by settings persistence and terminal commands. */
   readonly name = 'bsp'
 
   /**
-   * At most 4 windows are simultaneously visible (2 per column).
-   * Desktop bumps older windows to the minimized dock once this cap is reached.
+   * At most 6 windows are simultaneously visible (3 per column).
+   * Desktop bumps the oldest window to the minimized dock once this cap is reached.
    */
-  readonly maxVisible = 4
+  readonly maxVisible = BSP_MAX_PER_COLUMN * 2
 
   private rightPane:   HTMLElement
   private colA:        HTMLElement | null = null
@@ -172,37 +177,17 @@ export class BspLayout implements WindowLayout {
   }
 
   /**
-   * Route the incoming window to the correct column using a
-   * "shorter column first, prefer col-b on tie" rule.
-   *
-   * This produces the open sequence L R R L R L … so that:
-   *  - The first window anchors the left column.
-   *  - Each subsequent window fills whichever column is shorter.
-   *  - When both columns are equal length the right column is preferred,
-   *    so new rows fill right-first then left (matching the user's expectation).
+   * Route the incoming window to a column by strict open-order alternation
+   * (even index → left, odd → right), stacking vertically under prior windows
+   * in that column.  If the preferred column already holds {@link BSP_MAX_PER_COLUMN}
+   * windows, the spill column is used when it has room.
    */
   private resolveCol(alreadyTiled: number): HTMLElement {
-    // First window always anchors the left column.
-    if (alreadyTiled === 0) {
-      if (!this.colA) {
-        this.colA = document.createElement('div')
-        this.colA.className = 'bsp-col'
-        this.rightPane.prepend(this.colA)
-      }
-      return this.colA
-    }
+    const preferA = alreadyTiled % 2 === 0
+    const aCount = this.colWindowCount(this.colA)
+    const bCount = this.colWindowCount(this.colB)
 
-    // Count live content windows in each column.
-    const aCount = this.colA
-      ? this.colA.querySelectorAll<HTMLElement>(':scope > .content-window').length
-      : 0
-    const bCount = this.colB
-      ? this.colB.querySelectorAll<HTMLElement>(':scope > .content-window').length
-      : 0
-
-    // Left column wins only when it is strictly shorter.
-    // Equal or right-shorter → right column (col-b wins ties).
-    if (aCount < bCount) {
+    const pickA = (): HTMLElement => {
       if (!this.colA) {
         this.colA = document.createElement('div')
         this.colA.className = 'bsp-col'
@@ -215,8 +200,27 @@ export class BspLayout implements WindowLayout {
       return this.colA
     }
 
+    if (preferA) {
+      if (aCount < BSP_MAX_PER_COLUMN) return pickA()
+      if (bCount < BSP_MAX_PER_COLUMN) {
+        if (!this.colB) this.createColB()
+        return this.colB!
+      }
+      return pickA()
+    }
+
+    if (bCount < BSP_MAX_PER_COLUMN) {
+      if (!this.colB) this.createColB()
+      return this.colB!
+    }
+    if (aCount < BSP_MAX_PER_COLUMN) return pickA()
     if (!this.colB) this.createColB()
     return this.colB!
+  }
+
+  private colWindowCount(col: HTMLElement | null): number {
+    if (!col) return 0
+    return col.querySelectorAll<HTMLElement>(':scope > .content-window').length
   }
 
   /** Create col-b and the inter-column vertical drag handle. */

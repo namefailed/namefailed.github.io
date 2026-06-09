@@ -45,7 +45,6 @@ const SLUG = {
   'desktop tiles': 'desktop-tiles',
   'welcome guide': 'welcome-guide',
   'folder popup': 'folder-popup',
-  'hint bubbles': 'hint-bubbles',
   'p5.js first-open tip': 'p5-tip',
   'settings panel action': 'settings-panel',
 }

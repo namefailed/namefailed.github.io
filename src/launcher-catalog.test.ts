@@ -49,9 +49,10 @@ describe('TILED_WINDOW_COMMANDS', () => {
   })
 
   it('includes game and tool commands', () => {
-    for (const cmd of ['paint', 'snake', 'pong', 'cube', 'p5', 'explorer', 'browse']) {
+    for (const cmd of ['paint', 'snake', 'pong', 'p5', 'explorer', 'browse']) {
       expect(TILED_WINDOW_COMMANDS.has(cmd)).toBe(true)
     }
+    expect(TILED_WINDOW_COMMANDS.has('cube')).toBe(false)
   })
 
   it('does not include "terminal" (terminal is its own window type)', () => {
@@ -116,5 +117,12 @@ describe('LAUNCHER_ICON_ROWS', () => {
         expect(TILED_WINDOW_COMMANDS.has(row.cmd)).toBe(true)
       }
     }
+  })
+
+  it('app labels are A→Z (terminal row stays last)', () => {
+    const apps = LAUNCHER_ICON_ROWS.filter(r => r.kind === 'app').map(r => r.label)
+    const sorted = [...apps].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    expect(apps).toEqual(sorted)
+    expect(LAUNCHER_ICON_ROWS.at(-1)?.kind).toBe('terminal')
   })
 })

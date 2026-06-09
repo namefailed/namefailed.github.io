@@ -8,6 +8,7 @@ import { windowSpecForCommand } from './desktop-window-spec'
 vi.mock('./os-sound', () => ({ playOsSound: vi.fn() }))
 vi.mock('./welcome-guide', () => ({ mountWelcomeGuide: vi.fn() }))
 vi.mock('./desktop-tiles', () => ({ mountDesktopTiles: vi.fn() }))
+vi.mock('./desktop-personalize', () => ({ initDesktopPersonalize: vi.fn() }))
 vi.mock('./splitter', () => ({ Splitter: vi.fn() }))
 vi.mock('./os-registry', () => ({ setDesktopRef: vi.fn() }))
 
@@ -455,19 +456,32 @@ describe('Desktop WM', () => {
     expect(focusedCmd(desktop)).toBe('links')
   })
 
-  it('enforceTileLimit minimizes the oldest non-focused window at cap (4)', async () => {
+  it('enforceTileLimit minimizes the oldest window at cap (6)', async () => {
     const { desktop } = mountDesktop()
     await desktop.openWindow(whoamiSpec())
     await desktop.openWindow(linksSpec())
     await desktop.openWindow(projectsSpec())
     await desktop.openWindow(resumeSpec())
-    expect(desktop.getPsSnapshot().filter(r => r.stat === 'Sl' || r.stat === 'Sl+').length).toBe(4)
-
+    await desktop.openWindow({
+      command: 'explorer',
+      title: 'explorer',
+      content: [],
+      explorerPath: '/home/namefailed',
+    })
     await desktop.openWindow({ command: 'paint', title: 'paint', content: [] })
+    expect(desktop.getPsSnapshot().filter(r => r.stat === 'Sl' || r.stat === 'Sl+').length).toBe(6)
+
+    await desktop.openWindow({
+      command: 'edit',
+      title: 'edit',
+      content: [],
+      editorPath: 'notes.txt',
+    })
     const visible = desktop.getPsSnapshot().filter(r => r.stat === 'Sl' || r.stat === 'Sl+')
     const minimized = desktop.getPsSnapshot().filter(r => r.stat === 'T')
-    expect(visible.length).toBe(4)
+    expect(visible.length).toBe(6)
     expect(minimized.length).toBe(1)
-    expect(visible.some(r => r.cmd === 'paint')).toBe(true)
+    expect(minimized.some(r => r.cmd === 'whoami (minimized)')).toBe(true)
+    expect(visible.some(r => r.cmd === 'edit')).toBe(true)
   })
 })

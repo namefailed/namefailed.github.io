@@ -2,17 +2,17 @@
  * Turns the HTML shell into the live desktop.
  * Terminal is a lazy-loaded tile (Ctrl+T or dock). Matrix rain defers via idle callback.
  */
-import { runBootSplash } from './boot-splash'
 import { initThemeFromStorage } from './theme'
 import { initRetroFxFromStorage } from './retro-fx'
 import { initMatrixBg } from './matrix-bg'
 import { initOsSound } from './os-sound'
 import { initSystray, syncSettingsSoundToggle } from './os-systray'
 import { loadSavedWallpaper } from './wallpaper'
+import { dismissLegacyOnboardingUi } from './first-visit-flags'
 import { Desktop } from './desktop'
 
 export async function bootstrapShellUi(): Promise<void> {
-  await runBootSplash()
+  dismissLegacyOnboardingUi()
   initThemeFromStorage()
   loadSavedWallpaper()
   initRetroFxFromStorage()

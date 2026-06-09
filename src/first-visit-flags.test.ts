@@ -1,9 +1,12 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
-import { clearFirstVisitFlags } from './first-visit-flags'
-import { HINTS, hintKey } from './hint-bubbles'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import {
+  clearFirstVisitFlags,
+  dismissLegacyOnboardingUi,
+  FIRST_RUN_KEY,
+  SUPPRESSED_LEGACY_KEYS,
+} from './first-visit-flags'
 import { BOOT_SPLASH_KEY } from './boot-splash'
 import { GUIDE_KEY } from './welcome-guide'
-import { INTRO_TOASTS_KEY } from './intro-toasts'
 
 class MockStorage implements Storage {
   private data = new Map<string, string>()
@@ -21,20 +24,53 @@ beforeAll(() => {
     localStorage,
     setTimeout: (fn: () => void, _ms: number) => { fn(); return 0 },
   }
+  ;(globalThis as unknown as { document: Document }).document = {
+    body: null,
+    querySelectorAll: () => [] as unknown as NodeListOf<Element>,
+    addEventListener: () => {},
+  } as unknown as Document
+  ;(globalThis as unknown as { MutationObserver: typeof MutationObserver }).MutationObserver =
+    class {
+      observe(): void {}
+      disconnect(): void {}
+    } as unknown as typeof MutationObserver
 })
 
 const allFirstVisitKeys = [
   BOOT_SPLASH_KEY,
   GUIDE_KEY,
-  INTRO_TOASTS_KEY,
-  ...HINTS.map(h => hintKey(h.targetCmd)),
+  ...SUPPRESSED_LEGACY_KEYS,
 ]
+
+describe('dismissLegacyOnboardingUi', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('marks suppressed legacy keys as dismissed', () => {
+    dismissLegacyOnboardingUi()
+    expect(localStorage.getItem(FIRST_RUN_KEY)).toBe('1')
+    expect(localStorage.getItem('mrgrey-hint-portfolio-folder')).toBe('1')
+    expect(localStorage.getItem('mrgrey-hint-apps-folder')).toBe('1')
+    expect(localStorage.getItem('mrgrey-hint-games-folder')).toBe('1')
+  })
+
+  it('does not mark the welcome guide as seen', () => {
+    dismissLegacyOnboardingUi()
+    expect(localStorage.getItem(GUIDE_KEY)).toBeNull()
+  })
+
+  it('removes legacy hint bubble nodes from the DOM', () => {
+    const remove = vi.fn()
+    const bubble = { remove } as unknown as Element
+    vi.spyOn(document, 'querySelectorAll').mockReturnValue([bubble] as unknown as NodeListOf<Element>)
+    dismissLegacyOnboardingUi()
+    expect(remove).toHaveBeenCalledOnce()
+  })
+})
 
 describe('clearFirstVisitFlags', () => {
   beforeEach(() => localStorage.clear())
 
   it('removes all first-visit flag keys when they are set', () => {
-    // Populate every key
     for (const key of allFirstVisitKeys) {
       localStorage.setItem(key, '1')
     }
@@ -48,15 +84,6 @@ describe('clearFirstVisitFlags', () => {
     expect(() => clearFirstVisitFlags()).not.toThrow()
   })
 
-  it('covers exactly boot-splash, guide, toasts, and all folder hint keys', () => {
-    const hintKeys = HINTS.map(h => hintKey(h.targetCmd))
-    expect(allFirstVisitKeys).toContain(BOOT_SPLASH_KEY)
-    expect(allFirstVisitKeys).toContain(GUIDE_KEY)
-    expect(allFirstVisitKeys).toContain(INTRO_TOASTS_KEY)
-    expect(hintKeys.length).toBe(3)
-    expect(allFirstVisitKeys.length).toBe(6) // 3 + 3 hints
-  })
-
   it('does not remove unrelated keys (e.g. theme, wallpaper, apt)', () => {
     localStorage.setItem('mrgrey-theme', 'dracula')
     localStorage.setItem('mrgrey-wallpaper', '/wallpaper.jpg')
@@ -65,11 +92,5 @@ describe('clearFirstVisitFlags', () => {
     expect(localStorage.getItem('mrgrey-theme')).toBe('dracula')
     expect(localStorage.getItem('mrgrey-wallpaper')).toBe('/wallpaper.jpg')
     expect(localStorage.getItem('mrgrey-apt-cowsay')).toBe('1')
-  })
-
-  it('clears guide key (mrgrey-guide-seen) that was missing from old cookies clear', () => {
-    localStorage.setItem(GUIDE_KEY, '1')
-    clearFirstVisitFlags()
-    expect(localStorage.getItem(GUIDE_KEY)).toBeNull()
   })
 })

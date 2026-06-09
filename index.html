@@ -13,6 +13,17 @@
       (function () {
         var p = location.pathname || ''
         if (/\/static(\/|$)/.test(p)) return
+        var search = location.search || ''
+        var ref = document.referrer || ''
+        var recruiter =
+          /\b(?:ref|utm_source|from)=(linkedin|indeed|glassdoor|hiring|jobs|recruiter|job)\b/i.test(search) ||
+          /\bview=(classic|static|resume)\b/i.test(search) ||
+          /linkedin\.com|indeed\.com|glassdoor\.com|jobs\.lever\.co|greenhouse\.io/i.test(ref)
+        if (recruiter) {
+          var qs = search && search.length > 0 ? search : ''
+          location.replace(location.origin + '/static/' + qs)
+          return
+        }
         var ua = navigator.userAgent || ''
         var coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches
         var narrow = window.innerWidth <= 768
@@ -51,6 +62,22 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"
       rel="stylesheet"
     />
+    <!-- Silence removed folder hint bubbles before ES modules load. -->
+    <script>
+      (function () {
+        var keys = [
+          'mrgrey-first-run-done',
+          'mrgrey-toasts-seen',
+          'mrgrey-hint-portfolio-folder',
+          'mrgrey-hint-apps-folder',
+          'mrgrey-hint-games-folder',
+          'mrgrey-p5-tip-seen',
+        ]
+        try {
+          for (var i = 0; i < keys.length; i++) localStorage.setItem(keys[i], '1')
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#desktop-workspace">Skip to desktop</a>

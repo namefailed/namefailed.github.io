@@ -7,13 +7,14 @@ import {
   resolveBrowserUrl,
   resolveEditorPath,
   resolveExplorerPath,
+  windowChromeCallbacks,
 } from './desktop-open-window'
 import type { WindowSpec } from './appwindow'
 
 describe('isMiniGameCommand', () => {
-  it('recognizes paint/snake/pong/cube', () => {
+  it('recognizes paint/snake/pong', () => {
     expect(isMiniGameCommand('paint')).toBe(true)
-    expect(isMiniGameCommand('cube')).toBe(true)
+    expect(isMiniGameCommand('cube')).toBe(false)
     expect(isMiniGameCommand('resume')).toBe(false)
   })
 })
@@ -81,5 +82,24 @@ describe('editWindowSpecFromPath', () => {
     expect(spec.command).toBe('edit')
     expect(spec.editorPath).toBe('/home/notes.txt')
     expect(spec.title).toContain('notes.txt')
+  })
+})
+
+describe('windowChromeCallbacks', () => {
+  it('resolves the window instance lazily (not at callback creation time)', () => {
+    const closed: unknown[] = []
+    const host = {
+      closeWindow: (win: unknown) => {
+        closed.push(win)
+      },
+      minimizeWindow: () => {},
+      toggleMaximizeContent: () => {},
+      focusWindow: () => {},
+    }
+    let win!: { command: string }
+    win = { command: 'edit' }
+    const { onClose } = windowChromeCallbacks(host as never, () => win as never)
+    onClose()
+    expect(closed).toEqual([win])
   })
 })

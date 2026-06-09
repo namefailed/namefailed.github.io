@@ -1,6 +1,4 @@
-/**
- * Lazy window open dispatch — path-toggle tools, games, portfolio tiles, terminal tile.
- */
+import { pushToast } from './os-systray'
 
 import { AppWindow } from './appwindow'
 import type { WindowSpec } from './appwindow'
@@ -32,7 +30,7 @@ export interface MinimizedEntry {
   win: TiledWin
 }
 
-export const MINI_GAME_COMMANDS = new Set(['paint', 'snake', 'pong', 'cube'])
+export const MINI_GAME_COMMANDS = new Set(['paint', 'snake', 'pong'])
 
 export function isMiniGameCommand(cmd: string): boolean {
   return MINI_GAME_COMMANDS.has(cmd)
@@ -97,9 +95,9 @@ function mountContentWindow(host: OpenWindowHost, win: TiledWin): void {
   host.focusWindow(win)
 }
 
-function windowChromeCallbacks(
+export function windowChromeCallbacks(
   host: OpenWindowHost,
-  win: TiledWin,
+  getWin: () => TiledWin,
 ): {
   onClose: () => void
   onMinimize: () => void
@@ -107,10 +105,10 @@ function windowChromeCallbacks(
   onFocus: () => void
 } {
   return {
-    onClose: () => host.closeWindow(win),
-    onMinimize: () => host.minimizeWindow(win),
-    onMaximize: () => host.toggleMaximizeContent(win),
-    onFocus: () => host.focusWindow(win),
+    onClose: () => host.closeWindow(getWin()),
+    onMinimize: () => host.minimizeWindow(getWin()),
+    onMaximize: () => host.toggleMaximizeContent(getWin()),
+    onFocus: () => host.focusWindow(getWin()),
   }
 }
 
@@ -169,7 +167,7 @@ export async function dispatchOpenWindow(
         let ed!: EditorWindow
         ed = new EditorWindowCtor({
           initialPath: pathArg,
-          ...windowChromeCallbacks(host, ed),
+          ...windowChromeCallbacks(host, () => ed),
           onRunInP5: absPath => void host.openWindow(p5WindowSpecFromPath(absPath)),
         })
         return ed
@@ -190,7 +188,7 @@ export async function dispatchOpenWindow(
         let ex!: FileExplorerWindow
         ex = new FileExplorerWindowCtor({
           initialPath: pathArg,
-          ...windowChromeCallbacks(host, ex),
+          ...windowChromeCallbacks(host, () => ex),
           onOpenInEditor: absFilePath => void host.openWindow(explorerFileOpenSpec(absFilePath)),
         })
         return ex
@@ -211,7 +209,7 @@ export async function dispatchOpenWindow(
         let br!: BrowserWindow
         br = new BrowserWindowCtor({
           initialUrl: urlArg,
-          ...windowChromeCallbacks(host, br),
+          ...windowChromeCallbacks(host, () => br),
         })
         return br
       },
@@ -241,7 +239,7 @@ export async function dispatchOpenWindow(
     pw = new P5WindowCtor({
       initialVfsPath: pathArg,
       onOpenWindow: s => void host.openWindow(s),
-      ...windowChromeCallbacks(host, pw),
+      ...windowChromeCallbacks(host, () => pw),
     })
     mountContentWindow(host, pw)
     return
@@ -260,10 +258,11 @@ export async function dispatchOpenWindow(
       return
     }
 
+    pushToast('Loading terminal…', 1400)
     const { TerminalWindow: TerminalWindowCtor } = await import('./terminal')
     let tw!: TerminalWindow
     tw = new TerminalWindowCtor({
-      ...windowChromeCallbacks(host, tw),
+      ...windowChromeCallbacks(host, () => tw),
       onOpenWindow: s => void host.openWindow(s),
     })
     host.enforceTileLimit()
@@ -294,7 +293,7 @@ export async function dispatchOpenWindow(
     if (cmd === 'paint') {
       const { PaintWindow: PaintWindowCtor } = await import('./paint-window')
       let pw!: PaintWindow
-      pw = new PaintWindowCtor(windowChromeCallbacks(host, pw))
+      pw = new PaintWindowCtor(windowChromeCallbacks(host, () => pw))
       host.appendToRightPane(pw)
       host.windows.push(pw)
       host.attachVerticalSplitters()
@@ -304,26 +303,16 @@ export async function dispatchOpenWindow(
     if (cmd === 'snake') {
       const { SnakeWindow: SnakeWindowCtor } = await import('./snake-window')
       let sw!: SnakeWindow
-      sw = new SnakeWindowCtor(windowChromeCallbacks(host, sw))
+      sw = new SnakeWindowCtor(windowChromeCallbacks(host, () => sw))
       host.appendToRightPane(sw)
       host.windows.push(sw)
       host.attachVerticalSplitters()
       host.focusWindow(sw)
       return
     }
-    if (cmd === 'cube') {
-      const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
-      let rw!: RubikWindow
-      rw = new RubikWindowCtor(windowChromeCallbacks(host, rw))
-      host.appendToRightPane(rw)
-      host.windows.push(rw)
-      host.attachVerticalSplitters()
-      host.focusWindow(rw)
-      return
-    }
     const { PongWindow: PongWindowCtor } = await import('./pong-window')
     let pong!: PongWindow
-    pong = new PongWindowCtor(windowChromeCallbacks(host, pong))
+    pong = new PongWindowCtor(windowChromeCallbacks(host, () => pong))
     host.appendToRightPane(pong)
     host.windows.push(pong)
     host.attachVerticalSplitters()

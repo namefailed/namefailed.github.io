@@ -19,12 +19,12 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
   {
     id: 'open',
     glyph: '◐',
-    html: 'Click <strong>Portfolio</strong>, <strong>Apps</strong>, or <strong>Games</strong> to open a tile',
+    html: 'Click <strong>Portfolio</strong> for résumé, projects, about & contact in one window',
   },
   {
     id: 'hire',
     glyph: '◎',
-    html: 'Hiring managers: the <strong>Portfolio</strong> folder has projects, résumé, and contact',
+    html: 'Hiring managers: use <strong>Classic résumé view</strong> in the footer or top bar',
   },
   {
     id: 'terminal',
@@ -114,7 +114,7 @@ export function mountWelcomeGuide(): void {
   const classicLink = document.createElement('a')
   classicLink.className = 'welcome-guide-classic-link'
   classicLink.href = classicHref
-  classicLink.textContent = 'Open classic portfolio →'
+  classicLink.textContent = 'Classic résumé view →'
   footer.appendChild(classicLink)
   body.appendChild(footer)
 

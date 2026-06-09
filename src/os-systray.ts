@@ -231,6 +231,10 @@ export function initSystray(): void {
 
   const fullResetBtn = document.getElementById('settings-full-reset')
   fullResetBtn?.addEventListener('click', () => {
+    const ok = window.confirm(
+      'Full reset clears themes, wallpaper, desktop layout, and first-visit flags. Continue?',
+    )
+    if (!ok) return
     // Reset tile positions, wallpaper, and all first-visit flags
     resetTileLayout()
     clearWallpaper()

@@ -1,15 +1,11 @@
 /**
  * BspLayout column-routing tests.
  *
- * The key invariant: windows route to columns by the "shorter column first,
- * prefer right (col-b) on tie" rule, producing the sequence L R R L R L …
- *
- * The test environment is Node so we supply a minimal FakeEl that properly
- * tracks parent/child relationships and supports the querySelectorAll selectors
- * used by BspLayout and Splitter.
+ * Windows alternate L R L R … and stack vertically within each column
+ * (up to three per side, six visible total).
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
-import { BspLayout } from './bsp-layout'
+import { BspLayout, BSP_MAX_PER_COLUMN } from './bsp-layout'
 
 // ── Minimal DOM stub ─────────────────────────────────────────────────────────
 
@@ -67,11 +63,6 @@ class FakeEl {
     child._parent = null
   }
 
-  /**
-   * Supports the two selectors BspLayout actually uses:
-   *   ':scope > .content-window'  — direct children with that class
-   *   '.splitter-bsp-h'           — direct children with that class
-   */
   querySelectorAll(selector: string): FakeEl[] {
     const classMatch = (el: FakeEl, cls: string) =>
       el.className.split(/\s+/).includes(cls)
@@ -85,7 +76,6 @@ class FakeEl {
     return []
   }
 
-  /** No-op — satisfies Splitter's addEventListener call */
   addEventListener(_type: string, _handler: unknown): void {}
 
   classList = {
@@ -94,8 +84,6 @@ class FakeEl {
     toggle: (_cls: string, _force?: boolean) => {},
   }
 }
-
-// ── Global stubs ─────────────────────────────────────────────────────────────
 
 beforeAll(() => {
   ;(globalThis as unknown as { document: unknown }).document = {
@@ -106,16 +94,12 @@ beforeAll(() => {
   }
 })
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Create a fake window element (BspLayout queries for .content-window). */
 function makeWin(): FakeEl {
   const el = new FakeEl()
   el.className = 'content-window'
   return el
 }
 
-/** Mount `count` windows in sequence; returns the array of mounted elements. */
 function mountN(layout: BspLayout, count: number): FakeEl[] {
   const wins: FakeEl[] = []
   for (let i = 0; i < count; i++) {
@@ -126,7 +110,6 @@ function mountN(layout: BspLayout, count: number): FakeEl[] {
   return wins
 }
 
-/** Returns 'A' or 'B' depending on which bsp-col the element landed in. */
 function side(el: FakeEl): 'A' | 'B' | 'unknown' {
   let cur: FakeEl | null = el
   while (cur) {
@@ -142,7 +125,11 @@ function side(el: FakeEl): 'A' | 'B' | 'unknown' {
   return 'unknown'
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+function colChildren(sideLetter: 'A' | 'B', rightPane: FakeEl): FakeEl[] {
+  const cols = rightPane._children.filter((c: FakeEl) => c.className.includes('bsp-col'))
+  const col = sideLetter === 'A' ? cols[0] : cols[1]
+  return col?._children ?? []
+}
 
 describe('BspLayout column routing', () => {
   let rightPane: FakeEl
@@ -163,19 +150,19 @@ describe('BspLayout column routing', () => {
     expect(side(w2!)).toBe('B')
   })
 
-  it('window 3 goes to the right column (tie → prefer right)', () => {
+  it('window 3 goes to the left column (under W1)', () => {
     const [,, w3] = mountN(layout, 3)
-    expect(side(w3!)).toBe('B')
+    expect(side(w3!)).toBe('A')
   })
 
-  it('window 4 goes to the left column (right is longer)', () => {
+  it('window 4 goes to the right column (under W2)', () => {
     const [,,, w4] = mountN(layout, 4)
-    expect(side(w4!)).toBe('A')
+    expect(side(w4!)).toBe('B')
   })
 
-  it('first 4 windows follow L R R L routing', () => {
-    const wins = mountN(layout, 4)
-    expect(wins.map(w => side(w))).toEqual(['A', 'B', 'B', 'A'])
+  it('first 6 windows follow L R L R L R routing', () => {
+    const wins = mountN(layout, 6)
+    expect(wins.map(w => side(w))).toEqual(['A', 'B', 'A', 'B', 'A', 'B'])
   })
 
   it('inserts a vertical splitter between col-A and col-B', () => {
@@ -184,13 +171,11 @@ describe('BspLayout column routing', () => {
     expect(splitters.length).toBe(1)
   })
 
-  it('inserts a horizontal splitter within a column when a second window is added', () => {
-    mountN(layout, 3)
-    // col-B now has W2 and W3 — should have 1 horizontal splitter
-    const colBChildren: FakeEl[] = rightPane._children
-      .filter((c: FakeEl) => c.className.includes('bsp-col'))[1]!._children
-    const hSplitters = colBChildren.filter((c: FakeEl) => c.className.includes('splitter-bsp-h'))
-    expect(hSplitters.length).toBe(1)
+  it('inserts horizontal splitters when a column stacks three windows', () => {
+    mountN(layout, 5)
+    const colAChildren = colChildren('A', rightPane)
+    const hSplitters = colAChildren.filter((c: FakeEl) => c.className.includes('splitter-bsp-h'))
+    expect(hSplitters.length).toBe(2)
   })
 })
 
@@ -201,7 +186,6 @@ describe('BspLayout.destroy', () => {
     mountN(layout, 4)
     expect(rightPane._children.length).toBeGreaterThan(0)
     layout.destroy()
-    // All columns and splitter should be gone
     const remaining = rightPane._children.filter(
       (c: FakeEl) => c.className.includes('bsp-col') || c.className.includes('splitter-v'),
     )
@@ -216,8 +200,9 @@ describe('BspLayout.destroy', () => {
 })
 
 describe('BspLayout.maxVisible', () => {
-  it('caps visible windows at 4', () => {
+  it('caps visible windows at 6 (3 per column)', () => {
     const layout = new BspLayout(new FakeEl() as unknown as HTMLElement)
-    expect(layout.maxVisible).toBe(4)
+    expect(layout.maxVisible).toBe(BSP_MAX_PER_COLUMN * 2)
+    expect(layout.maxVisible).toBe(6)
   })
 })

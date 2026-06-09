@@ -7,7 +7,8 @@ import {
   RESUME_SKILL_MATRIX_SECTIONS,
   RESUME_WORKSTYLE_BULLETS,
 } from './content/copy/resume-copy'
-import { liveSiteScreenshotUrl } from './live-site-screenshot'
+import { mountContactForm } from './contact-form'
+import { buildProjectPreviewFigure } from './project-card-thumb'
 
 /** Portrait photo with MG initials fallback — shared by contact and résumé. */
 function mountPortfolioPortrait(
@@ -90,6 +91,10 @@ export interface WindowSpec {
   resumeBody?: string[]
   /** Thumbnail/metadata list for `projects` tile layout. */
   projectCards?: readonly PortfolioProjectEntry[]
+  /** Tabbed portfolio hub — résumé / projects / about / contact in one window. */
+  portfolioHub?: boolean
+  hubWhoamiLines?: string[]
+  hubContactLines?: string[]
   /** Initial VFS path for the p5 viewer. */
   p5SketchPath?: string
 }
@@ -135,7 +140,10 @@ export class AppWindow {
 
     this.el.appendChild(this.bodyEl)
 
-    if (opts.command === 'resume') {
+    if (opts.portfolioHub) {
+      this.el.classList.add('portfolio-hub-window')
+      this.renderPortfolioHub(opts)
+    } else if (opts.command === 'resume') {
       this.el.classList.add('resume-window')
       this.renderResume(opts.content, opts.resumeSkills, opts.resumeLead, opts.resumeBody)
     } else if (opts.command === 'links') {
@@ -156,6 +164,94 @@ export class AppWindow {
     this.bodyEl.innerHTML = lines
       .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
       .join('')
+  }
+
+  /** Tabbed hub for recruiters — one window, four sections. */
+  private renderPortfolioHub(opts: AppWindowOptions): void {
+    type TabId = 'resume' | 'projects' | 'whoami' | 'links'
+    const tabs: Array<{ id: TabId; label: string; panelClass: string }> = [
+      { id: 'resume', label: 'Résumé', panelClass: 'resume-window' },
+      { id: 'projects', label: 'Projects', panelClass: 'projects-window' },
+      { id: 'whoami', label: 'About', panelClass: 'whoami-window' },
+      { id: 'links', label: 'Contact', panelClass: 'contact-window' },
+    ]
+
+    this.bodyEl.classList.add('portfolio-hub-body')
+
+    const nav = document.createElement('nav')
+    nav.className = 'portfolio-hub-tabs'
+    nav.setAttribute('role', 'tablist')
+    nav.setAttribute('aria-label', 'Portfolio sections')
+
+    const panelsWrap = document.createElement('div')
+    panelsWrap.className = 'portfolio-hub-panels'
+
+    const panelInners = new Map<TabId, HTMLElement>()
+    let active: TabId = 'resume'
+
+    for (const t of tabs) {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'portfolio-hub-tab'
+      btn.dataset.tab = t.id
+      btn.setAttribute('role', 'tab')
+      btn.textContent = t.label
+      nav.appendChild(btn)
+
+      const panel = document.createElement('section')
+      panel.className = `portfolio-hub-panel ${t.panelClass}`
+      panel.dataset.tab = t.id
+      panel.setAttribute('role', 'tabpanel')
+
+      const inner = document.createElement('div')
+      inner.className = 'portfolio-hub-panel-inner'
+      panel.appendChild(inner)
+      panelInners.set(t.id, inner)
+      panelsWrap.appendChild(panel)
+    }
+
+    const showTab = (id: TabId): void => {
+      active = id
+      for (const btn of nav.querySelectorAll<HTMLButtonElement>('.portfolio-hub-tab')) {
+        const on = btn.dataset.tab === id
+        btn.classList.toggle('portfolio-hub-tab--active', on)
+        btn.setAttribute('aria-selected', on ? 'true' : 'false')
+        btn.tabIndex = on ? 0 : -1
+      }
+      for (const panel of panelsWrap.querySelectorAll<HTMLElement>('.portfolio-hub-panel')) {
+        const on = panel.dataset.tab === id
+        panel.hidden = !on
+      }
+    }
+
+    nav.addEventListener('click', e => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.portfolio-hub-tab')
+      if (!btn?.dataset.tab) return
+      showTab(btn.dataset.tab as TabId)
+    })
+
+    const shellBody = this.bodyEl
+    const renderInto = (target: HTMLElement, fn: () => void): void => {
+      this.bodyEl = target
+      fn()
+      this.bodyEl = shellBody
+    }
+
+    renderInto(panelInners.get('resume')!, () => {
+      this.renderResume(opts.content, opts.resumeSkills, opts.resumeLead, opts.resumeBody)
+    })
+    renderInto(panelInners.get('projects')!, () => {
+      if (opts.projectCards?.length) this.renderProjectCards(opts.projectCards)
+    })
+    renderInto(panelInners.get('whoami')!, () => {
+      this.renderAboutMe(opts.hubWhoamiLines ?? [])
+    })
+    renderInto(panelInners.get('links')!, () => {
+      this.renderContact(opts.hubContactLines ?? [])
+    })
+
+    shellBody.append(nav, panelsWrap)
+    showTab(active)
   }
 
   /**
@@ -270,10 +366,23 @@ export class AppWindow {
       asideHint: '',
       photoSrc: '/son.jpg',
     })
+    const col = this.bodyEl.querySelector('.contact-text-col')
+    col?.appendChild(mountContactForm('wm'))
   }
 
   /** About me — fencing banner across the top, text column below. */
   private renderAboutMe(lines: string[]): void {
+    const statusRow = document.createElement('div')
+    statusRow.className = 'about-status-row'
+    const badge = document.createElement('span')
+    badge.className = 'about-open-badge'
+    badge.textContent = 'Open to work'
+    const hint = document.createElement('p')
+    hint.className = 'about-status-hint'
+    hint.textContent = 'Remote / hybrid · US Central'
+    statusRow.append(badge, hint)
+    this.bodyEl.appendChild(statusRow)
+
     const banner = document.createElement('div')
     banner.className = 'about-banner'
     const bannerImg = document.createElement('img')
@@ -350,7 +459,7 @@ export class AppWindow {
     const sub = document.createElement('p')
     sub.className = 'projects-head-sub'
     sub.textContent =
-      'Live work — card art is a live screenshot when we have a URL (cached by wp.com); repo links stay manual.'
+      'Each card shows a labeled preview — expand for full size, or follow repo / web links below.'
     head.appendChild(h2)
     head.appendChild(sub)
 
@@ -361,65 +470,20 @@ export class AppWindow {
       const card = document.createElement('article')
       card.className = 'project-card'
 
-      const thumbPath = p.thumb
-        ? p.thumb.startsWith('/')
-          ? p.thumb
-          : `/${p.thumb}`
-        : null
-      const liveShot =
-        p.web && !p.skipLiveScreenshot ? liveSiteScreenshotUrl(p.web) : null
+      const mediaEl = document.createElement('div')
+      mediaEl.className = 'project-card-media'
 
-      const mediaEl = p.web
-        ? (() => {
-            const a = document.createElement('a')
-            a.className = 'project-card-thumb-hit'
-            a.href = p.web!
-            a.target = '_blank'
-            a.rel = 'noopener noreferrer'
-            a.setAttribute('aria-label', `${p.title} — open live site`)
-            return a
-          })()
-        : (() => {
-            const d = document.createElement('div')
-            d.className = 'project-card-thumb-hit project-card-thumb-hit--static'
-            return d
-          })()
-
-      const fig = document.createElement('figure')
-      fig.className = 'project-card-figure'
-
-      const img = document.createElement('img')
-      img.className = 'project-card-thumb'
-      img.alt = `${p.title} preview`
-      img.loading = 'lazy'
-      img.decoding = 'async'
-      img.referrerPolicy = 'no-referrer'
-      const ph = AppWindow.makeThumbPlaceholder(p.title)
-      if (!liveShot && !thumbPath) {
-        fig.appendChild(ph)
-      } else {
-        if (liveShot) {
-          img.src = liveShot
-          if (thumbPath) {
-            img.addEventListener(
-              'error',
-              () => {
-                img.src = thumbPath
-                img.addEventListener('error', () => fig.replaceChildren(ph), { once: true })
-              },
-              { once: true },
-            )
-          } else {
-            img.addEventListener('error', () => fig.replaceChildren(ph), { once: true })
-          }
-        } else {
-          img.src = thumbPath!
-          img.addEventListener('error', () => fig.replaceChildren(ph), { once: true })
-        }
-        fig.appendChild(img)
-      }
-
-      mediaEl.appendChild(fig)
+      const { figure } = buildProjectPreviewFigure({
+        title: p.title,
+        period: p.period,
+        thumb: p.thumb,
+        web: p.web,
+        repo: p.repo,
+        skipLiveScreenshot: p.skipLiveScreenshot,
+        thumbPosition: p.thumbPosition,
+        previewKind: p.previewKind,
+      })
+      mediaEl.appendChild(figure)
 
       const body = document.createElement('div')
       body.className = 'project-card-body'
@@ -474,24 +538,6 @@ export class AppWindow {
     shell.appendChild(head)
     shell.appendChild(grid)
     this.bodyEl.appendChild(shell)
-  }
-
-  private static makeThumbPlaceholder(title: string): HTMLElement {
-    const el = document.createElement('div')
-    el.className = 'project-card-thumb-placeholder'
-    el.setAttribute('role', 'img')
-    const words = title.split(/\s+/).filter(Boolean)
-    const ini =
-      words.length >= 2
-        ? `${words[0]![0]!}${words[1]![0]!}`
-        : (words[0]?.slice(0, 2) ?? '?').toUpperCase()
-    const span = document.createElement('span')
-    span.className = 'project-card-thumb-initials'
-    span.setAttribute('aria-hidden', 'true')
-    span.textContent = ini.toUpperCase()
-    el.appendChild(span)
-    el.setAttribute('aria-label', `${title} preview`)
-    return el
   }
 
   setActive(active: boolean): void {

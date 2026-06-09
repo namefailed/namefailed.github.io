@@ -75,6 +75,7 @@ export function lifecycleContext(self: DesktopWmSelf): WmLifecycleContext {
     appendToRightPane: win => self.appendToRightPane(win),
     focusWindow: win => self.focusWindow(win),
     closeLauncherOverlay: () => self.closeLauncherOverlay(),
+    enforceTileLimit: () => self.enforceTileLimit(),
   }
 }
 

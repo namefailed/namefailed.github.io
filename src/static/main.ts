@@ -1,4 +1,5 @@
 import './static.css'
+import { mountContactForm } from '../contact-form'
 import { PORTFOLIO_PROJECTS } from '../content/portfolio'
 import {
   CERTIFICATIONS,
@@ -10,7 +11,7 @@ import {
   type PlainProject,
   SKILLS_PRIMARY,
 } from './static-data'
-import { liveSiteScreenshotUrl } from '../live-site-screenshot'
+import { buildProjectPreviewFigure } from '../project-card-thumb'
 import { resolveDesktopShellHref } from '../static-portfolio-href'
 import { animateCounter, typewriter } from './static-motion'
 
@@ -25,6 +26,8 @@ function plainProjectsFromPortfolio(): PlainProject[] {
     repo: p.repo,
     thumb: p.thumb,
     skipLiveScreenshot: p.skipLiveScreenshot,
+    thumbPosition: p.thumbPosition,
+    previewKind: p.previewKind,
   }))
 }
 
@@ -166,74 +169,19 @@ function experienceCard(entry: ExperienceEntry, delay = 0): HTMLElement {
 // ── Project card ───────────────────────────────────────────────────────────
 
 function projectCard(project: PlainProject, delay = 0): HTMLElement {
-  const card = anim(el('article', 'plain-project'), delay)
-  if (project.thumb) card.classList.add('plain-project--has-thumb')
+  const card = anim(el('article', 'plain-project plain-project--has-thumb'), delay)
 
-  // ── Thumbnail (image-on-top, flush to card edges) ──────────────────────
-  // Strategy mirrors the main SPA (appwindow.ts):
-  //   1. Try a live WordPress mShots screenshot for projects with a URL
-  //   2. On error fall back to the local SVG placeholder (thumb)
-  //   3. If both fail, hide the image pane so the card still looks clean
-  const thumbPath = project.thumb
-    ? project.thumb.startsWith('/')
-      ? project.thumb
-      : `/${project.thumb}`
-    : null
-  const liveShot = project.url && !project.skipLiveScreenshot ? liveSiteScreenshotUrl(project.url) : null
-
-  if (thumbPath || liveShot) {
-    // Wrap in <a> when a live URL is available so the whole image is clickable
-    const wrap: HTMLElement = project.url
-      ? (() => {
-          const a = document.createElement('a')
-          a.href = project.url
-          a.target = '_blank'
-          a.rel = 'noopener noreferrer'
-          a.className = 'plain-project-thumb-link'
-          a.setAttribute('tabindex', '-1') // card links below are enough for keyboard nav
-          a.setAttribute('aria-hidden', 'true')
-          return a
-        })()
-      : el('div', 'plain-project-thumb-link')
-
-    const img = document.createElement('img')
-    img.className = 'plain-project-thumb'
-    img.alt = `${project.title} preview`
-    img.loading = 'lazy'
-    img.decoding = 'async'
-    img.referrerPolicy = 'no-referrer'
-
-    if (liveShot) {
-      img.src = liveShot
-      // mShots failure → try local SVG placeholder → hide pane
-      img.addEventListener(
-        'error',
-        () => {
-          if (thumbPath) {
-            img.src = thumbPath
-            img.addEventListener('error', () => {
-              wrap.style.display = 'none'
-              card.classList.remove('plain-project--has-thumb')
-            }, { once: true })
-          } else {
-            wrap.style.display = 'none'
-            card.classList.remove('plain-project--has-thumb')
-          }
-        },
-        { once: true },
-      )
-    } else {
-      // No live shot — go straight to the placeholder
-      img.src = thumbPath!
-      img.addEventListener('error', () => {
-        wrap.style.display = 'none'
-        card.classList.remove('plain-project--has-thumb')
-      }, { once: true })
-    }
-
-    wrap.appendChild(img)
-    card.appendChild(wrap)
-  }
+  const { figure } = buildProjectPreviewFigure({
+    title: project.title,
+    period: project.meta,
+    thumb: project.thumb,
+    web: project.url,
+    repo: project.repo,
+    skipLiveScreenshot: project.skipLiveScreenshot,
+    thumbPosition: project.thumbPosition,
+    previewKind: project.previewKind,
+  })
+  card.appendChild(figure)
 
   // ── Text body ──────────────────────────────────────────────────────────
   const body = el('div', 'plain-project-body')
@@ -390,24 +338,29 @@ function mount(): void {
   const hero = el('section', 'plain-hero')
   hero.setAttribute('aria-labelledby', 'plain-name')
 
-  hero.appendChild(anim(avatarEl(), 0))
+  const heroIntro = el('div', 'plain-hero-intro')
+  const heroIntroCopy = el('div', 'plain-hero-intro-copy')
+
+  heroIntro.appendChild(anim(avatarEl(), 0))
 
   const nameEl = anim(el('h1', 'plain-name', PROFILE.name), 80)
   nameEl.id = 'plain-name'
-  hero.appendChild(nameEl)
+  heroIntroCopy.appendChild(nameEl)
 
   // Headline — rendered empty; typewriter fills it in after fade
   const headlineEl = anim(el('p', 'plain-headline'), 140)
   headlineEl.setAttribute('aria-label', `${PROFILE.headline} · ${PROFILE.location}`)
   typewriter(headlineEl, `${PROFILE.headline} · ${PROFILE.location}`)
-  hero.appendChild(headlineEl)
+  heroIntroCopy.appendChild(headlineEl)
 
   const pill = anim(document.createElement('span'), 200)
   pill.className = PROFILE.statusOpen ? 'plain-status' : 'plain-status plain-status--muted'
   pill.textContent = PROFILE.statusOpen ? 'Open to work' : 'Unavailable'
-  hero.appendChild(pill)
+  heroIntroCopy.appendChild(pill)
 
-  hero.appendChild(statsStrip())
+  heroIntroCopy.appendChild(statsStrip())
+  heroIntro.appendChild(heroIntroCopy)
+  hero.appendChild(heroIntro)
 
   hero.appendChild(anim(el('p', 'plain-lede', PROFILE.summary), 280))
 
@@ -457,6 +410,7 @@ function mount(): void {
 
   const contactBlock = anim(el('div', 'plain-contact-block'), 60)
   for (const item of CONTACT) contactBlock.appendChild(linkRow(item.label, item.href, item.text))
+  contactBlock.appendChild(mountContactForm('plain'))
   hero.appendChild(contactBlock)
 
   // ── Footer ─────────────────────────────────────────────────────────────

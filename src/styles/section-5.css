@@ -38,6 +38,11 @@
   will-change: transform, opacity, filter;
 }
 
+/* Traffic lights stay clickable while the tile body animates in. */
+.wm-animate-mount .win-titlebar {
+  pointer-events: auto;
+}
+
 .wm-animate-close {
   animation: wm-window-close var(--ui-duration-wm-out) var(--ui-easing-smooth) forwards;
   pointer-events: none;

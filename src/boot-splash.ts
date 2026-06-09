@@ -37,14 +37,11 @@ export const BOOT_LINES: BootLine[] = [
   { ts: '0.612', kind: 'ok',   text: 'keybinds: 22 chords wired',                    section: 'input' },
   { ts: '0.634', kind: 'ok',   text: 'vim line editor: insert/normal/visual',        section: 'input' },
 
-  { ts: '0.679', kind: 'ok',   text: 'cube.ko: loaded, rubik solver ready',          section: 'apps' },
   { ts: '0.701', kind: 'ok',   text: 'p5.ko: loaded, canvas runtime ready',         section: 'apps' },
   { ts: '0.745', kind: 'ok',   text: 'xterm-emulator: suspended (app-mode)',         section: 'apps' },
 
   { ts: '0.812', kind: 'ok',   text: 'sound subsystem armed (web-audio)',            section: 'system services' },
-  { ts: '0.867', kind: 'ok',   text: 'systray + toasts initialized',                 section: 'system services' },
-  { ts: '0.912', kind: 'ok',   text: 'hint manager: 3 folder bubbles queued',      section: 'system services' },
-  { ts: '0.978', kind: 'ok',   text: 'toast cascade: 4 messages scheduled',         section: 'system services' },
+  { ts: '0.867', kind: 'ok',   text: 'systray initialized',                          section: 'system services' },
 
   { ts: '1.103', kind: 'info', text: 'all subsystems green' },
   { ts: '1.247', kind: 'info', text: 'handing off to desktop' },

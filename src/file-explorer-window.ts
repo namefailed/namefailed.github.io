@@ -239,7 +239,9 @@ export class FileExplorerWindow {
 
     this.renderBreadcrumbs()
     this.refresh()
-    this.clipboardStatus()
+    this.pushStatusWhenIdle(
+      'Double-click to open · right-click images → set wallpaper · browse ~/Wallpapers',
+    )
     this.syncToolbar()
   }
 

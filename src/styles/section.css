@@ -102,6 +102,8 @@
   --ui-duration-slow: 0.34s;
   --ui-duration-slower: 0.46s;
   --ui-duration-splash: 0.72s;
+  /** Applications overlay — shell dim + panel drawer stay in sync */
+  --ui-duration-launcher-in: 0.75s;
   /** Tiled window chrome — open/close (matches `desktop.ts` slack timers loosely) */
   --ui-duration-wm-in: 0.55s;
   --ui-duration-wm-out: 0.32s;
@@ -265,6 +267,21 @@ html.retro-fx::before {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 0 80px rgba(0, 0, 0, 0.35);
+}
+
+/* Soften busy wallpapers — keeps folder icons readable */
+#desktop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(17, 17, 27, 0.38) 0%,
+    rgba(17, 17, 27, 0.22) 45%,
+    rgba(17, 17, 27, 0.48) 100%
+  );
 }
 
 #matrix-bg {

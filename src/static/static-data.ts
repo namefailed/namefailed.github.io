@@ -14,6 +14,8 @@ export interface PlainProject {
   thumb?: string
   /** When true, skip the WordPress mShots live screenshot and rely solely on {@link thumb}. */
   skipLiveScreenshot?: boolean
+  thumbPosition?: string
+  previewKind?: 'website' | 'app' | 'portfolio' | 'client'
 }
 
 export interface ExperienceEntry {

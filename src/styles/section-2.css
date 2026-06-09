@@ -741,8 +741,8 @@ a.yasb-btn-classic:hover {
   visibility: hidden;
   opacity: 0;
   transition:
-    opacity var(--ui-duration-slower) var(--ui-easing-emph),
-    visibility 0s linear var(--ui-duration-slower);
+    opacity var(--ui-duration-slow) var(--ui-easing-smooth),
+    visibility 0s linear var(--ui-duration-slow);
 }
 
 /*
@@ -753,8 +753,9 @@ a.yasb-btn-classic:hover {
   visibility: visible;
   opacity: 1;
   pointer-events: auto;
+  /* Fade with panel — solid dim only (no backdrop blur; felt sluggish/off on open) */
   transition:
-    opacity var(--ui-duration-slower) var(--ui-easing-emph),
+    opacity var(--ui-duration-launcher-in) var(--ui-easing-emph),
     visibility 0s linear 0s;
   /* Bleed past `.wm-stack` over dock reserve + desktop bottom inset + home indicator */
   bottom: calc(
@@ -770,19 +771,8 @@ a.yasb-btn-classic:hover {
   position: absolute;
   inset: 0;
   z-index: var(--ui-z-launcher-backdrop);
-  background: var(--th-launcher-backdrop);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: color-mix(in srgb, var(--th-mantle) 72%, transparent);
   pointer-events: auto;
-  transition:
-    background var(--ui-duration-slow) var(--ui-easing-smooth),
-    backdrop-filter var(--ui-duration-slower) var(--ui-easing-emph);
-}
-
-#desktop.launchers-visible #launcher-backdrop {
-  background: color-mix(in srgb, var(--th-launcher-backdrop) 92%, rgba(var(--th-accent-rgb), 0.06));
-  backdrop-filter: blur(14px) saturate(1.12);
-  -webkit-backdrop-filter: blur(14px) saturate(1.12);
 }
 
 #launcher-panel {
@@ -797,9 +787,7 @@ a.yasb-btn-classic:hover {
   flex-direction: column;
   gap: var(--ui-space-6);
   pointer-events: auto;
-  background: var(--th-launcher-panel);
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  background: color-mix(in srgb, var(--th-mantle) 94%, rgba(var(--th-accent-rgb), 0.04));
   border: 1px solid rgba(var(--th-accent-rgb), 0.14);
   /* overflow: hidden is the only reliable way to clip all 4 corners to border-radius in Chrome.
      scrollbar-gutter:stable was creating a permanent right-side gutter that broke the right corners. */
@@ -820,6 +808,10 @@ a.yasb-btn-classic:hover {
 #desktop.launchers-visible #launcher-panel {
   transform: translateY(0) scale(1);
   opacity: 1;
+  transition:
+    transform var(--ui-duration-launcher-in) var(--ui-easing-emph),
+    opacity var(--ui-duration-launcher-in) var(--ui-easing-emph),
+    box-shadow var(--ui-duration-slow) var(--ui-easing-smooth);
   box-shadow:
     0 20px 56px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(var(--th-accent-rgb), 0.1),
@@ -966,70 +958,64 @@ a.yasb-btn-classic:hover {
 @keyframes launcher-tile-in {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.94);
-    filter: blur(5px);
-  }
-  55% {
-    opacity: 1;
-    filter: blur(0);
+    transform: translateY(14px) scale(0.96);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
 #desktop.launchers-visible .launcher-search-wrap {
   animation:
-    launcher-tile-in calc(var(--ui-duration-slower) + 0.08s) var(--ui-easing-out-back) 0.06s backwards;
+    launcher-tile-in var(--ui-duration-launcher-in) var(--ui-easing-out-back) 0.17s backwards;
 }
 
 #desktop.launchers-visible .desktop-icon {
-  animation: launcher-tile-in calc(var(--ui-duration-slower) + 0.04s) var(--ui-easing-out-back) backwards;
+  animation: launcher-tile-in var(--ui-duration-launcher-in) var(--ui-easing-out-back) backwards;
 }
 
 #desktop.launchers-visible .desktop-icon:nth-child(1) {
-  animation-delay: 0.05s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(2) {
-  animation-delay: 0.07s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(3) {
-  animation-delay: 0.09s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(4) {
-  animation-delay: 0.11s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(5) {
-  animation-delay: 0.13s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(6) {
-  animation-delay: 0.15s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(7) {
   animation-delay: 0.17s;
 }
-#desktop.launchers-visible .desktop-icon:nth-child(8) {
-  animation-delay: 0.19s;
+#desktop.launchers-visible .desktop-icon:nth-child(2) {
+  animation-delay: 0.2s;
 }
-#desktop.launchers-visible .desktop-icon:nth-child(9) {
-  animation-delay: 0.21s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(10) {
+#desktop.launchers-visible .desktop-icon:nth-child(3) {
   animation-delay: 0.23s;
 }
-#desktop.launchers-visible .desktop-icon:nth-child(11) {
-  animation-delay: 0.25s;
+#desktop.launchers-visible .desktop-icon:nth-child(4) {
+  animation-delay: 0.26s;
 }
-#desktop.launchers-visible .desktop-icon:nth-child(12) {
-  animation-delay: 0.27s;
-}
-#desktop.launchers-visible .desktop-icon:nth-child(13) {
+#desktop.launchers-visible .desktop-icon:nth-child(5) {
   animation-delay: 0.29s;
 }
+#desktop.launchers-visible .desktop-icon:nth-child(6) {
+  animation-delay: 0.32s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(7) {
+  animation-delay: 0.35s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(8) {
+  animation-delay: 0.38s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(9) {
+  animation-delay: 0.41s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(10) {
+  animation-delay: 0.44s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(11) {
+  animation-delay: 0.47s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(12) {
+  animation-delay: 0.5s;
+}
+#desktop.launchers-visible .desktop-icon:nth-child(13) {
+  animation-delay: 0.53s;
+}
 #desktop.launchers-visible .desktop-icon:nth-child(14) {
-  animation-delay: 0.31s;
+  animation-delay: 0.56s;
 }
 
 /* Hide tiled chrome so launcher shell receives clicks */

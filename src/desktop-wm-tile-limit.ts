@@ -11,20 +11,17 @@ export interface TileLimitHost {
   getFocusedId(): string | null
   setFocusedId(id: string | null): void
   unmaximizeContent(win: TiledWin): void
+  onWindowBumped?: (win: TiledWin) => void
 }
 
-/** Pick the window to minimize when at the tile cap (prefer non-focused). */
-export function pickTileLimitBump(
-  windows: readonly TiledWin[],
-  focusedId: string | null,
-): TiledWin | null {
-  if (windows.length === 0) return null
-  return windows.find(w => w.command !== focusedId) ?? windows[0] ?? null
+/** Pick the window to minimize when at the tile cap (oldest open window first). */
+export function pickTileLimitBump(windows: readonly TiledWin[]): TiledWin | null {
+  return windows[0] ?? null
 }
 
 export function enforceTileLimit(host: TileLimitHost): void {
   if (host.windows.length < host.maxVisible) return
-  const bump = pickTileLimitBump(host.windows, host.getFocusedId())
+  const bump = pickTileLimitBump(host.windows)
   if (!bump) return
   if (bump.isMaximized()) host.unmaximizeContent(bump)
   bump.setMinimized(true)
@@ -33,4 +30,5 @@ export function enforceTileLimit(host: TileLimitHost): void {
   if (idx !== -1) host.windows.splice(idx, 1)
   host.minimized.push({ win: bump })
   if (host.getFocusedId() === bump.command) host.setFocusedId(null)
+  host.onWindowBumped?.(bump)
 }

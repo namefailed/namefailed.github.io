@@ -7,6 +7,7 @@ export function linksAndContactLines(): string[] {
   return [
     '',
     `  ${c.pink}contact${c.reset}  ${c.dim}— outbound + direct lines${c.reset}`,
+    `  ${c.green}${c.bold}open to work${c.reset}  ${c.dim}· remote / hybrid · US Central${c.reset}`,
     `  ${dimRule(44)}`,
     '',
     `  ${c.yellow}site${c.reset}       mrgrey.site`,
