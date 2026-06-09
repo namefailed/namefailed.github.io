@@ -2,18 +2,12 @@
  * Interactive 3×3 Rubik's cube tile.
  *
  * Interaction:
- *   Left-drag on canvas   — orbit camera (spin the cube)
- *   Left-click a sticker  — quarter-turn that face (Shift/Ctrl/⌘ = prime)
- *   Middle-drag / scroll  — zoom
- *   Right-drag            — pan
- *   U D L R F B keys      — turn (Shift = prime)
- *   Space                 — animated scramble
- *
- * Toolbar buttons drive animated sequences:
- *   Scramble — generates a no-repeat random sequence then plays it
- *   Solve    — plays inverse of full move history (returns to solved)
- *   Algorithm picker — runs a canonical alg (Sune, T-perm, etc.)
- *   Stop     — aborts an in-progress sequence
+ *   Drag a sticker       — quarter-turn that face (drag direction = turn sense)
+ *   Tap a sticker        — clockwise quarter-turn (Shift = prime)
+ *   Right-drag / scroll  — orbit / zoom the view
+ *   Face buttons         — U D L R F B (Shift = prime)
+ *   U D L R F B keys     — turn (Shift = prime)
+ *   Space                — animated scramble
  */
 
 import * as THREE from 'three'
@@ -38,8 +32,11 @@ import {
   faceOutward,
   latticeStickerCenter,
   stickerInAnimatedLayer,
+  inferFaceTurnFromScreenDrag,
+  turnTokenForFace,
   type CubeMoveFace,
 } from './rubik-stickers-layout'
+import { createWindowChrome } from './window-chrome'
 
 export interface RubikWindowOptions {
   onClose: () => void
@@ -108,9 +105,16 @@ export class RubikWindow {
   private glInited = false
   private glBootCleanup: (() => void) | null = null
 
-  /** Pointer-down position — used to distinguish click from drag. */
-  private ptrDown: { x: number; y: number } | null = null
-  private readonly dragSlopPx = 5
+  /** Active sticker drag-turn gesture (left pointer on a face). */
+  private pointerTurn: {
+    face: CubeMoveFace
+    startX: number
+    startY: number
+    shiftKey: boolean
+    pointerId: number
+    center: THREE.Vector3
+  } | null = null
+  private hoveredMesh: THREE.Mesh | null = null
 
   private onClose: () => void
   private onMinimize: () => void
@@ -131,7 +135,7 @@ export class RubikWindow {
     this.el.dataset.app = 'cube'
     this.el.tabIndex = -1
 
-    this.el.appendChild(this.buildTitleBar())
+    this.el.appendChild(this.buildChrome())
     this.el.appendChild(this.buildBody())
 
     this.el.addEventListener('keydown', e => this.onKey(e), true)
@@ -147,39 +151,42 @@ export class RubikWindow {
 
   // ── DOM construction ────────────────────────────────────────────────────────
 
-  private buildTitleBar(): HTMLElement {
-    const bar = document.createElement('div')
-    bar.className = 'win-titlebar'
-    bar.innerHTML = `
-      <div class="win-title-left"><span class="win-title">cube</span></div>
-      <div class="win-traffic">
-        <span class="dot dot-min"   title="minimize (ctrl+m)"></span>
-        <span class="dot dot-max"   title="maximize / restore (ctrl+f)"></span>
-        <span class="dot dot-close" title="close (ctrl+q)"></span>
-      </div>
-    `
-    bar.querySelector('.dot-close')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.dispose()
-      this.onClose()
+  private buildChrome(): HTMLElement {
+    const { titlebar } = createWindowChrome({
+      title: 'cube',
+      onClose: () => {
+        this.dispose()
+        this.onClose()
+      },
+      onMinimize: () => this.onMinimize(),
+      onMaximize: () => this.onMaximize(),
+      onFocus: () => this.notifyFocus(),
     })
-    bar.querySelector('.dot-min')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMinimize()
-    })
-    bar.querySelector('.dot-max')!.addEventListener('click', e => {
-      e.stopPropagation()
-      this.onMaximize()
-    })
-    bar.addEventListener('mousedown', () => this.notifyFocus())
-    return bar
+    return titlebar
   }
 
   private buildBody(): HTMLElement {
     const stack = document.createElement('div')
     stack.className = 'rubik-stack'
 
-    // ── primary toolbar: scramble · solve · stop · reset ────────────────────
+    // ── Canvas stage (primary — most of the tile height) ─────────────────────
+    const stage = document.createElement('div')
+    stage.className = 'rubik-stage'
+
+    this.host = document.createElement('div')
+    this.host.className = 'rubik-canvas-host'
+    this.host.tabIndex = 0
+
+    const hint = document.createElement('p')
+    hint.className = 'rubik-stage-hint'
+    hint.textContent = 'Drag a face to turn · Right-drag to rotate · Scroll to zoom'
+
+    stage.append(this.host, hint)
+
+    const controls = document.createElement('div')
+    controls.className = 'rubik-controls'
+
+    // ── primary toolbar ─────────────────────────────────────────────────────
     const toolbar = document.createElement('div')
     toolbar.className = 'rubik-toolbar'
 
@@ -204,7 +211,7 @@ export class RubikWindow {
 
     toolbar.append(this.scrambleBtn, this.solveBtn, this.stopBtn, this.resetBtn)
 
-    // ── status row: move count + solved indicator + speed slider ────────────
+    // ── status row ──────────────────────────────────────────────────────────
     const statusRow = document.createElement('div')
     statusRow.className = 'rubik-status-row'
 
@@ -228,7 +235,6 @@ export class RubikWindow {
     speedSlider.className = 'rubik-speed-slider'
     speedSlider.title = 'Animation speed (faster ←→ slower)'
     speedSlider.addEventListener('input', () => {
-      // Slider value is "speed" — invert for duration multiplier.
       const v = Number(speedSlider.value)
       this.speedMultiplier = 1 / Math.max(0.3, v)
     })
@@ -236,7 +242,39 @@ export class RubikWindow {
 
     statusRow.append(this.moveCountEl, this.statusEl, speedLabel)
 
-    // ── algorithm picker dropdown ───────────────────────────────────────────
+    // ── compact face pad (6 faces, not 18 notation buttons) ───────────────
+    const facePad = document.createElement('div')
+    facePad.className = 'rubik-face-pad'
+    facePad.setAttribute('role', 'group')
+    facePad.setAttribute('aria-label', 'Face turns')
+
+    const faceOrder: CubeMoveFace[] = ['U', 'D', 'L', 'R', 'F', 'B']
+    for (const face of faceOrder) {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'rubik-face-btn'
+      b.dataset.face = face
+      b.textContent = face
+      b.title = `${face} clockwise · Shift = counter-clockwise`
+      b.addEventListener('click', e => {
+        if (this.sequenceRunning) return
+        const token = (e.shiftKey ? `${face}'` : face) as TurnToken
+        this.commitTurnAnimated(token)
+        this.notifyFocus()
+        this.el.focus()
+      })
+      facePad.appendChild(b)
+    }
+
+    // ── advanced (algorithms + notation) — collapsed by default ─────────────
+    const advanced = document.createElement('details')
+    advanced.className = 'rubik-advanced'
+
+    const advancedSummary = document.createElement('summary')
+    advancedSummary.className = 'rubik-advanced-summary'
+    advancedSummary.textContent = 'Algorithms & notation'
+    advanced.appendChild(advancedSummary)
+
     const algRow = document.createElement('div')
     algRow.className = 'rubik-alg-row'
 
@@ -264,11 +302,10 @@ export class RubikWindow {
       void this.runSequence(alg.moves.split(/\s+/).filter(Boolean) as TurnToken[])
     })
 
-    // ── free-form notation input ────────────────────────────────────────────
     this.algInput = document.createElement('input')
     this.algInput.type = 'text'
     this.algInput.className = 'rubik-alg-input'
-    this.algInput.placeholder = "custom notation: R U R' U2 F'"
+    this.algInput.placeholder = "R U R' U2 F'"
     this.algInput.autocomplete = 'off'
     this.algInput.spellcheck = false
     this.algInput.addEventListener('keydown', e => {
@@ -282,52 +319,22 @@ export class RubikWindow {
     })
 
     algRow.append(this.algSelect, runAlgBtn, this.algInput, applyBtn)
+    advanced.appendChild(algRow)
 
-    // ── manual move buttons ─────────────────────────────────────────────────
-    const moveRow = document.createElement('div')
-    moveRow.className = 'rubik-moves'
-    const tokens: TurnToken[] = [
-      'U', "U'", 'U2',
-      'D', "D'", 'D2',
-      'L', "L'", 'L2',
-      'R', "R'", 'R2',
-      'F', "F'", 'F2',
-      'B', "B'", 'B2',
-    ]
-    for (const tok of tokens) {
-      const b = document.createElement('button')
-      b.type = 'button'
-      b.className = 'rubik-move-btn os-toolbar-btn'
-      b.textContent = tok
-      b.addEventListener('click', () => {
-        if (this.sequenceRunning) return
-        this.commitTurnAnimated(tok)
-        this.notifyFocus()
-        this.el.focus()
-      })
-      moveRow.appendChild(b)
-    }
-
-    // ── help text ───────────────────────────────────────────────────────────
     const help = document.createElement('details')
     help.className = 'rubik-help'
     help.innerHTML = `
-      <summary class="rubik-help-summary">Controls</summary>
+      <summary class="rubik-help-summary">Keyboard shortcuts</summary>
       <ul class="rubik-help-list">
-        <li><kbd>Left-drag</kbd> on canvas — spin the cube (orbit)</li>
-        <li><kbd>Click</kbd> a sticker — quarter-turn that face (<kbd>Shift</kbd>/<kbd>Ctrl</kbd> = prime)</li>
-        <li><kbd>Middle-drag</kbd> / <kbd>Scroll</kbd> — zoom · <kbd>Right-drag</kbd> — pan</li>
-        <li><kbd>U D L R F B</kbd> — turn that face · <kbd>Shift</kbd> = prime</li>
-        <li><kbd>Space</kbd> — scramble · Custom notation accepts <code>R U R' U2 F'</code></li>
+        <li><kbd>Drag</kbd> a sticker — turn that face (direction follows your drag)</li>
+        <li><kbd>Tap</kbd> a sticker — clockwise · <kbd>Shift</kbd> = prime</li>
+        <li><kbd>Right-drag</kbd> — orbit · <kbd>Scroll</kbd> — zoom</li>
+        <li><kbd>U D L R F B</kbd> — turn · <kbd>Shift</kbd> = prime · <kbd>Space</kbd> — scramble</li>
       </ul>
     `
 
-    // ── canvas host ─────────────────────────────────────────────────────────
-    this.host = document.createElement('div')
-    this.host.className = 'rubik-canvas-host'
-    this.host.tabIndex = 0
-
-    stack.append(toolbar, statusRow, algRow, moveRow, help, this.host)
+    controls.append(toolbar, statusRow, facePad, advanced, help)
+    stack.append(stage, controls)
     return stack
   }
 
@@ -354,7 +361,7 @@ export class RubikWindow {
       if (this.glDisposed || this.glInited) return
       try {
         this.initThree()
-        this.setupStickerClickRouter()
+        this.setupPointerRouter()
         this.syncStickerMaterials()
         this.updateStatus()
       } catch {
@@ -449,7 +456,7 @@ export class RubikWindow {
       }
     }
 
-    // OrbitControls — LEFT=rotate is the natural "spin the cube" feel.
+    // Orbit with right-drag only — left pointer is reserved for face turns.
     const ctl = new OrbitControls(cam, renderer.domElement)
     ctl.enableDamping = true
     ctl.dampingFactor = 0.07
@@ -457,10 +464,11 @@ export class RubikWindow {
     ctl.maxDistance = 16
     ctl.rotateSpeed = 0.75
     ctl.target.set(0, 0, 0)
+    ctl.enablePan = false
     ctl.mouseButtons = {
-      LEFT: MOUSE.ROTATE,
+      LEFT: null as unknown as MOUSE,
       MIDDLE: MOUSE.DOLLY,
-      RIGHT: MOUSE.PAN,
+      RIGHT: MOUSE.ROTATE,
     }
     this.controls = ctl
 
@@ -478,41 +486,119 @@ export class RubikWindow {
     requestAnimationFrame(() => this.resizeGl())
   }
 
-  // ── Sticker click → quarter-turn ────────────────────────────────────────────
+  // ── Pointer: drag-to-turn, tap, hover highlight ─────────────────────────────
 
-  private setupStickerClickRouter(): void {
+  private setupPointerRouter(): void {
     const el = this.renderer.domElement
     el.style.touchAction = 'none'
+    el.addEventListener('pointerdown', e => this.onCanvasPointerDown(e))
+    el.addEventListener('pointermove', e => this.onCanvasPointerMove(e))
+    el.addEventListener('pointerup', e => this.onCanvasPointerUp(e))
+    el.addEventListener('pointercancel', e => this.onCanvasPointerUp(e))
+    el.addEventListener('pointerleave', () => this.clearStickerHover())
+  }
 
-    el.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return
-      this.ptrDown = { x: e.clientX, y: e.clientY }
-    })
-    el.addEventListener('pointercancel', () => {
-      this.ptrDown = null
-    })
+  private raycastSticker(clientX: number, clientY: number): THREE.Mesh | null {
+    const el = this.renderer.domElement
+    const rect = el.getBoundingClientRect()
+    this.pointerNdc.x = ((clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1
+    this.pointerNdc.y = -((clientY - rect.top) / Math.max(1, rect.height)) * 2 + 1
+    this.raycaster.setFromCamera(this.pointerNdc, this.camera)
+    const hits = this.raycaster.intersectObjects(this.stickerMeshes, false)
+    return (hits[0]?.object as THREE.Mesh | undefined) ?? null
+  }
 
-    el.addEventListener('click', (e: MouseEvent) => {
-      if (e.button !== 0) return
-      if (!this.ptrDown) return
-      const moved = Math.hypot(e.clientX - this.ptrDown.x, e.clientY - this.ptrDown.y)
-      this.ptrDown = null
-      if (moved > this.dragSlopPx) return
-      if (this.singleTurnAnimating || this.sequenceRunning) return
+  private onCanvasPointerDown(e: PointerEvent): void {
+    if (e.button !== 0) return
+    if (this.singleTurnAnimating || this.sequenceRunning) return
 
-      const rect = el.getBoundingClientRect()
-      this.pointerNdc.x = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1
-      this.pointerNdc.y = -((e.clientY - rect.top) / Math.max(1, rect.height)) * 2 + 1
-      this.raycaster.setFromCamera(this.pointerNdc, this.camera)
-      const hits = this.raycaster.intersectObjects(this.stickerMeshes, false)
-      const hit = hits[0]
-      if (!hit) return
+    const hit = this.raycastSticker(e.clientX, e.clientY)
+    if (!hit) return
 
-      const face = hit.object.userData.cubeFace as CubeFaceKey
-      const prime = e.shiftKey || e.metaKey || e.ctrlKey
-      const token = (prime ? `${face}'` : face) as TurnToken
-      this.commitTurnAnimated(token)
-    })
+    e.preventDefault()
+    const face = hit.userData.cubeFace as CubeMoveFace
+    const idx = hit.userData.faceIndex as number
+    const center = latticeStickerCenter(face, idx)
+
+    this.pointerTurn = {
+      face,
+      startX: e.clientX,
+      startY: e.clientY,
+      shiftKey: e.shiftKey,
+      pointerId: e.pointerId,
+      center,
+    }
+    this.controls.enabled = false
+    this.renderer.domElement.setPointerCapture(e.pointerId)
+    this.setStickerHover(hit)
+  }
+
+  private onCanvasPointerMove(e: PointerEvent): void {
+    if (this.pointerTurn) return
+    if (this.singleTurnAnimating || this.sequenceRunning) {
+      this.clearStickerHover()
+      return
+    }
+    const hit = this.raycastSticker(e.clientX, e.clientY)
+    this.setStickerHover(hit)
+  }
+
+  private onCanvasPointerUp(e: PointerEvent): void {
+    const turn = this.pointerTurn
+    if (!turn || e.pointerId !== turn.pointerId) return
+
+    const el = this.renderer.domElement
+    try {
+      el.releasePointerCapture(e.pointerId)
+    } catch {
+      /* already released */
+    }
+    this.pointerTurn = null
+    this.controls.enabled = true
+
+    if (this.singleTurnAnimating || this.sequenceRunning) return
+
+    const rect = el.getBoundingClientRect()
+    const sense = inferFaceTurnFromScreenDrag(
+      turn.face,
+      this.camera,
+      turn.center,
+      turn.startX,
+      turn.startY,
+      e.clientX,
+      e.clientY,
+      rect,
+    )
+
+    let token: TurnToken
+    if (sense) {
+      token = turnTokenForFace(turn.face, sense) as TurnToken
+    } else {
+      token = (turn.shiftKey || e.shiftKey ? `${turn.face}'` : turn.face) as TurnToken
+    }
+
+    this.commitTurnAnimated(token)
+    this.notifyFocus()
+  }
+
+  private setStickerHover(mesh: THREE.Mesh | null): void {
+    if (this.hoveredMesh === mesh) return
+    if (this.hoveredMesh) {
+      this.hoveredMesh.scale.set(1, 1, 1)
+      const mat = this.hoveredMesh.material as THREE.MeshBasicMaterial
+      if (this.hoveredMesh.userData.baseHex) mat.color.set(this.hoveredMesh.userData.baseHex as string)
+    }
+    this.hoveredMesh = mesh
+    if (mesh) {
+      mesh.scale.set(1.06, 1.06, 1.06)
+      const mat = mesh.material as THREE.MeshBasicMaterial
+      mesh.userData.baseHex = `#${mat.color.getHexString()}`
+      mat.color.offsetHSL(0, 0, 0.12)
+    }
+  }
+
+  private clearStickerHover(): void {
+    this.setStickerHover(null)
   }
 
   // ── Sticker positioning ─────────────────────────────────────────────────────

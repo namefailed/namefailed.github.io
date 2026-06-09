@@ -103,6 +103,61 @@ export function stickerInAnimatedLayer(face: CubeMoveFace, i: number): boolean {
 /**
  * Infer which face-turn the user tapped from world-space outward normal (+Y = top).
  */
+/** Minimum pointer travel (px) before a drag counts as a turn instead of a click. */
+export const FACE_TURN_DRAG_MIN_PX = 14
+
+export type FaceTurnSense = 'cw' | 'ccw'
+
+/**
+ * Map a screen-space drag on a visible face to clockwise vs counter-clockwise.
+ * Returns null when the drag is too small or the face points away from the camera.
+ */
+export function inferFaceTurnFromScreenDrag(
+  face: CubeMoveFace,
+  camera: THREE.Camera,
+  stickerCenter: THREE.Vector3,
+  startClientX: number,
+  startClientY: number,
+  endClientX: number,
+  endClientY: number,
+  canvasRect: DOMRect,
+): FaceTurnSense | null {
+  const dx = endClientX - startClientX
+  const dy = endClientY - startClientY
+  if (Math.hypot(dx, dy) < FACE_TURN_DRAG_MIN_PX) return null
+
+  const viewDir = stickerCenter.clone().sub(camera.position).normalize()
+  const normal = faceOutward(face)
+  if (viewDir.dot(normal) < 0.2) return null
+
+  const ndc = stickerCenter.clone().project(camera)
+  const cx = (ndc.x * 0.5 + 0.5) * canvasRect.width
+  const cy = (-ndc.y * 0.5 + 0.5) * canvasRect.height
+
+  const sx = startClientX - canvasRect.left
+  const sy = startClientY - canvasRect.top
+  const ex = endClientX - canvasRect.left
+  const ey = endClientY - canvasRect.top
+
+  const a0 = Math.atan2(sy - cy, sx - cx)
+  const a1 = Math.atan2(ey - cy, ex - cx)
+  let delta = a1 - a0
+  while (delta > Math.PI) delta -= 2 * Math.PI
+  while (delta < -Math.PI) delta += 2 * Math.PI
+
+  if (Math.abs(delta) < 0.12) return null
+
+  const camForward = new THREE.Vector3()
+  camera.getWorldDirection(camForward)
+  const sign = camForward.dot(normal) >= 0 ? 1 : -1
+
+  return delta * sign > 0 ? 'cw' : 'ccw'
+}
+
+export function turnTokenForFace(face: CubeMoveFace, sense: FaceTurnSense): string {
+  return sense === 'cw' ? face : `${face}'`
+}
+
 export function turnFaceFromWorldNormal(normal: THREE.Vector3): CubeMoveFace | null {
   const ax = Math.abs(normal.x)
   const ay = Math.abs(normal.y)

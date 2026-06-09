@@ -9,6 +9,9 @@ import {
   faceOutward,
   turnFaceFromWorldNormal,
   gridTripleFromSticker,
+  inferFaceTurnFromScreenDrag,
+  turnTokenForFace,
+  FACE_TURN_DRAG_MIN_PX,
   type CubeMoveFace,
 } from './rubik-stickers-layout'
 import { MOVE_MAP, solvedCube, type CubeFaces, type CubeFaceKey } from './rubik-model'
@@ -218,5 +221,32 @@ describe('gridTripleFromSticker', () => {
     const cube = solvedCube()
     const centers = new Set([cube.U[4], cube.R[4], cube.F[4], cube.D[4], cube.L[4], cube.B[4]])
     expect(centers.size).toBe(6)
+  })
+})
+
+// ── drag turn inference ───────────────────────────────────────────────────────
+
+describe('inferFaceTurnFromScreenDrag', () => {
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
+  camera.position.set(3, 2.4, 3.8)
+  camera.lookAt(0, 0, 0)
+  camera.updateMatrixWorld()
+
+  const rect = { left: 0, top: 0, width: 400, height: 400 } as DOMRect
+
+  it('returns null for tiny movement (tap threshold)', () => {
+    const center = latticeStickerCenter('F', 4)
+    expect(
+      inferFaceTurnFromScreenDrag('F', camera, center, 200, 200, 205, 203, rect),
+    ).toBeNull()
+  })
+
+  it('turnTokenForFace maps sense to WCA tokens', () => {
+    expect(turnTokenForFace('R', 'cw')).toBe('R')
+    expect(turnTokenForFace('R', 'ccw')).toBe("R'")
+  })
+
+  it('drag threshold constant is reasonable', () => {
+    expect(FACE_TURN_DRAG_MIN_PX).toBeGreaterThan(8)
   })
 })
