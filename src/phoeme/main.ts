@@ -1,6 +1,9 @@
 import './phoeme.css'
 import { PHOEME, PHOEME_FEATURES, PHOEME_STEPS } from './phoeme-data'
 import { resolveDesktopShellHref } from '../static-portfolio-href'
+import { initBrochureTheme, mountBrochureThemeSwitcher } from '../brochure-theme'
+
+initBrochureTheme()
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -84,7 +87,9 @@ function mount(): void {
     el('p', 'phoeme-banner-title', 'Phoneme'),
     el('p', 'phoeme-banner-sub', 'Product page'),
   )
-  bannerInner.append(backLink, bannerMeta)
+  bannerInner.append(backLink)
+  mountBrochureThemeSwitcher(bannerInner)
+  bannerInner.append(bannerMeta)
   banner.appendChild(bannerInner)
 
   const main = el('main', 'phoeme-main')

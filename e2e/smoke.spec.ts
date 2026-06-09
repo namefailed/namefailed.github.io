@@ -35,5 +35,6 @@ test.describe('production build smoke', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Phoneme' })).toBeVisible()
     await expect(page.getByRole('link', { name: /view on github/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /mrgrey\.site/i })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: /color theme/i })).toBeVisible()
   })
 })

@@ -1,16 +1,30 @@
-/* ── Phoneme product page (`/phoeme/`) ─────────────────────────────────────── */
+/* ── Phoneme product page (`/phoeme/`) — Catppuccin packs via brochure-theme.ts ─ */
 
+/* Mocha defaults until initBrochureTheme() applies a stored pack */
 :root {
-  --phoeme-bg: #0a1014;
-  --phoeme-bg-soft: #101820;
-  --phoeme-surface: rgba(255, 255, 255, 0.04);
-  --phoeme-edge: rgba(255, 255, 255, 0.1);
-  --phoeme-text: #e8edf5;
-  --phoeme-muted: #9aabb8;
-  --phoeme-dim: #667788;
-  --phoeme-accent: #7ee787;
-  --phoeme-accent-soft: #5eead4;
-  --phoeme-link: #79c0ff;
+  --th-body-bg:
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(35, 32, 48, 0.55), transparent 55%),
+    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(18, 18, 28, 0.9), transparent 45%),
+    #050508;
+  --th-accent-rgb: 245, 194, 231;
+  --th-accent: #f5c2e7;
+  --th-blue-rgb: 137, 180, 250;
+  --th-blue: #89b4fa;
+  --th-text: #cdd6f4;
+  --th-text-muted: #a6adc8;
+  --th-subtext: #585b70;
+  --th-surface0: #313244;
+  --th-surface1: #1e1e2e;
+  --th-mantle: #181825;
+  --th-overlay-rgb: 17, 17, 27;
+  --th-titlebar-border: rgba(255, 255, 255, 0.05);
+  --th-teal: #94e2d5;
+  --th-teal-rgb: 148, 226, 213;
+  --th-dot-max: #a6e3a1;
+  --th-dot-min: #f9e2af;
+  --th-dot-close: #f38ba8;
+  --th-badge-visual: #cba6f7;
+
   --phoeme-max: min(68rem, 92vw);
   --phoeme-gutter: clamp(1.1rem, 4vw, 2rem);
   --phoeme-font: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -35,21 +49,52 @@ body {
   font-family: var(--phoeme-font);
   font-size: 17px;
   line-height: 1.62;
-  color: var(--phoeme-text);
-  background:
-    radial-gradient(900px 420px at 10% -10%, rgba(94, 234, 212, 0.09), transparent 60%),
-    radial-gradient(700px 380px at 100% 0%, rgba(121, 192, 255, 0.08), transparent 55%),
-    linear-gradient(180deg, var(--phoeme-bg) 0%, #0d1218 100%);
+  color: var(--th-text);
+  background: var(--th-surface1);
+  overflow-x: hidden;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(90px);
+}
+
+body::before {
+  width: 640px;
+  height: 640px;
+  top: -220px;
+  left: -180px;
+  background: radial-gradient(circle, rgba(var(--th-accent-rgb), 0.14) 0%, transparent 68%);
+}
+
+body::after {
+  width: 560px;
+  height: 560px;
+  bottom: -140px;
+  right: -140px;
+  background: radial-gradient(circle, rgba(var(--th-blue-rgb), 0.11) 0%, transparent 68%);
+}
+
+#phoeme-root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
 }
 
 a {
-  color: var(--phoeme-link);
+  color: var(--th-blue);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
+  transition: color 0.15s ease;
 }
 
 a:hover {
-  color: var(--phoeme-accent-soft);
+  color: var(--th-accent);
 }
 
 .phoeme-skip:not(:focus-visible) {
@@ -71,16 +116,16 @@ a:hover {
   z-index: 100;
   padding: 0.5rem 0.85rem;
   border-radius: 8px;
-  background: var(--phoeme-bg-soft);
-  border: 1px solid var(--phoeme-edge);
+  background: var(--th-mantle);
+  border: 1px solid var(--th-titlebar-border);
 }
 
 .phoeme-banner {
   position: sticky;
   top: 0;
   z-index: 20;
-  border-bottom: 1px solid var(--phoeme-edge);
-  background: rgba(10, 16, 20, 0.78);
+  border-bottom: 1px solid var(--th-titlebar-border);
+  background: rgba(var(--th-overlay-rgb), 0.78);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   padding: 0.85rem var(--phoeme-gutter);
@@ -102,11 +147,11 @@ a:hover {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-decoration: none;
-  color: var(--phoeme-accent-soft);
+  color: var(--th-accent);
 }
 
 .phoeme-back:hover {
-  color: var(--phoeme-accent);
+  color: var(--th-text);
 }
 
 .phoeme-banner-meta {
@@ -117,12 +162,60 @@ a:hover {
   margin: 0;
   font-size: 0.82rem;
   font-weight: 600;
+  color: var(--th-text);
 }
 
 .phoeme-banner-sub {
   margin: 0;
   font-size: 0.72rem;
-  color: var(--phoeme-dim);
+  color: var(--th-subtext);
+}
+
+/* ── Theme switcher (shared brochure control) ─────────────────────────────── */
+
+.brochure-theme-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.brochure-theme-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--phoeme-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--th-subtext);
+}
+
+.brochure-theme-select {
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  min-width: 9.5rem;
+  max-width: 100%;
+  font: inherit;
+  font-family: var(--phoeme-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--th-text);
+  background: rgba(var(--th-overlay-rgb), 0.55);
+  border: 1px solid var(--th-titlebar-border);
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.brochure-theme-select:hover {
+  border-color: rgba(var(--th-accent-rgb), 0.35);
+}
+
+.brochure-theme-select:focus-visible {
+  border-color: rgba(var(--th-accent-rgb), 0.55);
+  box-shadow: 0 0 0 2px rgba(var(--th-accent-rgb), 0.2);
 }
 
 .phoeme-main {
@@ -149,9 +242,9 @@ a:hover {
   display: inline-flex;
   padding: 0.28rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid rgba(126, 231, 135, 0.35);
-  background: rgba(126, 231, 135, 0.08);
-  color: var(--phoeme-accent);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.35);
+  background: rgba(var(--th-accent-rgb), 0.1);
+  color: var(--th-accent);
   font-family: var(--phoeme-mono);
   font-size: 0.62rem;
   font-weight: 700;
@@ -165,19 +258,20 @@ a:hover {
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.05;
+  color: var(--th-text);
 }
 
 .phoeme-tagline {
   margin: 0 0 0.85rem;
   font-size: 1.05rem;
   font-weight: 600;
-  color: var(--phoeme-accent-soft);
+  color: var(--th-teal);
 }
 
 .phoeme-summary {
   margin: 0 0 0.75rem;
   max-width: 38rem;
-  color: var(--phoeme-muted);
+  color: var(--th-text-muted);
   font-size: 1.02rem;
   line-height: 1.72;
 }
@@ -188,7 +282,7 @@ a:hover {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--phoeme-dim);
+  color: var(--th-subtext);
 }
 
 .phoeme-actions {
@@ -213,37 +307,37 @@ a:hover {
 }
 
 .phoeme-cta--primary {
-  border: 1px solid rgba(126, 231, 135, 0.45);
-  background: rgba(126, 231, 135, 0.14);
-  color: var(--phoeme-text);
+  border: 1px solid rgba(var(--th-accent-rgb), 0.45);
+  background: rgba(var(--th-accent-rgb), 0.14);
+  color: var(--th-text);
 }
 
 .phoeme-cta--primary:hover {
-  background: rgba(126, 231, 135, 0.22);
-  color: var(--phoeme-text);
+  background: rgba(var(--th-accent-rgb), 0.22);
+  color: var(--th-text);
   transform: translateY(-1px);
 }
 
 .phoeme-cta--ghost {
-  border: 1px solid var(--phoeme-edge);
+  border: 1px solid var(--th-titlebar-border);
   background: transparent;
-  color: var(--phoeme-muted);
+  color: var(--th-text-muted);
 }
 
 .phoeme-cta--ghost:hover {
-  border-color: rgba(121, 192, 255, 0.45);
-  color: var(--phoeme-text);
+  border-color: rgba(var(--th-blue-rgb), 0.45);
+  color: var(--th-text);
 }
 
 .phoeme-hero-visual {
   margin: 0;
   border-radius: calc(var(--phoeme-radius) + 2px);
   overflow: hidden;
-  border: 1px solid var(--phoeme-edge);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--th-titlebar-border);
+  background: rgba(var(--th-overlay-rgb), 0.35);
   box-shadow:
     0 24px 48px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(94, 234, 212, 0.08);
+    0 0 0 1px rgba(var(--th-accent-rgb), 0.08);
 }
 
 .phoeme-hero-img {
@@ -266,7 +360,7 @@ a:hover {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--phoeme-dim);
+  color: var(--th-subtext);
 }
 
 .phoeme-heading::before {
@@ -274,7 +368,7 @@ a:hover {
   width: 3px;
   height: 1rem;
   border-radius: 2px;
-  background: linear-gradient(180deg, var(--phoeme-accent-soft), var(--phoeme-accent));
+  background: linear-gradient(180deg, var(--th-teal), var(--th-accent));
 }
 
 .phoeme-feature-grid {
@@ -285,8 +379,8 @@ a:hover {
 .phoeme-feature {
   padding: 1rem 1.1rem;
   border-radius: var(--phoeme-radius);
-  border: 1px solid var(--phoeme-edge);
-  background: var(--phoeme-surface);
+  border: 1px solid var(--th-titlebar-border);
+  background: rgba(var(--th-overlay-rgb), 0.35);
   text-align: left;
 }
 
@@ -294,11 +388,12 @@ a:hover {
   margin: 0 0 0.35rem;
   font-size: 0.98rem;
   font-weight: 700;
+  color: var(--th-text);
 }
 
 .phoeme-feature-body {
   margin: 0;
-  color: var(--phoeme-muted);
+  color: var(--th-text-muted);
   font-size: 0.92rem;
   line-height: 1.6;
 }
@@ -313,20 +408,21 @@ a:hover {
 
 .phoeme-step {
   padding: 1rem 1.1rem;
-  border-left: 3px solid rgba(94, 234, 212, 0.55);
+  border-left: 3px solid rgba(var(--th-teal-rgb), 0.55);
   border-radius: 0 var(--phoeme-radius) var(--phoeme-radius) 0;
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(var(--th-overlay-rgb), 0.25);
 }
 
 .phoeme-step-title {
   margin: 0 0 0.3rem;
   font-size: 0.95rem;
   font-weight: 700;
+  color: var(--th-text);
 }
 
 .phoeme-step-body {
   margin: 0;
-  color: var(--phoeme-muted);
+  color: var(--th-text-muted);
   font-size: 0.92rem;
 }
 
@@ -340,23 +436,23 @@ a:hover {
 .phoeme-stack-chip {
   padding: 0.35rem 0.72rem;
   border-radius: 999px;
-  border: 1px solid var(--phoeme-edge);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--th-titlebar-border);
+  background: rgba(var(--th-overlay-rgb), 0.35);
   font-family: var(--phoeme-mono);
   font-size: 0.72rem;
-  color: var(--phoeme-muted);
+  color: var(--th-text-muted);
 }
 
 .phoeme-license {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--phoeme-dim);
+  color: var(--th-subtext);
 }
 
 .phoeme-footer {
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--phoeme-edge);
+  border-top: 1px solid var(--th-titlebar-border);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -366,7 +462,7 @@ a:hover {
 .phoeme-footer-note {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--phoeme-dim);
+  color: var(--th-subtext);
 }
 
 [data-anim] {
@@ -394,6 +490,14 @@ a:hover {
 
   .phoeme-steps {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .brochure-theme-wrap {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: flex-start;
   }
 }
 
