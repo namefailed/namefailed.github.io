@@ -13,6 +13,7 @@ import { applyTheme, getThemeId, listThemeSummaries } from './theme'
 import { resetTileLayout } from './desktop-tiles'
 import { clearWallpaper } from './wallpaper'
 import { clearFirstVisitFlags } from './first-visit-flags'
+import { resolveStaticPortfolioHref } from './static-portfolio-href'
 
 function syncSettingsSwitch(btn: HTMLElement, on: boolean): void {
   btn.setAttribute('aria-pressed', on ? 'true' : 'false')
@@ -221,6 +222,12 @@ export function initSystray(): void {
   )
 
   syncSettingsSoundToggle()
+
+  const classicLink = document.getElementById('yasb-classic-link') as HTMLAnchorElement | null
+  if (classicLink) classicLink.href = resolveStaticPortfolioHref()
+
+  const classicSkip = document.querySelector<HTMLAnchorElement>('.skip-link--classic')
+  if (classicSkip) classicSkip.href = resolveStaticPortfolioHref()
 
   const fullResetBtn = document.getElementById('settings-full-reset')
   fullResetBtn?.addEventListener('click', () => {

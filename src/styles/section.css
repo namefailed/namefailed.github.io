@@ -352,6 +352,10 @@ html.retro-fx::before {
   border-color: rgba(var(--th-accent-rgb), 0.45);
 }
 
+.skip-link--classic:focus-visible {
+  top: calc(max(12px, env(safe-area-inset-top, 0px)) + 2.75rem);
+}
+
 /* Keyboard focus — visible on chrome; xterm keeps its own caret (no double ring) */
 :focus:not(:focus-visible) {
   outline: none;

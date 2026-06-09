@@ -70,6 +70,15 @@
   gap: 4px;
 }
 
+a.yasb-btn-classic {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.yasb-btn-classic:hover {
+  color: var(--th-yasb-btn-text);
+}
+
 .yasb-volume-cluster {
   display: flex;
   align-items: center;

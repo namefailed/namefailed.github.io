@@ -12,6 +12,7 @@ export const INTRO_TOASTS: ReadonlyArray<string> = [
   'Open the Portfolio folder to see my work, or drag it anywhere.',
   'The Apps folder has tools & games. Try whatever catches your eye.',
   'Ctrl+D opens the launcher. Run cookies clear to replay this intro.',
+  'Prefer a readable page? Click Classic view in the top bar or type static in the terminal.',
 ]
 
 export interface IntroToastsOptions {

@@ -10,6 +10,7 @@
  * Replay via the "Reset experience" button in the system menu.
  */
 
+import { resolveStaticPortfolioHref } from './static-portfolio-href'
 import { storageGet, storageSet } from './storage'
 
 export const GUIDE_KEY = 'mrgrey-guide-seen'
@@ -19,6 +20,11 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
     id: 'open',
     glyph: '◐',
     html: 'Click <strong>Portfolio</strong>, <strong>Apps</strong>, or <strong>Games</strong> to open a tile',
+  },
+  {
+    id: 'hire',
+    glyph: '◎',
+    html: 'Hiring managers: the <strong>Portfolio</strong> folder has projects, résumé, and contact',
   },
   {
     id: 'terminal',
@@ -40,6 +46,8 @@ const TIPS: Array<{ id: string; glyph: string; html: string }> = [
 export function mountWelcomeGuide(): void {
   if (typeof window === 'undefined') return
   if (storageGet(GUIDE_KEY) === '1') return
+
+  const classicHref = resolveStaticPortfolioHref()
 
   // ── Build card ────────────────────────────────────────────────────────────
 
@@ -72,7 +80,9 @@ export function mountWelcomeGuide(): void {
 
   const intro = document.createElement('p')
   intro.className = 'welcome-guide-intro'
-  intro.textContent = 'This portfolio is a tiling window manager. Here\'s how it works:'
+  intro.innerHTML =
+    'This site is my portfolio dressed up as a fake desktop OS — résumé, projects, contact, and a few toys. ' +
+    'Prefer a normal page? Use <strong>Classic view</strong> in the top bar or type <code>static</code> in the terminal.'
   body.appendChild(intro)
 
   const list = document.createElement('ul')
@@ -97,6 +107,17 @@ export function mountWelcomeGuide(): void {
   }
 
   body.appendChild(list)
+
+  const footer = document.createElement('div')
+  footer.className = 'welcome-guide-footer'
+
+  const classicLink = document.createElement('a')
+  classicLink.className = 'welcome-guide-classic-link'
+  classicLink.href = classicHref
+  classicLink.textContent = 'Open classic portfolio →'
+  footer.appendChild(classicLink)
+  body.appendChild(footer)
+
   card.appendChild(body)
 
   document.body.appendChild(card)

@@ -53,7 +53,8 @@
     />
   </head>
   <body>
-    <a class="skip-link" href="#terminal">Skip to terminal</a>
+    <a class="skip-link" href="#desktop-workspace">Skip to desktop</a>
+    <a class="skip-link skip-link--classic" href="/static/">Skip to classic portfolio</a>
     <!-- Vintage CRT-style bezel; inner surface is #desktop -->
     <div id="monitor-frame">
     <div id="desktop" data-content-count="0" data-terminal-closed="1">
@@ -82,6 +83,15 @@
             <div class="yasb-cluster yasb-end">
               <div class="yasb-system" id="yasb-system">
                 <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+                <a
+                  id="yasb-classic-link"
+                  class="yasb-btn yasb-btn-classic"
+                  href="/static/"
+                  title="Readable portfolio — no desktop UI"
+                >
+                  <span class="yasb-btn-glyph" aria-hidden="true">◎</span>
+                  Classic view
+                </a>
                 <button
                   type="button"
                   id="btn-yasb-clock"

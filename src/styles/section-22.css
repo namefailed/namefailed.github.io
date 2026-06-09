@@ -75,6 +75,29 @@
   padding: 16px;
 }
 
+.welcome-guide-footer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--th-surface1, #45475a);
+}
+
+.welcome-guide-classic-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  color: var(--th-accent, #cba6f7);
+  transition: color var(--ui-duration-fast), letter-spacing var(--ui-duration-fast);
+}
+
+.welcome-guide-classic-link:hover {
+  color: var(--th-text, #cdd6f4);
+  letter-spacing: 0.05em;
+}
+
 .welcome-guide-intro {
   margin: 0 0 12px;
   color: var(--th-subtext1, #bac2de);

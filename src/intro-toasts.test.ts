@@ -21,16 +21,20 @@ describe('intro toasts', () => {
     localStorage.clear()
   })
 
-  it('has exactly 4 sequential greeting toasts', () => {
-    expect(INTRO_TOASTS.length).toBe(4)
+  it('has exactly 5 sequential greeting toasts', () => {
+    expect(INTRO_TOASTS.length).toBe(5)
   })
 
   it('first toast mentions Matt', () => {
     expect(INTRO_TOASTS[0]).toMatch(/Matt/)
   })
 
-  it('last toast mentions cookies clear', () => {
+  it('penultimate toast mentions cookies clear', () => {
     expect(INTRO_TOASTS[3]).toMatch(/cookies clear/)
+  })
+
+  it('last toast mentions classic view', () => {
+    expect(INTRO_TOASTS[4]).toMatch(/Classic view|static/)
   })
 
   it('uses mrgrey-toasts-seen as the storage gate key', () => {
@@ -47,11 +51,12 @@ describe('intro toasts', () => {
   it('calls push once per toast in order', async () => {
     const push = vi.fn()
     await runIntroToasts({ push, gapMs: 1 })
-    expect(push).toHaveBeenCalledTimes(4)
+    expect(push).toHaveBeenCalledTimes(5)
     expect(push.mock.calls[0][0]).toBe(INTRO_TOASTS[0])
     expect(push.mock.calls[1][0]).toBe(INTRO_TOASTS[1])
     expect(push.mock.calls[2][0]).toBe(INTRO_TOASTS[2])
     expect(push.mock.calls[3][0]).toBe(INTRO_TOASTS[3])
+    expect(push.mock.calls[4][0]).toBe(INTRO_TOASTS[4])
   })
 
   it('sets the gate flag after all toasts fire', async () => {
