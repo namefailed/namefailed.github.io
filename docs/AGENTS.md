@@ -52,7 +52,11 @@ static/index.html
 | `commands/app-commands.ts` | Tile stubs returning `[]` |
 | `os-fs.ts` | VFS — key `portfolio-vfs-v8-namefailed-home` |
 | `os-registry.ts` | Breaks circular import: terminal → desktop ref |
-| `editor-vim-ops.ts` | Pure editor motions — **preferred home for new vim text helpers** |
+| `editor-vim-motions.ts` | Pure caret/motion helpers — **no buffer mutation** |
+| `editor-vim-edits.ts` | Pure `{ text, pos }` buffer edits — `BufferEditResult` |
+| `editor-vim-ops.ts` | Barrel re-export of motions + edits |
+| `editor-buffer.ts` | Apply layer between pure edits and textarea state |
+| `editor-normal-handlers.ts` | NORMAL-mode single-key handler map |
 | `editor-vim-keys.ts` | Pure editor key-chord helpers |
 | `vim.ts` | Terminal one-line vim widget (separate from editor tile) |
 | `bsp-layout.ts` | Two-column BSP + splitters |
@@ -73,7 +77,7 @@ static/index.html
 | `focusedId === null` | No right-pane tile focused (not “legacy terminal focused”) |
 | `#panes` contains only `#right-pane` | Terminal is a tile, not static HTML column |
 | BSP `maxVisible = 4` | Fifth tile bumps oldest to dock |
-| Editor buffer mutations | Prefer `editor-vim-ops.ts` + tests before touching `editor-window.ts` |
+| Editor buffer mutations | Prefer `editor-vim-edits.ts` + `editor-vim-motions.ts` + tests before touching `editor-window.ts` |
 
 ---
 
@@ -111,12 +115,13 @@ Prefer editing the extracted module, not `desktop.ts`:
 | Shell CSS dataset | `desktop-wm-sync.ts` |
 | Host bindings | `desktop-wm-hosts.ts` |
 
-### Editor vim motion
+### Editor vim motion or edit
 
 ```
-1. Add pure function to editor-vim-ops.ts
-2. Test in editor-vim-ops.test.ts
-3. Wire one-liner in editor-window.ts
+1. Add pure function to editor-vim-motions.ts (caret) or editor-vim-edits.ts (mutation)
+2. Test in editor-vim-motions.test.ts or editor-vim-edits.test.ts
+3. Wire handler in editor-normal-handlers.ts OR chord in editor-window.ts
+4. Buffer apply goes through editor-buffer.ts when mutating textarea state
 ```
 
 ---

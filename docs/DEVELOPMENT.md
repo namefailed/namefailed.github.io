@@ -40,7 +40,7 @@ Run before opening a PR:
 
 ```bash
 npm run lint       # ESLint
-npm test           # Vitest — 583 unit tests
+npm test           # Vitest — 587 unit tests
 npm run build      # TypeScript + Vite
 npm run test:e2e   # Playwright (requires preview build)
 ```

@@ -1,39 +1,30 @@
 /** Modal editor over the fake VFS (normal / insert / ex); not the terminal one-line vim widget. */
 
 import { parseEditorExCommand } from './editor-ex-commands'
+import {
+  applyBufferEditToState,
+  applyStateToTextarea,
+  bufferStateFromTextarea,
+  type BufferEditResult,
+} from './editor-buffer'
+import { dispatchEditorNormalKey } from './editor-normal-handlers'
 import { insertModeKeyAction, tryAppendCountDigit } from './editor-vim-keys'
 import {
   applyReplaceRunsText,
-  appendLineEndPos,
   consumeCountDigits,
   consumeOptionalNat,
-  deleteCharBackwardText,
-  deleteCharForwardText,
   deleteLineBlockText,
   deleteThroughEOLText,
-  firstNonBlankOnLine,
   getLineCol,
   gotoLinePos,
   indentLinesText,
   joinLinesText,
-  lineBounds,
   lineCountTotal,
-  lineEndCaretPos,
-  moveHorizPos,
-  moveVertRepeat,
-  openLineAboveText,
-  openLineBelowText,
   pasteYankText,
   repeatFindPos,
   reverseFindKind,
-  substituteCharsText,
-  toggleCaseRunText,
   unindentLinesText,
-  wordBackRepeat,
-  wordEndForwardRepeat,
-  wordForwardRepeat,
   yankLineBlockText,
-  yankToEOLText,
 } from './editor-vim-ops'
 import { editorPathsEqual, editorWindowTitle } from './editor-window-meta'
 import { vfsFormatPath, vfsNormalize, vfsReadRaw, vfsWrite } from './os-fs'
@@ -299,19 +290,15 @@ export class EditorWindow {
     this.gotoLine(this.lineCountTotal())
   }
 
-  private firstNonBlankOnLine(pos: number): number {
-    return firstNonBlankOnLine(this.textarea.value, pos)
-  }
-
   /** Apply a pure buffer edit result to the textarea + undo stack. */
   private applyBufferEdit(
-    result: { text: string; pos: number } | null | undefined,
+    result: BufferEditResult | null | undefined,
     opts?: { enterInsert?: boolean },
   ): boolean {
-    if (!result) return false
-    this.textarea.value = result.text
-    this.textarea.setSelectionRange(result.pos, result.pos)
-    this.dirty = result.text !== this.savedText
+    const state = bufferStateFromTextarea(this.textarea, this.savedText, this.dirty)
+    if (!applyBufferEditToState(state, result)) return false
+    applyStateToTextarea(this.textarea, state)
+    this.dirty = state.dirty
     this.recordAfterMutation()
     this.syncTitle()
     if (opts?.enterInsert) {
@@ -912,35 +899,6 @@ export class EditorWindow {
       return
     }
 
-    // `:` prefix already cleared count
-    const pasteAfter = (): void => {
-      const result = pasteYankText(this.textarea.value, cur(), this.yankRegister, true)
-      if (!result) return
-      this.textarea.value = result.text
-      setCur(result.pos)
-    }
-
-    const pasteBeforeLine = (): void => {
-      const result = pasteYankText(this.textarea.value, cur(), this.yankRegister, false)
-      if (!result) return
-      this.textarea.value = result.text
-      setCur(result.pos)
-    }
-
-    if (k === 'p' || k === 'P') {
-      e.preventDefault()
-      if (!this.yankRegister) return
-      const times = this.consumeCount(1)
-      for (let i = 0; i < times; i++) {
-        if (k === 'p') pasteAfter()
-        else pasteBeforeLine()
-      }
-      this.dirty = this.textarea.value !== this.savedText
-      this.recordAfterMutation()
-      this.syncTitle()
-      return
-    }
-
     if (k === '>') {
       e.preventDefault()
       this.clearPendingDy()
@@ -966,212 +924,69 @@ export class EditorWindow {
       return
     }
 
-    if (k === '0') {
-      e.preventDefault()
-      this.consumeCount(1)
-      const { start } = this.lineBounds(cur())
-      setCur(start)
-      return
-    }
-
-    if (k === '^') {
-      e.preventDefault()
-      this.consumeCount(1)
-      setCur(this.firstNonBlankOnLine(cur()))
-      return
-    }
-
-    if (k === '$') {
-      e.preventDefault()
-      this.consumeCount(1)
-      setCur(lineEndCaretPos(this.textarea.value, cur()))
-      return
-    }
-
-    if (k === 'G') {
-      e.preventDefault()
-      this.clearPendingDy()
-      this.gArm = false
-      const n = this.consumeOptionalNat()
-      if (n == null) this.gotoLastLine()
-      else this.gotoLine(n)
-      return
-    }
-
-    if (k === 'D') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.deleteThroughEOL()
-      return
-    }
-
-    if (k === 'C') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.applyBufferEdit(
-        deleteThroughEOLText(this.textarea.value, cur()),
-        { enterInsert: true },
-      )
-      return
-    }
-
-    if (k === 's') {
-      e.preventDefault()
-      this.applyBufferEdit(
-        substituteCharsText(this.textarea.value, cur(), this.consumeCount(1)),
-        { enterInsert: true },
-      )
-      return
-    }
-
-    if (k === '~') {
-      e.preventDefault()
-      this.applyBufferEdit(
-        toggleCaseRunText(this.textarea.value, cur(), this.consumeCount(1)),
-      )
-      return
-    }
-
-    if (k === 'Y') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.yankRegister = yankToEOLText(this.textarea.value, cur())
-      this.flashStatus('Yanked to end of line', false)
-      return
-    }
-
-    if (k === 'J') {
-      e.preventDefault()
-      this.joinBelow()
-      return
-    }
-
-    if (k === 'r') {
-      e.preventDefault()
-      const nRuns = this.consumeCount(1)
-      this.replacePending = { nRuns }
-      this.refreshModeMeta()
-      return
-    }
-
-    if (k === 'X') {
-      e.preventDefault()
-      this.applyBufferEdit(
-        deleteCharBackwardText(this.textarea.value, cur(), this.consumeCount(1)),
-      )
-      return
-    }
-
-    if (k === 'w') {
-      e.preventDefault()
-      setCur(wordForwardRepeat(this.textarea.value, cur(), this.consumeCount(1)))
-      return
-    }
-    if (k === 'b') {
-      e.preventDefault()
-      setCur(wordBackRepeat(this.textarea.value, cur(), this.consumeCount(1)))
-      return
-    }
-
-    if (k === 'e') {
-      e.preventDefault()
-      setCur(wordEndForwardRepeat(this.textarea.value, cur(), this.consumeCount(1)))
-      return
-    }
-
-    if (k === 'i') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.mode = 'insert'
-      this.syncStatus()
-      this.syncEditorChrome()
-      return
-    }
-    if (k === 'a') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.mode = 'insert'
-      setCur(cur() + 1)
-      this.syncStatus()
-      this.syncEditorChrome()
-      return
-    }
-    if (k === 'A') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.mode = 'insert'
-      setCur(appendLineEndPos(this.textarea.value, cur()))
-      this.syncStatus()
-      this.syncEditorChrome()
-      return
-    }
-    if (k === 'I') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.mode = 'insert'
-      setCur(this.firstNonBlankOnLine(cur()))
-      this.syncStatus()
-      this.syncEditorChrome()
-      return
-    }
-    if (k === 'o') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.applyBufferEdit(openLineBelowText(this.textarea.value, cur()), { enterInsert: true })
-      return
-    }
-    if (k === 'O') {
-      e.preventDefault()
-      this.consumeCount(1)
-      this.applyBufferEdit(openLineAboveText(this.textarea.value, cur()), { enterInsert: true })
-      return
-    }
-
-    if (k === 'h') {
-      e.preventDefault()
-      setCur(moveHorizPos(this.textarea.value, cur(), -1, this.consumeCount(1)))
-      return
-    }
-    if (k === 'l') {
-      e.preventDefault()
-      setCur(moveHorizPos(this.textarea.value, cur(), 1, this.consumeCount(1)))
-      return
-    }
-    if (k === 'j') {
-      e.preventDefault()
-      setCur(moveVertRepeat(this.textarea.value, cur(), 1, this.consumeCount(1)))
-      return
-    }
-    if (k === 'k') {
-      e.preventDefault()
-      setCur(moveVertRepeat(this.textarea.value, cur(), -1, this.consumeCount(1)))
-      return
-    }
-
-    if (k === 'x') {
-      e.preventDefault()
-      this.applyBufferEdit(
-        deleteCharForwardText(this.textarea.value, cur(), this.consumeCount(1)),
-      )
-      return
-    }
-
-    if (k === 'u') {
-      e.preventDefault()
-      if (this.snapPtr <= 0) return
-      this.snapPtr--
-      this.textarea.value = this.snapshots[this.snapPtr]!
-      this.dirty = this.textarea.value !== this.savedText
-      this.syncTitle()
-      this.refreshModeMeta()
+    const self = this
+    if (
+      dispatchEditorNormalKey({
+        key: k,
+        prevent: () => e.preventDefault(),
+        cur,
+        setCur,
+        text: () => self.textarea.value,
+        consumeCount: (defaultN?: number) => self.consumeCount(defaultN),
+        consumeOptionalNat: () => self.consumeOptionalNat(),
+        applyEdit: (result, opts) => self.applyBufferEdit(result, opts),
+        enterInsert: () => {
+          self.mode = 'insert'
+          self.syncStatus()
+          self.syncEditorChrome()
+        },
+        enterInsertAt: pos => {
+          self.mode = 'insert'
+          setCur(pos)
+          self.syncStatus()
+          self.syncEditorChrome()
+        },
+        gotoLine: n => self.gotoLine(n),
+        gotoLastLine: () => self.gotoLastLine(),
+        deleteThroughEOL: () => self.deleteThroughEOL(),
+        joinBelow: () => self.joinBelow(),
+        get yankRegister() {
+          return self.yankRegister
+        },
+        set yankRegister(v: string) {
+          self.yankRegister = v
+        },
+        flash: msg => self.flashStatus(msg, false),
+        armReplace: nRuns => {
+          self.replacePending = { nRuns }
+          self.refreshModeMeta()
+        },
+        undo: () => {
+          if (self.snapPtr <= 0) return
+          self.snapPtr--
+          self.textarea.value = self.snapshots[self.snapPtr]!
+          self.dirty = self.textarea.value !== self.savedText
+          self.syncTitle()
+          self.refreshModeMeta()
+        },
+        paste: (times, afterLine) => {
+          if (!self.yankRegister) return
+          for (let i = 0; i < times; i++) {
+            const result = pasteYankText(self.textarea.value, cur(), self.yankRegister, afterLine)
+            if (!result) return
+            self.textarea.value = result.text
+            setCur(result.pos)
+          }
+          self.dirty = self.textarea.value !== self.savedText
+          self.recordAfterMutation()
+          self.syncTitle()
+        },
+      })
+    ) {
       return
     }
 
     swallowPrintable()
-  }
-
-  private lineBounds(pos: number): { start: number; end: number } {
-    return lineBounds(this.textarea.value, pos)
   }
 
   private reverseFindKind(kind: 'f' | 'F' | 't' | 'T'): 'f' | 'F' | 't' | 'T' {

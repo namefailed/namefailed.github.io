@@ -88,9 +88,9 @@ Each window tile (`editor-window.ts`, `rubik-window.ts`, etc.) is loaded with **
 | Layer | Module | Purpose |
 |-------|--------|---------|
 | Terminal one-liner | `vim.ts` | Shell prompt — insert/normal/visual, history, completion |
-| Modal editor tile | `editor-window.ts` + `editor-vim-ops.ts` | Full buffer editor over the VFS — motions, operators, ex commands |
+| Modal editor tile | `editor-window.ts` + vim stack | Full buffer editor over the VFS — motions, operators, ex commands |
 
-Pure caret helpers in `editor-vim-ops.ts` are **unit-tested without a DOM**, which keeps editor logic maintainable.
+Pure caret and edit helpers (`editor-vim-motions.ts`, `editor-vim-edits.ts`) are **unit-tested without a DOM**, which keeps editor logic maintainable.
 
 ### Virtual filesystem (VFS v8)
 
@@ -100,7 +100,7 @@ Files persist in `localStorage` under `portfolio-vfs-v8-namefailed-home`. First 
 
 | Stage | Tool |
 |-------|------|
-| Unit | Vitest — **583 tests**, **46 files**, Node environment with DOM stubs where needed |
+| Unit | Vitest — **587 tests**, **48 files**, Node environment with DOM stubs where needed |
 | Lint | ESLint 9 + TypeScript-eslint |
 | E2e | Playwright — production build smoke (desktop shell, brochure, nav) |
 | Deploy | GitHub Actions → `dist/` → GitHub Pages |
