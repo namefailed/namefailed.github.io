@@ -1,5 +1,13 @@
 import './phoeme.css'
-import { PHOEME, PHOEME_FEATURES, PHOEME_STEPS } from './phoeme-data'
+import {
+  PHOEME,
+  PHOEME_AUDIENCE,
+  PHOEME_FEATURES,
+  PHOEME_PHILOSOPHY,
+  PHOEME_STEPS,
+  PHOEME_WORKFLOWS,
+  type PhoemeCopyBlock,
+} from './phoeme-data'
 import { resolveDesktopShellHref } from '../static-portfolio-href'
 import { initBrochureTheme, mountBrochureThemeSwitcher } from '../brochure-theme'
 
@@ -45,9 +53,9 @@ function ctaLink(
   return a
 }
 
-function featureCard(feature: { title: string; body: string }, delay = 0): HTMLElement {
-  const card = anim(el('article', 'phoeme-feature'), delay)
-  card.append(el('h3', 'phoeme-feature-title', feature.title), el('p', 'phoeme-feature-body', feature.body))
+function copyCard(block: PhoemeCopyBlock, className: string, delay = 0): HTMLElement {
+  const card = anim(el('article', className), delay)
+  card.append(el('h3', `${className}-title`, block.title), el('p', `${className}-body`, block.body))
   return card
 }
 
@@ -101,7 +109,7 @@ function mount(): void {
 
   const heroCopy = el('div', 'phoeme-hero-copy')
   const badgeRow = el('div', 'phoeme-badges')
-  for (const label of ['Windows', 'Local-first', 'Open source']) {
+  for (const label of ['Windows', 'Local-first', 'Open source', 'No telemetry']) {
     badgeRow.appendChild(el('span', 'phoeme-badge', label))
   }
 
@@ -113,8 +121,9 @@ function mount(): void {
 
   const actions = anim(el('div', 'phoeme-actions'), 160)
   actions.append(
-    ctaLink(PHOEME.repo, 'View on GitHub', 'primary', true),
-    ctaLink(PHOEME.releases, 'Releases', 'ghost', true),
+    ctaLink(PHOEME.releases, 'Download for Windows', 'primary', true),
+    ctaLink(PHOEME.docs, 'Documentation', 'ghost', true),
+    ctaLink(PHOEME.repo, 'GitHub', 'ghost', true),
   )
 
   heroCopy.append(badgeRow, title, tagline, summary, status, actions)
@@ -128,15 +137,34 @@ function mount(): void {
   img.height = 540
   img.loading = 'eager'
   img.decoding = 'async'
+  img.referrerPolicy = 'no-referrer'
   heroVisual.appendChild(img)
 
   hero.append(heroCopy, heroVisual)
+
+  const philosophySection = el('section', 'phoeme-section')
+  philosophySection.setAttribute('aria-labelledby', 'sec-philosophy')
+  philosophySection.appendChild(sectionHeading('Philosophy', 'sec-philosophy'))
+  const philosophyGrid = el('div', 'phoeme-philosophy-grid')
+  PHOEME_PHILOSOPHY.forEach((item, i) =>
+    philosophyGrid.appendChild(copyCard(item, 'phoeme-philosophy', i * 45)),
+  )
+  philosophySection.appendChild(philosophyGrid)
+
+  const workflowsSection = el('section', 'phoeme-section')
+  workflowsSection.setAttribute('aria-labelledby', 'sec-workflows')
+  workflowsSection.appendChild(sectionHeading('Core workflows', 'sec-workflows'))
+  const workflowGrid = el('div', 'phoeme-workflow-grid')
+  PHOEME_WORKFLOWS.forEach((item, i) =>
+    workflowGrid.appendChild(copyCard(item, 'phoeme-workflow', i * 45)),
+  )
+  workflowsSection.appendChild(workflowGrid)
 
   const featuresSection = el('section', 'phoeme-section')
   featuresSection.setAttribute('aria-labelledby', 'sec-features')
   featuresSection.appendChild(sectionHeading('Features', 'sec-features'))
   const featureGrid = el('div', 'phoeme-feature-grid')
-  PHOEME_FEATURES.forEach((f, i) => featureGrid.appendChild(featureCard(f, i * 50)))
+  PHOEME_FEATURES.forEach((f, i) => featureGrid.appendChild(copyCard(f, 'phoeme-feature', i * 40)))
   featuresSection.appendChild(featureGrid)
 
   const stepsSection = el('section', 'phoeme-section')
@@ -150,6 +178,8 @@ function mount(): void {
   })
   stepsSection.appendChild(stepsList)
 
+  const audience = anim(el('p', 'phoeme-audience', PHOEME_AUDIENCE), 80)
+
   const stackSection = el('section', 'phoeme-section phoeme-section--stack')
   stackSection.setAttribute('aria-labelledby', 'sec-stack')
   stackSection.appendChild(sectionHeading('Built with', 'sec-stack'))
@@ -160,11 +190,25 @@ function mount(): void {
 
   const footer = el('footer', 'phoeme-footer')
   footer.append(
+    ctaLink(PHOEME.docs, 'Read the docs →', 'ghost', true),
     ctaLink(PHOEME.repo, 'Source on GitHub →', 'ghost', true),
-    el('p', 'phoeme-footer-note', 'Phoneme is a side project by Matt Grey · not affiliated with any STT vendor.'),
+    el(
+      'p',
+      'phoeme-footer-note',
+      'Phoneme is open source by Matt Grey — not affiliated with any STT vendor.',
+    ),
   )
 
-  main.append(hero, featuresSection, stepsSection, stackSection, footer)
+  main.append(
+    hero,
+    philosophySection,
+    workflowsSection,
+    featuresSection,
+    stepsSection,
+    audience,
+    stackSection,
+    footer,
+  )
   root.replaceChildren(banner, main)
 
   document.title = `${PHOEME.name} — ${PHOEME.tagline}`

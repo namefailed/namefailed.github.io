@@ -41,9 +41,9 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     title: 'Phoneme',
     period: 'phoneme · 2025–2026',
     lines: [
-      `Local-first voice transcription for Windows — global hotkey, speak, release, paste anywhere.`,
-      `Offline Whisper by default; optional cloud STT/LLM cleanup, meeting mode with dual-track capture,`,
-      `SQLite catalog, webhooks, and CLI. Rust + Tauri + egui. Open source (MIT/Apache-2.0).`,
+      `Local-first Windows transcription — hotkey dictation, meeting dual-track capture, semantic search, hooks, and CLI.`,
+      `Offline whisper.cpp by default; independent STT/LLM providers per pipeline step. Rust + Tauri + Lit.`,
+      `Open source (MIT/Apache-2.0). Product page and docs at /phoeme/.`,
     ],
     repo: 'https://github.com/namefailed/phoneme',
     web: 'https://mrgrey.site/phoeme/',

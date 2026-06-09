@@ -30,11 +30,14 @@ test.describe('production build smoke', () => {
     await expect(page.getByRole('link', { name: /full desktop experience/i })).toBeVisible()
   })
 
-  test('phoeme product page loads hero and GitHub CTA', async ({ page }) => {
+  test('phoeme product page loads hero and primary CTAs', async ({ page }) => {
     await page.goto('/phoeme/')
     await expect(page.getByRole('heading', { level: 1, name: 'Phoneme' })).toBeVisible()
-    await expect(page.getByRole('link', { name: /view on github/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /download for windows/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /documentation/i })).toBeVisible()
     await expect(page.getByRole('link', { name: /mrgrey\.site/i })).toBeVisible()
     await expect(page.getByRole('combobox', { name: /color theme/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Philosophy' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Core workflows' })).toBeVisible()
   })
 })
