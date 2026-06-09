@@ -4,19 +4,20 @@
  * Keys: Ctrl+T terminal; Ctrl+1–9 docks; Ctrl+H/K vs L/J along stack; Ctrl+Q/M/F/D close/min/max/show-desktop; Applications = launcher.
  */
 
-import { AppWindow } from './appwindow'
 import type { WindowSpec } from './appwindow'
 import type { BrowserWindow } from './browser-window'
 import type { EditorWindow } from './editor-window'
 import type { FileExplorerWindow } from './file-explorer-window'
+import {
+  dispatchOpenWindow,
+  type MinimizedEntry,
+  type OpenWindowHost,
+  type TiledWin,
+} from './desktop-open-window'
 import type { PaintWindow } from './paint-window'
 import type { PongWindow } from './pong-window'
-import type { RubikWindow } from './rubik-window'
 import type { SnakeWindow } from './snake-window'
-import type { P5Window } from './p5-window'
 import type { TerminalWindow } from './terminal'
-import { DEFAULT_BROWSER_URL, normalizeBrowserUrl } from './browser-url'
-import { FS_HOME, vfsNormalize } from './os-fs'
 import { Splitter } from './splitter'
 import {
   attachLazyPrefetchHandlers,
@@ -80,23 +81,6 @@ export interface PsSnapshotRow {
 }
 
 export type { WindowSpec }
-
-type TiledWin =
-  | AppWindow
-  | EditorWindow
-  | FileExplorerWindow
-  | BrowserWindow
-  | PaintWindow
-  | SnakeWindow
-  | PongWindow
-  | RubikWindow
-  | P5Window
-  | TerminalWindow
-
-interface MinimizedEntry {
-  win: TiledWin
-}
-
 
 export class Desktop {
   private desktop:    HTMLElement
@@ -241,339 +225,26 @@ export class Desktop {
    * All heavy tile modules are loaded via dynamic `import()` on first open, keeping the initial
    * bundle lean.
    */
+  private openWindowHost(): OpenWindowHost {
+    const self = this
+    return {
+      get windows() { return self.windows },
+      get minimized() { return self.minimized },
+      closeLauncherOverlay: () => self.closeLauncherOverlay(),
+      closeWindow: win => self.closeWindow(win),
+      focusWindow: win => self.focusWindow(win),
+      restoreMinimized: entry => self.restoreMinimized(entry),
+      minimizeWindow: win => self.minimizeWindow(win),
+      toggleMaximizeContent: win => self.toggleMaximizeContent(win),
+      enforceTileLimit: () => self.enforceTileLimit(),
+      appendToRightPane: win => self.appendToRightPane(win),
+      attachVerticalSplitters: () => self.attachVerticalSplitters(),
+      openWindow: spec => self.openWindow(spec),
+    }
+  }
+
   async openWindow(spec: WindowSpec): Promise<void> {
-    this.closeLauncherOverlay()
-
-    if (spec.command === 'edit') {
-      const pathArg = spec.editorPath ?? 'notes.txt'
-
-      const existingOpen = this.windows.find(w => w.command === 'edit')
-      if (existingOpen) {
-        const ed = existingOpen as EditorWindow
-        if (ed.pathMatches(pathArg)) {
-          this.closeWindow(existingOpen)
-          return
-        }
-        ed.loadFile(pathArg)
-        this.focusWindow(existingOpen)
-        return
-      }
-
-      const minEd = this.minimized.find(m => m.win.command === 'edit')
-      if (minEd) {
-        const ed = minEd.win as EditorWindow
-        if (ed.pathMatches(pathArg)) {
-          this.restoreMinimized(minEd)
-          return
-        }
-        ed.loadFile(pathArg)
-        this.restoreMinimized(minEd)
-        return
-      }
-
-      const { EditorWindow: EditorWindowCtor } = await import('./editor-window')
-      let ed!: EditorWindow
-      ed = new EditorWindowCtor({
-        initialPath: pathArg,
-        onClose: () => this.closeWindow(ed),
-        onMinimize: () => this.minimizeWindow(ed),
-        onMaximize: () => this.toggleMaximizeContent(ed),
-        onFocus: () => this.focusWindow(ed),
-        onRunInP5: absPath =>
-          void this.openWindow({
-            command: 'p5',
-            title: absPath.split('/').pop() ?? 'p5.js',
-            content: [],
-            p5SketchPath: absPath,
-          }),
-      })
-      this.enforceTileLimit()
-      this.appendToRightPane(ed)
-      this.windows.push(ed)
-      this.attachVerticalSplitters()
-      this.focusWindow(ed)
-      return
-    }
-
-    if (spec.command === 'explorer') {
-      const pathArg = vfsNormalize(spec.explorerPath ?? FS_HOME)
-
-      const existingOpen = this.windows.find(w => w.command === 'explorer')
-      if (existingOpen) {
-        const ex = existingOpen as FileExplorerWindow
-        if (ex.pathMatches(pathArg)) {
-          this.closeWindow(existingOpen)
-          return
-        }
-        ex.navigateTo(pathArg)
-        this.focusWindow(existingOpen)
-        return
-      }
-
-      const minEx = this.minimized.find(m => m.win.command === 'explorer')
-      if (minEx) {
-        const ex = minEx.win as FileExplorerWindow
-        if (ex.pathMatches(pathArg)) {
-          this.restoreMinimized(minEx)
-          return
-        }
-        ex.navigateTo(pathArg)
-        this.restoreMinimized(minEx)
-        return
-      }
-
-      const { FileExplorerWindow: FileExplorerWindowCtor } = await import('./file-explorer-window')
-      let ex!: FileExplorerWindow
-      ex = new FileExplorerWindowCtor({
-        initialPath: pathArg,
-        onClose: () => this.closeWindow(ex),
-        onMinimize: () => this.minimizeWindow(ex),
-        onMaximize: () => this.toggleMaximizeContent(ex),
-        onFocus: () => this.focusWindow(ex),
-        onOpenInEditor: absFilePath => {
-          // .js files route to the p5 viewer so double-clicking a sketch in
-          // ~/sketches plays it directly. The viewer's Edit button still
-          // bounces the file into the mini-vim if the user wants to modify.
-          if (absFilePath.endsWith('.js')) {
-            void this.openWindow({
-              command: 'p5',
-              title: absFilePath.split('/').pop() ?? 'p5.js',
-              content: [],
-              p5SketchPath: absFilePath,
-            })
-            return
-          }
-          void this.openWindow({
-            command: 'edit',
-            title: `edit — ${absFilePath}`,
-            content: [],
-            editorPath: absFilePath,
-          })
-        },
-      })
-      this.enforceTileLimit()
-      this.appendToRightPane(ex)
-      this.windows.push(ex)
-      this.attachVerticalSplitters()
-      this.focusWindow(ex)
-      return
-    }
-
-    if (spec.command === 'browse') {
-      const urlArg = normalizeBrowserUrl(spec.browserUrl ?? DEFAULT_BROWSER_URL)
-
-      const existingOpen = this.windows.find(w => w.command === 'browse')
-      if (existingOpen) {
-        const br = existingOpen as BrowserWindow
-        if (br.pathMatches(urlArg)) {
-          this.closeWindow(existingOpen)
-          return
-        }
-        br.navigateTo(urlArg)
-        this.focusWindow(existingOpen)
-        return
-      }
-
-      const minBr = this.minimized.find(m => m.win.command === 'browse')
-      if (minBr) {
-        const br = minBr.win as BrowserWindow
-        if (br.pathMatches(urlArg)) {
-          this.restoreMinimized(minBr)
-          return
-        }
-        br.navigateTo(urlArg)
-        this.restoreMinimized(minBr)
-        return
-      }
-
-      const { BrowserWindow: BrowserWindowCtor } = await import('./browser-window')
-      let br!: BrowserWindow
-      br = new BrowserWindowCtor({
-        initialUrl: urlArg,
-        onClose: () => this.closeWindow(br),
-        onMinimize: () => this.minimizeWindow(br),
-        onMaximize: () => this.toggleMaximizeContent(br),
-        onFocus: () => this.focusWindow(br),
-      })
-      this.enforceTileLimit()
-      this.appendToRightPane(br)
-      this.windows.push(br)
-      this.attachVerticalSplitters()
-      this.focusWindow(br)
-      return
-    }
-
-    if (spec.command === 'p5') {
-      const pathArg = spec.p5SketchPath ?? null
-
-      // Restore minimized — load the new path into it if one was supplied.
-      const min = this.minimized.find(m => m.win.command === 'p5')
-      if (min) {
-        if (pathArg) void (min.win as P5Window).loadFromVfs(pathArg)
-        this.restoreMinimized(min)
-        return
-      }
-
-      // Already open — focus it and load the new path if any.
-      const existing = this.windows.find(w => w.command === 'p5')
-      if (existing) {
-        if (pathArg) void (existing as P5Window).loadFromVfs(pathArg)
-        this.focusWindow(existing)
-        return
-      }
-
-      const { P5Window: P5WindowCtor } = await import('./p5-window')
-      let pw!: P5Window
-      pw = new P5WindowCtor({
-        initialVfsPath: pathArg,
-        onOpenWindow: s => void this.openWindow(s),
-        onClose:    () => this.closeWindow(pw),
-        onMinimize: () => this.minimizeWindow(pw),
-        onMaximize: () => this.toggleMaximizeContent(pw),
-        onFocus:    () => this.focusWindow(pw),
-      })
-      this.enforceTileLimit()
-      this.appendToRightPane(pw)
-      this.windows.push(pw)
-      this.attachVerticalSplitters()
-      this.focusWindow(pw)
-      return
-    }
-
-    if (spec.command === 'terminal') {
-      const min = this.minimized.find(m => m.win.command === 'terminal')
-      if (min) { this.restoreMinimized(min); return }
-
-      const existing = this.windows.find(w => w.command === 'terminal')
-      if (existing) { this.focusWindow(existing); return }
-
-      const { TerminalWindow: TerminalWindowCtor } = await import('./terminal')
-      let tw!: TerminalWindow
-      tw = new TerminalWindowCtor({
-        onClose:       () => this.closeWindow(tw),
-        onMinimize:    () => this.minimizeWindow(tw),
-        onMaximize:    () => this.toggleMaximizeContent(tw),
-        onFocus:       () => this.focusWindow(tw),
-        onOpenWindow:  s  => void this.openWindow(s),
-      })
-      this.enforceTileLimit()
-      this.appendToRightPane(tw)
-      this.windows.push(tw)
-      this.attachVerticalSplitters()
-      await tw.mount()
-      tw.fit()
-      this.focusWindow(tw)
-      return
-    }
-
-    const miniGameOpen = (
-      spec.command === 'paint' ||
-      spec.command === 'snake' ||
-      spec.command === 'pong'  ||
-      spec.command === 'cube'
-    )
-    if (miniGameOpen) {
-      const cmd = spec.command
-      const min = this.minimized.find(m => m.win.command === cmd)
-      if (min) {
-        this.restoreMinimized(min)
-        return
-      }
-      const existing = this.windows.find(w => w.command === cmd)
-      if (existing) {
-        this.closeWindow(existing)
-        return
-      }
-
-      this.enforceTileLimit()
-
-      if (cmd === 'paint') {
-        const { PaintWindow: PaintWindowCtor } = await import('./paint-window')
-        let pw!: PaintWindow
-        pw = new PaintWindowCtor({
-          onClose: () => this.closeWindow(pw),
-          onMinimize: () => this.minimizeWindow(pw),
-          onMaximize: () => this.toggleMaximizeContent(pw),
-          onFocus: () => this.focusWindow(pw),
-        })
-        this.appendToRightPane(pw)
-        this.windows.push(pw)
-        this.attachVerticalSplitters()
-        this.focusWindow(pw)
-        return
-      }
-      if (cmd === 'snake') {
-        const { SnakeWindow: SnakeWindowCtor } = await import('./snake-window')
-        let sw!: SnakeWindow
-        sw = new SnakeWindowCtor({
-          onClose: () => this.closeWindow(sw),
-          onMinimize: () => this.minimizeWindow(sw),
-          onMaximize: () => this.toggleMaximizeContent(sw),
-          onFocus: () => this.focusWindow(sw),
-        })
-        this.appendToRightPane(sw)
-        this.windows.push(sw)
-        this.attachVerticalSplitters()
-        this.focusWindow(sw)
-        return
-      }
-      if (cmd === 'cube') {
-        const { RubikWindow: RubikWindowCtor } = await import('./rubik-window')
-        let rw!: RubikWindow
-        rw = new RubikWindowCtor({
-          onClose:    () => this.closeWindow(rw),
-          onMinimize: () => this.minimizeWindow(rw),
-          onMaximize: () => this.toggleMaximizeContent(rw),
-          onFocus:    () => this.focusWindow(rw),
-        })
-        this.appendToRightPane(rw)
-        this.windows.push(rw)
-        this.attachVerticalSplitters()
-        this.focusWindow(rw)
-        return
-      }
-      const { PongWindow: PongWindowCtor } = await import('./pong-window')
-      let pong!: PongWindow
-      pong = new PongWindowCtor({
-        onClose: () => this.closeWindow(pong),
-        onMinimize: () => this.minimizeWindow(pong),
-        onMaximize: () => this.toggleMaximizeContent(pong),
-        onFocus: () => this.focusWindow(pong),
-      })
-      this.appendToRightPane(pong)
-      this.windows.push(pong)
-      this.attachVerticalSplitters()
-      this.focusWindow(pong)
-      return
-    }
-
-    // If there's a minimized version, just restore it
-    const min = this.minimized.find(m => m.win.command === spec.command)
-    if (min) {
-      this.restoreMinimized(min)
-      return
-    }
-
-    // Toggle: re-running the command closes the open window
-    const existing = this.windows.find(w => w.command === spec.command)
-    if (existing) {
-      this.closeWindow(existing)
-      return
-    }
-
-    const win = new AppWindow({
-      ...spec,
-      onClose:    () => this.closeWindow(win),
-      onMinimize: () => this.minimizeWindow(win),
-      onMaximize: () => this.toggleMaximizeContent(win),
-      onFocus:    () => this.focusWindow(win),
-    })
-
-    this.enforceTileLimit()
-    this.appendToRightPane(win)
-    this.windows.push(win)
-    this.attachVerticalSplitters()
-    this.focusWindow(win)
+    await dispatchOpenWindow(spec, this.openWindowHost())
   }
 
   /**
