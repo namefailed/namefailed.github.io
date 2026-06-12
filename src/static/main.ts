@@ -203,6 +203,7 @@ function projectCard(project: PlainProject, delay = 0, isFirst = false): HTMLEle
   const body = el('div', 'plain-project-body')
 
   const h = document.createElement('h3')
+  h.className = 'plain-project-head'
   h.appendChild(el('span', 'plain-project-title', project.title))
   if (project.meta) h.appendChild(el('span', 'plain-project-meta', ` · ${project.meta}`))
   body.appendChild(h)

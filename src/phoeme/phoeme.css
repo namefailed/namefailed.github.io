@@ -3,8 +3,8 @@
   --pm-bg-soft: var(--th-surface1);
   --pm-panel: color-mix(in srgb, var(--th-mantle) 54%, transparent);
   --pm-panel-strong: color-mix(in srgb, var(--th-mantle) 78%, transparent);
-  --pm-card: color-mix(in srgb, var(--th-text) 3%, transparent);
-  --pm-card-hover: color-mix(in srgb, var(--th-text) 6%, transparent);
+  --pm-card: var(--th-surface0);
+  --pm-card-hover: var(--th-surface1);
   --pm-edge: var(--th-surface0);
   --pm-edge-strong: var(--th-surface1);
   --pm-text: var(--th-text);
@@ -196,18 +196,29 @@ summary:focus-visible {
 }
 
 .pm-header-brand {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.2rem 0.65rem;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1.2;
   white-space: nowrap;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.pm-brand-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.pm-brand-text {
   background: linear-gradient(120deg, var(--pm-text) 0%, var(--pm-accent) 72%, var(--pm-blue) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  transition: filter 0.15s ease, transform 0.15s ease;
 }
 
 .pm-header-brand:hover {
@@ -1065,6 +1076,22 @@ summary:focus-visible {
   max-width: 100%;
   margin-inline: auto;
   padding-inline: var(--pm-gutter);
+}
+
+
+
+.pm-hero-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.pm-hero-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--th-crust) 25%, transparent);
 }
 
 .pm-footer-brand {

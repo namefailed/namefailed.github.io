@@ -7,8 +7,8 @@
 :root {
   --plain-bg:            var(--th-mantle);
   --plain-bg-bot:        var(--th-crust);
-  --plain-surface:       color-mix(in srgb, var(--th-text) 3%, transparent);
-  --plain-surface-hover: color-mix(in srgb, var(--th-text) 6%, transparent);
+  --plain-surface:       var(--th-surface0);
+  --plain-surface-hover: var(--th-surface1);
   --plain-edge:          var(--th-surface0);
   --plain-edge-hover:    var(--th-accent);
   --plain-text:          var(--th-text);
@@ -599,10 +599,19 @@ a:hover { color: var(--plain-accent); }
   padding: 1.1rem 1.25rem 1.18rem;
 }
 
-.plain-project h3 {
+.plain-project-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   margin: 0 0 0.42rem;
   font-size: 1.02rem;
   font-weight: 700;
+}
+
+.plain-project-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
 }
 
 .plain-project-title { color: var(--plain-accent-strong); }

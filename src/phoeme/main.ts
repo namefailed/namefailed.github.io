@@ -82,7 +82,16 @@ function mountHero(): HTMLElement {
   hero.setAttribute('aria-labelledby', 'pm-title')
 
   const copy = el('div', 'pm-hero-copy')
-  copy.append(el('p', 'pm-eyebrow', PHOEME.tagline))
+  
+  const heroHead = el('div', 'pm-hero-head')
+  const icon = el('img', 'pm-hero-icon') as HTMLImageElement
+  icon.src = '/img/phoneme-icon.png'
+  icon.alt = 'Phoneme Icon'
+  icon.width = 48
+  icon.height = 48
+  heroHead.append(icon, el('p', 'pm-eyebrow', PHOEME.tagline))
+  
+  copy.append(heroHead)
 
   const title = el('h1', 'pm-hero-title')
   title.id = 'pm-title'

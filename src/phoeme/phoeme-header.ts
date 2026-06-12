@@ -25,7 +25,14 @@ export function mountPhoemeHeader(opts: PhoemeHeaderOptions): HTMLElement {
   const mobileBrand = document.createElement('a')
   mobileBrand.href = '#content'
   mobileBrand.className = 'pm-header-brand pm-header-brand-mobile'
-  mobileBrand.textContent = PHOEME.name
+  const mobileIcon = document.createElement('img')
+  mobileIcon.src = '/img/phoneme-icon.png'
+  mobileIcon.alt = ''
+  mobileIcon.className = 'pm-brand-icon'
+  const mobileText = document.createElement('span')
+  mobileText.className = 'pm-brand-text'
+  mobileText.textContent = PHOEME.name
+  mobileBrand.append(mobileIcon, mobileText)
   mobileBrand.setAttribute('aria-label', `${PHOEME.name} — top of page`)
 
   start.appendChild(back)
@@ -37,7 +44,14 @@ export function mountPhoemeHeader(opts: PhoemeHeaderOptions): HTMLElement {
   const brand = document.createElement('a')
   brand.href = '#content'
   brand.className = 'pm-header-brand'
-  brand.textContent = PHOEME.name
+  const brandIcon = document.createElement('img')
+  brandIcon.src = '/img/phoneme-icon.png'
+  brandIcon.alt = ''
+  brandIcon.className = 'pm-brand-icon'
+  const brandText = document.createElement('span')
+  brandText.className = 'pm-brand-text'
+  brandText.textContent = PHOEME.name
+  brand.append(brandIcon, brandText)
   brand.setAttribute('aria-label', `${PHOEME.name} — top of page`)
 
   center.appendChild(brand)
