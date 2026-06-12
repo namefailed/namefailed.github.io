@@ -1,4 +1,6 @@
 import './static.css'
+import { mountBrochureBanner } from '../brochure-banner'
+import { initBrochureTheme } from '../brochure-theme'
 import { mountContactForm } from '../contact-form'
 import { PORTFOLIO_PROJECTS } from '../content/portfolio'
 import {
@@ -14,6 +16,8 @@ import {
 import { buildProjectPreviewFigure } from '../project-card-thumb'
 import { resolveDesktopShellHref } from '../static-portfolio-href'
 import { animateCounter, typewriter } from './static-motion'
+
+initBrochureTheme()
 
 // ── Data helpers ───────────────────────────────────────────────────────────
 
@@ -149,8 +153,8 @@ function contactLinkText(label: string, text: string): string {
 
 // ── Experience card ────────────────────────────────────────────────────────
 
-function experienceCard(entry: ExperienceEntry, delay = 0): HTMLElement {
-  const card = anim(el('article', 'plain-exp-card'), delay)
+function experienceCard(entry: ExperienceEntry, delay = 0, isFirst = false): HTMLElement {
+  const card = anim(el('article', 'plain-exp-card' + (isFirst ? ' plain-span-2' : '')), delay)
   if (entry.type) card.dataset['type'] = entry.type
   if (entry.featured) {
     card.dataset['featured'] = ''
@@ -180,8 +184,8 @@ function experienceCard(entry: ExperienceEntry, delay = 0): HTMLElement {
 
 // ── Project card ───────────────────────────────────────────────────────────
 
-function projectCard(project: PlainProject, delay = 0): HTMLElement {
-  const card = anim(el('article', 'plain-project plain-project--has-thumb'), delay)
+function projectCard(project: PlainProject, delay = 0, isFirst = false): HTMLElement {
+  const card = anim(el('article', 'plain-project plain-project--has-thumb' + (isFirst ? ' plain-span-2' : '')), delay)
 
   const { figure } = buildProjectPreviewFigure({
     title: project.title,
@@ -333,19 +337,13 @@ function mount(): void {
   const sectionNav = buildSectionNav(NAV_SECTIONS)
 
   // ── Banner ─────────────────────────────────────────────────────────────
-  const banner = el('header', 'plain-banner')
-  const bannerInner = el('div', 'plain-banner-inner')
-  const backLink = document.createElement('a')
-  backLink.href = homeHref
-  backLink.className = 'plain-back'
-  backLink.textContent = '← Full desktop experience'
-  const bannerMeta = el('div', 'plain-banner-meta-wrap')
-  bannerMeta.append(
-    el('p', 'plain-banner-title', 'Classic portfolio'),
-    el('p', 'plain-banner-sub', 'Same content — optimized for reading'),
-  )
-  bannerInner.append(backLink, bannerMeta)
-  banner.appendChild(bannerInner)
+  const banner = mountBrochureBanner({
+    backHref: homeHref,
+    backLabel: '← Desktop',
+    backTitle: 'Full desktop experience',
+    title: 'Classic portfolio',
+    subtitle: 'Readable view',
+  })
 
   // ── Hero ───────────────────────────────────────────────────────────────
   const hero = el('section', 'plain-hero')
@@ -397,7 +395,7 @@ function mount(): void {
   experienceSection.appendChild(sectionHeading('Experience', 'sec-experience'))
 
   const expList = el('div', 'plain-exp-list')
-  EXPERIENCE.forEach((entry, i) => expList.appendChild(experienceCard(entry, i * 65)))
+  EXPERIENCE.forEach((entry, i) => expList.appendChild(experienceCard(entry, i * 65, i === 0)))
   experienceSection.appendChild(expList)
 
   // ── Projects ───────────────────────────────────────────────────────────
@@ -406,7 +404,7 @@ function mount(): void {
   projectsSection.appendChild(sectionHeading('Selected projects', 'sec-projects'))
 
   const grid = el('div', 'plain-project-grid')
-  plainProjectsFromPortfolio().forEach((p, i) => grid.appendChild(projectCard(p, i * 55)))
+  plainProjectsFromPortfolio().forEach((p, i) => grid.appendChild(projectCard(p, i * 55, i === 0)))
   projectsSection.appendChild(grid)
 
   // ── Education ──────────────────────────────────────────────────────────

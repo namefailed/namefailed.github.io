@@ -5,6 +5,26 @@
 
 import { applyTheme, getThemeId, initThemeFromStorage, listThemeSummaries } from './theme'
 
+/**
+ * Compact option labels for the brochure theme picker. The sticky banner / header
+ * select is narrow (≈11rem on mobile), so full pack names like "Catppuccin Mocha"
+ * clip. Desktop personalize and the terminal keep the full `listThemeSummaries`
+ * labels; only the brochure switcher shortens them.
+ */
+const BROCHURE_THEME_SHORT_LABELS: Readonly<Record<string, string>> = {
+  mocha: 'Mocha',
+  dracula: 'Dracula',
+  nord: 'Nord',
+  gruvbox: 'Gruvbox',
+  'tokyo-night': 'Tokyo Night',
+  solarized: 'Solarized',
+  'one-dark': 'One Dark',
+}
+
+function brochureThemeLabel(id: string, fallback: string): string {
+  return BROCHURE_THEME_SHORT_LABELS[id] ?? fallback
+}
+
 export function initBrochureTheme(): void {
   initThemeFromStorage()
   syncBrochureMetaThemeColor()
@@ -25,7 +45,10 @@ export function mountBrochureThemeSwitcher(container: HTMLElement): HTMLSelectEl
 
   const label = document.createElement('label')
   label.className = 'brochure-theme-label'
-  label.textContent = 'Theme'
+
+  const labelText = document.createElement('span')
+  labelText.className = 'brochure-theme-label-text'
+  labelText.textContent = 'Theme'
 
   const select = document.createElement('select')
   select.className = 'brochure-theme-select'
@@ -35,7 +58,7 @@ export function mountBrochureThemeSwitcher(container: HTMLElement): HTMLSelectEl
   for (const { id, label: name } of listThemeSummaries()) {
     const opt = document.createElement('option')
     opt.value = id
-    opt.textContent = name
+    opt.textContent = brochureThemeLabel(id, name)
     select.appendChild(opt)
   }
 
@@ -44,7 +67,7 @@ export function mountBrochureThemeSwitcher(container: HTMLElement): HTMLSelectEl
     applyTheme(select.value)
   })
 
-  label.appendChild(select)
+  label.append(labelText, select)
   wrap.appendChild(label)
   container.appendChild(wrap)
   return select

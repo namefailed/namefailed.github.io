@@ -1,24 +1,25 @@
 /* ── Tokens ──────────────────────────────────────────────────────────────── */
 
+@import '../brochure-banner.css';
 @import '../styles/project-preview.css';
 @import '../styles/contact-form.css';
 
 :root {
-  --plain-bg:            #0d0e14;
-  --plain-bg-bot:        #11121a;
-  --plain-surface:       rgba(255, 255, 255, 0.04);
-  --plain-surface-hover: rgba(255, 255, 255, 0.07);
-  --plain-edge:          rgba(255, 255, 255, 0.10);
-  --plain-edge-hover:    rgba(245, 194, 231, 0.30);
-  --plain-text:          #e9ebf8;
-  --plain-muted:         #9aa4c0;
-  --plain-dim:           #6b7593;
-  --plain-accent:        #f5c2e7;
-  --plain-accent-strong: #e8b4f0;
-  --plain-teal:          #94e2d5;
-  --plain-green:         #a6e3a1;
-  --plain-link:          #89b4fa;
-  --plain-yellow:        #f9e2af;
+  --plain-bg:            var(--th-mantle);
+  --plain-bg-bot:        var(--th-crust);
+  --plain-surface:       color-mix(in srgb, var(--th-text) 3%, transparent);
+  --plain-surface-hover: color-mix(in srgb, var(--th-text) 6%, transparent);
+  --plain-edge:          var(--th-surface0);
+  --plain-edge-hover:    var(--th-accent);
+  --plain-text:          var(--th-text);
+  --plain-muted:         var(--th-subtext);
+  --plain-dim:           var(--th-surface2);
+  --plain-accent:        var(--th-accent);
+  --plain-accent-strong: var(--th-accent);
+  --plain-teal:          var(--th-teal);
+  --plain-green:         var(--th-green);
+  --plain-link:          var(--th-blue);
+  --plain-yellow:        var(--th-yellow);
   --plain-max:           42rem;
   --plain-max-prose:     40rem;
   --plain-gutter:        clamp(1.1rem, 5vw, 2rem);
@@ -133,79 +134,6 @@ a:hover { color: var(--plain-accent); }
   z-index: 100;
 }
 
-/* ── Sticky banner ───────────────────────────────────────────────────────── */
-
-.plain-banner {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  border-bottom: 1px solid var(--plain-edge);
-  background: rgba(13, 14, 20, 0.72);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  padding: 0.85rem clamp(1.1rem, 4vw, 2rem);
-  transition: background 0.2s ease;
-}
-
-.plain-banner-inner {
-  max-width: var(--plain-max);
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1.25rem;
-}
-
-.plain-back {
-  font-weight: 600;
-  font-family: var(--plain-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.05em;
-  text-decoration: none;
-  color: var(--plain-accent-strong);
-  transition:
-    color 0.2s var(--plain-ease),
-    letter-spacing 0.25s var(--plain-ease),
-    transform 0.15s var(--plain-ease);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.plain-back:hover {
-  color: var(--plain-accent);
-  letter-spacing: 0.08em;
-  transform: translateX(-2px);
-}
-
-.plain-back:active {
-  transform: translateX(-1px) scale(0.98);
-}
-
-.plain-banner-meta-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
-  text-align: right;
-}
-
-.plain-banner-title {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--plain-text);
-  letter-spacing: 0.04em;
-}
-
-.plain-banner-sub {
-  margin: 0;
-  font-size: 0.72rem;
-  color: var(--plain-dim);
-  letter-spacing: 0.03em;
-}
-
 /* ── Main wrapper ────────────────────────────────────────────────────────── */
 
 .plain-main {
@@ -256,30 +184,20 @@ a:hover { color: var(--plain-accent); }
   flex-shrink: 0;
 }
 
-/* Spinning conic-gradient ring */
+/* Breathing glassmorphism aura */
 .plain-avatar-ring {
   position: absolute;
-  inset: -3px;
+  inset: -8px;
   border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    var(--plain-accent)       0%,
-    var(--plain-link)        35%,
-    var(--plain-teal)        65%,
-    var(--plain-accent)     100%
-  );
-  animation: plain-spin 12s linear infinite;
-  will-change: transform;
+  background: radial-gradient(circle, rgba(245, 194, 231, 0.15) 0%, transparent 70%);
+  animation: plain-breathe 8s ease-in-out infinite alternate;
+  will-change: transform, opacity;
   opacity: 0.8;
 }
 
 /* Mask out the centre so only the ring edge shows */
 .plain-avatar-ring::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: var(--plain-bg);
+  display: none;
 }
 
 .plain-avatar {
@@ -319,9 +237,9 @@ a:hover { color: var(--plain-accent); }
   display: flex;
 }
 
-@keyframes plain-spin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes plain-breathe {
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.1); opacity: 1; }
 }
 
 /* ── Name ────────────────────────────────────────────────────────────────── */
@@ -486,11 +404,24 @@ a:hover { color: var(--plain-accent); }
 
 /* ── Experience cards ────────────────────────────────────────────────────── */
 
-.plain-exp-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
+.plain-project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
   align-self: stretch;
+}
+
+.plain-exp-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  align-self: stretch;
+}
+
+@media (min-width: 768px) {
+  .plain-span-2 {
+    grid-column: span 2;
+  }
 }
 
 .plain-exp-card {
@@ -590,13 +521,6 @@ a:hover { color: var(--plain-accent); }
 .plain-ul li::marker { color: rgba(245, 194, 231, 0.5); }
 
 /* ── Project cards ───────────────────────────────────────────────────────── */
-
-.plain-project-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  align-self: stretch;
-}
 
 .plain-project {
   padding: 1.1rem 1.25rem 1.18rem;
@@ -1118,6 +1042,7 @@ a:hover { color: var(--plain-accent); }
     transform 0.3s var(--plain-ease);
   user-select: none;
   cursor: pointer;
+  align-self: center;
 }
 
 .plain-scroll-cue:hover {
