@@ -1247,9 +1247,19 @@ summary:focus-visible {
 }
 
 @media (min-width: 1040px) {
+  /* Two-column hero: copy left, screenshot right. The base .pm-hero is a
+     centered flex column, so display:grid is required for grid-template-columns
+     to take effect, and the copy left-aligns beside the visual. */
   .pm-hero {
+    display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
     gap: clamp(2rem, 3.5vw, 3rem);
+    text-align: left;
+    align-items: center;
+  }
+
+  .pm-hero-copy {
+    align-items: start;
   }
 
   /* Three even columns — 9 features land as a clean 3x3 grid. If the count
