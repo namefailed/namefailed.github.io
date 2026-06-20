@@ -93,11 +93,21 @@ describe('SnakeWindow', () => {
   const origRO = globalThis.ResizeObserver
   const origPath2D = (globalThis as { Path2D?: unknown }).Path2D
   const origGBCR = HTMLElement.prototype.getBoundingClientRect
+  const origRAF = globalThis.requestAnimationFrame
+  const origCAF = globalThis.cancelAnimationFrame
 
   let roCallback: (() => void) | null = null
 
   beforeEach(() => {
     vi.useFakeTimers()
+    // Drive rAF through the faked clock so the boot rAF -> resetGame -> first-tick
+    // chain is deterministic under vi.advanceTimersByTime. happy-dom's own rAF can
+    // bind the real setTimeout depending on suite init order, which made the
+    // powerup-eating ticks flaky once the full suite reshuffled file ordering.
+    globalThis.requestAnimationFrame = ((cb: FrameRequestCallback) =>
+      globalThis.setTimeout(() => cb(0), 0) as unknown as number) as typeof requestAnimationFrame
+    globalThis.cancelAnimationFrame = ((h: number) =>
+      globalThis.clearTimeout(h as unknown as ReturnType<typeof setTimeout>)) as typeof cancelAnimationFrame
     document.body.replaceChildren()
     roCallback = null
 
@@ -140,6 +150,8 @@ describe('SnakeWindow', () => {
   afterEach(() => {
     vi.runOnlyPendingTimers()
     vi.useRealTimers()
+    globalThis.requestAnimationFrame = origRAF
+    globalThis.cancelAnimationFrame = origCAF
     HTMLCanvasElement.prototype.getContext = origGetContext
     globalThis.getComputedStyle = origGetComputedStyle
     globalThis.ResizeObserver = origRO
