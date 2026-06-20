@@ -253,7 +253,7 @@ describe('MOVE_MAP', () => {
 // ── normalizeNotationInput ────────────────────────────────────────────────────
 
 describe('normalizeNotationInput', () => {
-  it('returns null for an empty string', () => {
+  it('returns an empty string for empty input (nothing to flag as unrecognized)', () => {
     expect(normalizeNotationInput('')).toBe('')
   })
 

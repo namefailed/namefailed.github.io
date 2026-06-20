@@ -315,9 +315,18 @@ describe('ls command — long, human, and edge branches', () => {
     expect(out).toContain('inside.txt')
   })
 
-  it('-A behaves like -a (shows the dot entries)', () => {
-    const out = plain(run('ls', ['-A', DOCS]))
-    expect(out.split('\n').map(l => l.trim())).toContain('.')
+  it('-A lists the same real entries as -a but omits the . and .. pseudo-dirs', () => {
+    const aAll = plain(run('ls', ['-a', DOCS])).split('\n').map(l => l.trim())
+    const aAlmost = plain(run('ls', ['-A', DOCS])).split('\n').map(l => l.trim())
+    // -a keeps . and ..; -A (POSIX "almost all") drops exactly those two.
+    expect(aAll).toContain('.')
+    expect(aAll).toContain('..')
+    expect(aAlmost).not.toContain('.')
+    expect(aAlmost).not.toContain('..')
+    // every real entry -a shows still appears under -A
+    for (const entry of aAll.filter(n => n && n !== '.' && n !== '..')) {
+      expect(aAlmost).toContain(entry)
+    }
   })
 })
 
@@ -535,11 +544,9 @@ describe('head command', () => {
     expect(plain(run('head', [`${FS_HOME}/missing.txt`]))).toContain('No such file or directory')
   })
 
-  it('prints a single blank line for a zero-byte file', () => {
-    // An empty body splits to [''] → one blank, two-space-indented line (not the
-    // (empty) placeholder, which only fires when the slice is genuinely empty).
+  it('shows the (empty) marker for a zero-byte file (no stray blank line)', () => {
     vfsWrite(`${FS_HOME}/z.txt`, '')
-    expect(lines('head', [`${FS_HOME}/z.txt`])).toEqual(['  '])
+    expect(plain(run('head', [`${FS_HOME}/z.txt`]))).toContain('(empty)')
   })
 })
 
@@ -582,11 +589,9 @@ describe('tail command', () => {
     expect(plain(run('tail', [`${FS_HOME}/missing.txt`]))).toContain('No such file or directory')
   })
 
-  it('prints a single blank line for a zero-byte file', () => {
-    // Empty body → [''] → one blank indented line. tail's (empty) placeholder is
-    // unreachable: slice(max(0, len-n)) on a >=1-length array always keeps >=1 item.
+  it('shows the (empty) marker for a zero-byte file (no stray blank line)', () => {
     vfsWrite(`${FS_HOME}/z.txt`, '')
-    expect(lines('tail', [`${FS_HOME}/z.txt`])).toEqual(['  '])
+    expect(plain(run('tail', [`${FS_HOME}/z.txt`]))).toContain('(empty)')
   })
 })
 

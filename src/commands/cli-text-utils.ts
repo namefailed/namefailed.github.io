@@ -15,6 +15,9 @@ export function fmtHumanBytes(n: number): string {
 }
 
 export function wcStats(s: string): { lines: number; words: number; chars: number } {
+  // "lines" counts content segments, not POSIX wc -l's newline count — a 2-line
+  // file with no trailing newline reads as 2 here, which is the friendlier count
+  // for this terminal (vfsCat strips the trailing newline anyway).
   const lines = s === '' ? 0 : s.split('\n').length
   const words = s.trim() ? s.trim().split(/\s+/).length : 0
   const chars = encoder.encode(s).length

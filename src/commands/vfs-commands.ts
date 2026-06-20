@@ -59,24 +59,30 @@ export const vfsCommands: Record<string, Command> = {
 
   ls: {
     description:
-      'List directory — ls -a . .. · ls -l long mode · -h human sizes (with -l)',
+      'List directory — -a all incl . .. · -A all but . .. · -l long mode · -h human sizes (with -l)',
     run: args => {
-      let showAll = false
+      let showAll = false // -a : include dotfiles plus the . and .. entries
+      let almostAll = false // -A : include dotfiles but omit . and .. (POSIX "almost all")
       let long = false
       let human = false
       const pathChunks: string[] = []
       for (const a of args) {
-        if (a === '-a' || a === '-A') showAll = true
+        if (a === '-a') showAll = true
+        else if (a === '-A') almostAll = true
         else if (a === '-l') long = true
         else if (a === '-h' || a === '--human-readable') human = true
         else if (!a.startsWith('-')) pathChunks.push(a)
       }
+      const all = showAll || almostAll
+      // -A lists dotfiles but drops the . and .. pseudo-dirs that -a keeps.
+      const dropDotDirs = almostAll && !showAll
       const target = pathChunks.join(' ')
       if (long) {
-        const rows = vfsLsLong(target || undefined, { all: showAll })
+        const rows = vfsLsLong(target || undefined, { all })
         if (rows.length >= 1 && typeof rows[0] === 'string' && rows[0].startsWith('ls:'))
           return [`  ${rows[0]}`]
-        const data = rows as VfsLongEntry[]
+        let data = rows as VfsLongEntry[]
+        if (dropDotDirs) data = data.filter(r => r.name !== '.' && r.name !== '..')
         const szW = human
           ? Math.max(4, ...data.map(r => fmtHumanBytes(r.size).length))
           : Math.max(4, ...data.map(r => String(r.size).length))
@@ -93,8 +99,9 @@ export const vfsCommands: Record<string, Command> = {
         return out
       }
 
-      const lines = vfsLs(target || undefined, { all: showAll })
+      let lines = vfsLs(target || undefined, { all })
       if (lines.length === 1 && lines[0].startsWith('ls:')) return [`  ${lines[0]}`]
+      if (dropDotDirs) lines = lines.filter(n => n !== '.' && n !== '..')
       if (lines.length === 0)
         return ['', `  ${c.dim}(empty directory)${c.reset}`, '']
       return [
@@ -198,7 +205,9 @@ export const vfsCommands: Record<string, Command> = {
       const out = vfsCat(path)
       if (out == null || out.startsWith('cat:')) return [`  ${out ?? 'cat: I/O error'}`]
       const body = out === '(empty file)' ? '' : out
-      const lines = body.split('\n')
+      // An empty file has no lines — fall through to the (empty) marker rather
+      // than ''.split('\n') === [''] printing a stray blank line.
+      const lines = body === '' ? [] : body.split('\n')
       const take = lines.slice(0, n)
       return take.length ? take.map(line => `  ${line}`) : [`  ${c.dim}(empty)${c.reset}`]
     },
@@ -212,7 +221,7 @@ export const vfsCommands: Record<string, Command> = {
       const out = vfsCat(path)
       if (out == null || out.startsWith('cat:')) return [`  ${out ?? 'cat: I/O error'}`]
       const body = out === '(empty file)' ? '' : out
-      const lines = body.split('\n')
+      const lines = body === '' ? [] : body.split('\n')
       const start = Math.max(0, lines.length - n)
       const take = lines.slice(start)
       return take.length ? take.map(line => `  ${line}`) : [`  ${c.dim}(empty)${c.reset}`]
