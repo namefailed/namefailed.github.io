@@ -101,8 +101,8 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     type: 'contract',
     featured: true,
     bullets: [
-      'Sole front-end dev: designed and built the entire public Vertalo.com from scratch — responsive, fast, and accessible for an institutional audience.',
-      "Built it on Craft CMS, wired into Vertalo's React / PostgreSQL / AWS stack, so non-developers could manage content after launch.",
+      'Front-end developer on the public Vertalo.com — designed and built the marketing site for an institutional audience: responsive, fast, and accessible.',
+      "Built the front end on Craft CMS, against Vertalo's React / PostgreSQL / AWS stack, so non-developers could manage content after launch.",
       'Applied SEO and performance work across the site; built to accessibility standards (semantic markup, keyboard nav, contrast) for an institutional audience.',
       'Turned dense blockchain and digital-asset material into plain, credible copy and layout for fund managers and investors.',
       'Collaborated directly with company leadership on messaging, UX, and content — from first commit through post-launch refinement and handoff.',
