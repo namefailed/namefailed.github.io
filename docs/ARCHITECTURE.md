@@ -33,9 +33,12 @@ sequenceDiagram
 |------|---------|
 | `index.html` | Desktop shell — monitor frame, YASB bar, launcher, `#panes` → `#right-pane` |
 | `static/index.html` | Brochure — no OS chrome; mobile redirect target |
+| `phoeme/index.html` | Phoneme product page — standalone marketing layout, no OS chrome |
+| `phoneme/index.html` | Meta-refresh + JS redirect to `/phoeme/` (correct spelling → canonical URL) |
 | `src/main.ts` | Imports CSS, calls `bootstrapShellUi()` |
 | `src/bootstrap-shell.ts` | Theme → wallpaper → retro FX → sound → systray → boot splash → `Desktop` → matrix rain (idle) |
 | `src/static/main.ts` | Brochure: hero, sections, scroll-spy, motion |
+| `src/phoeme/main.ts` | Phoneme page: hero, feature grid, pipeline, comparison, FAQ (data from `phoeme-data.ts`) |
 
 **Terminal is not in static HTML.** It opens as a lazy tile (`Ctrl+T`, dock, or `terminal` command).
 
@@ -104,10 +107,10 @@ Self-contained classes with `el`, `command`, WM callbacks. Lazy-loaded except `a
 | `browser-window.ts` | iframe + URL bar |
 | `paint-window.ts` | Pixel canvas |
 | `p5-window.ts` | Sandboxed p5 viewer |
-| `rubik-window.ts` | Three.js Rubik cube |
+| `rubik-window.ts` | cubing.js Rubik cube (`TwistyPlayer`) |
 | `pong-window.ts` / `snake-window.ts` | Arcade games |
 
-Three.js ships **only** in the `rubik-window` lazy chunk.
+The `rubik-window.ts` tile uses cubing.js (`TwistyPlayer`), which bundles Three.js. That dependency ships **only** in the `rubik-window` lazy chunk — never in the main bundle.
 
 ### Editor vim stack
 
@@ -168,8 +171,9 @@ Three.js ships **only** in the `rubik-window` lazy chunk.
 
 | Module | Purpose |
 |--------|---------|
-| `rubik-model.ts` | Pure cube state — moves, scramble, algorithms |
-| `rubik-stickers-layout.ts` | Three.js geometry helpers |
+| `rubik-model.ts` | Pure cube state — canonical algorithms, notation parsing, sequence inversion |
+
+Rendering and interaction live in `rubik-window.ts`, which drives cubing.js `TwistyPlayer`.
 
 ---
 
@@ -194,6 +198,8 @@ Vite entry points (`vite.config.ts`):
 
 - `index.html` → main bundle + lazy chunks per tile
 - `static/index.html` → separate brochure bundle
+- `phoeme/index.html` → separate Phoneme product-page bundle
+- `phoneme/index.html` → tiny redirect-only HTML (no JS bundle)
 
 `prefetchLazyWindowModule()` in `launcher-catalog.ts` warms chunks on launcher hover.
 
@@ -205,6 +211,7 @@ Vite entry points (`vite.config.ts`):
 |------|----------|
 | Desktop | `src/styles/01-foundation.css` … `23-boot-splash.css` via `src/style.css` |
 | Brochure | `src/static/static.css` (`--plain-*` tokens) |
+| Phoneme page | `src/phoeme/phoeme.css` |
 
 Regenerate split CSS: `node scripts/split-style-css.mjs`
 
@@ -234,7 +241,7 @@ Bump VFS key version in `os-fs.ts` to reset visitor filesystems.
 
 ## Testing
 
-**587 tests** · **48 files** · Vitest in Node · Playwright e2e smoke.
+**615 tests** · **60 files** · Vitest in Node · Playwright e2e smoke (8 specs).
 
 ### By domain
 
@@ -245,9 +252,10 @@ Bump VFS key version in `os-fs.ts` to reset visitor filesystems.
 | Terminal / vim | `vim.test.ts`, `terminal-motd.test.ts` |
 | VFS / commands | `os-fs.test.ts`, `commands/*.test.ts` |
 | Tiles / launcher | `launcher-catalog.test.ts`, `desktop-open-window.test.ts`, `window-chrome.test.ts` |
-| Rubik | `rubik-model.test.ts`, `rubik-stickers-layout.test.ts` |
+| Rubik | `rubik-model.test.ts` |
 | Theme / FX | `theme-control.test.ts`, `matrix-bg.test.ts`, `retro-fx.test.ts`, `wallpaper.test.ts` |
 | Brochure | `static/static-motion.test.ts`, `static-portfolio-href.test.ts` |
+| Phoneme page | `phoeme/phoeme-data.test.ts`, `phoeme/phoeme-header.test.ts`, `phoeme/main.test.ts` |
 | Content | `content/portfolio.test.ts`, `p5-sketches.test.ts` |
 
 ```bash

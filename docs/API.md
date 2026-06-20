@@ -307,6 +307,8 @@ const c = { pink, blue, green, yellow, red, cyan, white, dim, bold, reset }
 | `mrgrey-wallpaper-change` | `string \| null` URL |
 | `mrgrey-first-window` | none |
 | `mrgrey-terminal-cmd` | none |
+| `mrgrey-open-personalize` | none — requests the personalize dialog |
+| `mrgrey-guide-dismissed` | none — welcome guide closed |
 
 ### Sound
 

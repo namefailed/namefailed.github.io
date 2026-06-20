@@ -2,7 +2,7 @@
 
 **Live:** [mrgrey.site](https://mrgrey.site) · **Alt:** [namefailed.github.io](https://namefailed.github.io/)
 
-A personal portfolio built as an **in-browser desktop OS** — tiling window manager, xterm.js terminal, virtual filesystem, vim-style editor, interactive demos, and seven runtime colour themes. The same content also ships as a polished brochure at `/static/` (mobile default).
+A personal portfolio built as an **in-browser desktop OS** — tiling window manager, xterm.js terminal, virtual filesystem, vim-style editor, interactive demos, and seven runtime colour themes. The same content also ships as a polished brochure at `/static/` (mobile default), and the repo additionally hosts a standalone product page for [Phoneme](https://github.com/namefailed/phoneme) at `/phoeme/`.
 
 ---
 
@@ -12,8 +12,8 @@ A personal portfolio built as an **in-browser desktop OS** — tiling window man
 |---|---|
 | **Stack** | TypeScript · Vite 8 · vanilla DOM (no framework) |
 | **Terminal** | [@xterm/xterm](https://github.com/xtermjs/xterm.js) + vim input layer |
-| **3D** | Three.js (Rubik cube — lazy chunk only) |
-| **Tests** | **587** unit · **3** e2e smoke · CI on every `main` push |
+| **3D** | [cubing.js](https://github.com/cubing/cubing.js) `TwistyPlayer` (Rubik cube — lazy chunk only) |
+| **Tests** | **615** unit · **8** e2e smoke · CI on every `main` push |
 | **Deploy** | GitHub Actions → GitHub Pages (`dist/`) |
 
 ---
@@ -33,7 +33,7 @@ Most portfolios list skills. This one **runs** them: modular TypeScript, lazy co
 ```bash
 npm install
 npm run dev          # desktop → http://localhost:5173/
-npm test             # 587 unit tests
+npm test             # 615 unit tests
 npm run build && npm run test:e2e
 ```
 
@@ -53,6 +53,11 @@ Open the terminal (`Ctrl+T`) and type `help`.
 ### Brochure (`/static/`)
 - Scroll progress, section nav, typewriter hero, animated counters
 - Auto-redirect on viewport ≤768px
+
+### Phoneme product page (`/phoeme/`)
+- Standalone marketing page for [Phoneme](https://github.com/namefailed/phoneme), a local-first Windows voice-transcription app
+- Hero, feature grid, pipeline, comparison table, FAQ accordion — shares the brochure theme system
+- `/phoneme/` redirects here (the `/phoeme/` spelling is the canonical, memorable URL)
 
 ---
 

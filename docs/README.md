@@ -1,6 +1,6 @@
 # Documentation
 
-Personal portfolio site ([mrgrey.site](https://mrgrey.site)) built as an in-browser desktop OS — tiling window manager, xterm.js shell, virtual filesystem, games, and a separate mobile brochure.
+Personal portfolio site ([mrgrey.site](https://mrgrey.site)) built as an in-browser desktop OS — tiling window manager, xterm.js shell, virtual filesystem, games, a separate mobile brochure, and a standalone product page for the [Phoneme](https://github.com/namefailed/phoneme) app.
 
 ---
 
@@ -32,11 +32,11 @@ Personal portfolio site ([mrgrey.site](https://mrgrey.site)) built as an in-brow
 
 | Metric | Value |
 |--------|-------|
-| Unit tests | **587** across **48** files (`npm test`) |
-| E2e smoke | **3** Playwright specs (`npm run test:e2e`) |
+| Unit tests | **615** across **60** files (`npm test`) |
+| E2e smoke | **8** Playwright specs (`npm run test:e2e`) |
 | CI | lint → unit tests → build → e2e → GitHub Pages deploy |
 | Stack | TypeScript, Vite 8, vanilla DOM — no React/Vue/Svelte |
-| Bundle strategy | Lazy `import()` per window tile; Three.js isolated to Rubik chunk |
+| Bundle strategy | Lazy `import()` per window tile; cubing.js (bundles Three.js) isolated to Rubik chunk |
 
 ---
 
@@ -46,6 +46,8 @@ Personal portfolio site ([mrgrey.site](https://mrgrey.site)) built as an in-brow
 namefailed.github.io/
 ├── index.html              # Desktop shell entry
 ├── static/index.html       # Brochure entry (mobile default)
+├── phoeme/index.html       # Phoneme product page entry
+├── phoneme/index.html      # Redirect → /phoeme/
 ├── src/
 │   ├── main.ts             # Desktop bootstrap
 │   ├── desktop.ts          # Window manager orchestrator (~340 lines)
@@ -54,7 +56,8 @@ namefailed.github.io/
 │   ├── commands/           # Shell command registry
 │   ├── content/            # Portfolio copy
 │   ├── os-*.ts             # Fake OS (VFS, sound, systray)
-│   └── static/             # Brochure-only code + CSS
+│   ├── static/             # Brochure-only code + CSS
+│   └── phoeme/             # Phoneme product page code + CSS
 ├── docs/                   # ← you are here
 ├── e2e/                    # Playwright smoke tests
 └── .github/workflows/      # CI + Pages deploy

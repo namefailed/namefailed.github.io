@@ -66,7 +66,7 @@ The terminal uses **xterm.js** with a vim-style input layer (`vim.ts`):
 | `explorer [path]` | File browser |
 | `browse [url]` | Embedded browser |
 | `p5` | p5.js sketch viewer |
-| `cube` | Rubik's cube (Three.js) |
+| `cube` | Rubik's cube (cubing.js) |
 | `paint` / `snake` / `pong` | Mini-apps |
 | `theme [id\|list\|random]` | Switch colour pack |
 | `retro on\|off` | CRT scanline overlay |

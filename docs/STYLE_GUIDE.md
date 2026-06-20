@@ -479,7 +479,7 @@ el.innerHTML = escapeHtml(userInput)
 ## Tooling
 
 - `npm run lint` — ESLint (TypeScript, e2e specs, maintainer scripts)
-- `npm test` — **587** Vitest unit tests (48 files)
+- `npm test` — **615** Vitest unit tests (60 files)
 - `npm run test:coverage` — Vitest v8 coverage (`coverage/` gitignored)
 - `npm run test:e2e` — Playwright smoke against `vite preview`
 - Desktop CSS: `src/styles/*.css` via `src/style.css` hub; regenerate with `node scripts/split-style-css.mjs`

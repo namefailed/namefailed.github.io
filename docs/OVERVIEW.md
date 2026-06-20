@@ -26,6 +26,7 @@ flowchart TB
   subgraph entries [Entry points]
     IDX[index.html]
     STA[static/index.html]
+    PHO[phoeme/index.html]
   end
 
   subgraph desktop [Desktop shell]
@@ -56,6 +57,7 @@ flowchart TB
   DESK --> VFS
   BOOT --> THEME
   STA --> BRO[static/main.ts]
+  PHO --> PM[phoeme/main.ts]
 ```
 
 ---
@@ -68,7 +70,7 @@ The UI is built with **vanilla TypeScript and DOM APIs**. State lives in class i
 
 ### Code splitting by feature
 
-Each window tile (`editor-window.ts`, `rubik-window.ts`, etc.) is loaded with **dynamic `import()`** on first open. Three.js (~140 kB gzipped) never touches the main bundle — it ships only inside the Rubik cube chunk.
+Each window tile (`editor-window.ts`, `rubik-window.ts`, etc.) is loaded with **dynamic `import()`** on first open. cubing.js — and the Three.js renderer it bundles internally — never touches the main bundle; it ships only inside the Rubik cube chunk.
 
 ### Window manager extracted into modules
 
@@ -100,9 +102,9 @@ Files persist in `localStorage` under `portfolio-vfs-v8-namefailed-home`. First 
 
 | Stage | Tool |
 |-------|------|
-| Unit | Vitest — **587 tests**, **48 files**, Node environment with DOM stubs where needed |
+| Unit | Vitest — **615 tests**, **60 files**, Node environment with DOM stubs where needed |
 | Lint | ESLint 9 + TypeScript-eslint |
-| E2e | Playwright — production build smoke (desktop shell, brochure, nav) |
+| E2e | Playwright — production build smoke (desktop shell, brochure, Phoneme product page) |
 | Deploy | GitHub Actions → `dist/` → GitHub Pages |
 
 Every push to `main` runs the full pipeline before deploy.
@@ -115,14 +117,15 @@ Every push to `main` runs the full pipeline before deploy.
 
 ---
 
-## Dual entry: desktop vs brochure
+## Entry points: desktop, brochure, product page
 
 | Route | Audience | Behaviour |
 |-------|----------|-----------|
 | `/` | Desktop experience | Full OS chrome, terminal, tiling |
 | `/static/` | Mobile + print-friendly | Scroll-based résumé; viewport ≤768px auto-redirects here |
+| `/phoeme/` | Phoneme app visitors | Standalone product page for the [Phoneme](https://github.com/namefailed/phoneme) transcription app; `/phoneme/` redirects here |
 
-Both entries share portfolio **content** (`src/content/`, `src/static/static-data.ts`) but use separate CSS token systems (`--th-*` vs `--plain-*`).
+The desktop and brochure share portfolio **content** (`src/content/`, `src/static/static-data.ts`) but use separate CSS token systems (`--th-*` vs `--plain-*`). The Phoneme page is fully independent (`src/phoeme/`) and reuses only the shared brochure theme switcher.
 
 ---
 
@@ -131,7 +134,7 @@ Both entries share portfolio **content** (`src/content/`, `src/static/static-dat
 - **TypeScript** — strict typing, module boundaries, no `any`
 - **Browser APIs** — Canvas, Web Audio, `localStorage`, dynamic imports, `ResizeObserver`
 - **UX engineering** — keyboard chords, spatial focus, lazy prefetch on launcher hover
-- **Graphics** — xterm.js integration, Three.js Rubik cube, p5.js sandboxed viewer
+- **Graphics** — xterm.js integration, cubing.js Rubik cube, p5.js sandboxed viewer
 - **Testing** — co-located unit tests, fake DOM stubs, CI-gated e2e
 - **Documentation** — architecture docs, API reference, agent-oriented guides
 

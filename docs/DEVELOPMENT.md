@@ -24,6 +24,7 @@ npm run dev
 |-----|-------|
 | http://localhost:5173/ | Desktop shell |
 | http://localhost:5173/static/ | Brochure |
+| http://localhost:5173/phoeme/ | Phoneme product page |
 
 Production build:
 
@@ -40,7 +41,7 @@ Run before opening a PR:
 
 ```bash
 npm run lint       # ESLint
-npm test           # Vitest — 587 unit tests
+npm test           # Vitest — 615 unit tests
 npm run build      # TypeScript + Vite
 npm run test:e2e   # Playwright (requires preview build)
 ```
@@ -122,7 +123,7 @@ Regenerate split files from monolith backup (if used):
 node scripts/split-style-css.mjs
 ```
 
-Brochure CSS is separate: `src/static/static.css` (`--plain-*` tokens).
+Brochure CSS is separate: `src/static/static.css` (`--plain-*` tokens). The Phoneme product page has its own stylesheet too: `src/phoeme/phoeme.css`.
 
 ---
 

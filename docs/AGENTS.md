@@ -33,6 +33,12 @@ index.html
 
 static/index.html
   └─ src/static/main.ts (brochure only — no desktop imports)
+
+phoeme/index.html
+  └─ src/phoeme/main.ts (Phoneme product page — copy from phoeme-data.ts; no desktop imports)
+
+phoneme/index.html
+  └─ meta-refresh + JS redirect → /phoeme/ (no bundle)
 ```
 
 ---
@@ -64,6 +70,9 @@ static/index.html
 | `theme-packs.ts` | All `--th-*` values per theme |
 | `content/copy/*.ts` | Portfolio text sources |
 | `portfolio.ts` | ANSI line arrays for content tiles |
+| `static/*.ts` | Brochure (classic portfolio) page — no desktop imports |
+| `phoeme/*.ts` | Phoneme product page; copy lives in `phoeme/phoeme-data.ts` |
+| `brochure-theme.ts` / `brochure-banner.ts` | Shared by brochure + Phoneme page |
 
 ---
 
@@ -155,11 +164,14 @@ WM tests often use `FakeEl` trees — copy pattern from `src/desktop.test.ts` or
 | `mrgrey-desktop-tile-positions-v6` | `desktop-tiles.ts` | Folder tile drag layout |
 | `portfolio-fe-prefs-v1` | `file-explorer-window.ts` | Explorer prefs |
 | `mrgrey-browser-iframe-tip-dismiss` | `browser-window.ts` | Browser tip permanent dismiss |
+| `mrgrey-browser-iframe-tip-session` | `browser-window.ts` | Browser tip dismissed for this tab (**sessionStorage**) |
 | `mrgrey-boot-seen` | `boot-splash.ts` | Skip boot animation |
 | `mrgrey-guide-seen` | `welcome-guide.ts` | Welcome guide card |
-| `mrgrey-p5-tip-seen` | `p5-window.ts` | p5 viewer tip |
+| `mrgrey-empty-hint-seen` | `desktop-empty-cta.ts` | Empty-desktop CTA hint dismissed |
 | `mrgrey-pkgs-v1` | `os-packages.ts` | Installed joke packages |
 | `mrgrey-apt-cowsay` | `os-apt.ts` | cowsay install flag |
+
+Plus a set of **suppressed legacy keys** (`first-visit-flags.ts` → `SUPPRESSED_LEGACY_KEYS`): `mrgrey-first-run-done`, `mrgrey-toasts-seen`, `mrgrey-hint-portfolio-folder`, `mrgrey-hint-apps-folder`, `mrgrey-hint-games-folder`, `mrgrey-p5-tip-seen`. These back removed onboarding layers; boot sets them to `1` to silence stale UI, and `clearFirstVisitFlags()` wipes them on reset.
 
 Always read/write through `storage.ts` helpers.
 
@@ -173,6 +185,8 @@ Always read/write through `storage.ts` helpers.
 | `mrgrey-wallpaper-change` | Wallpaper set/cleared |
 | `mrgrey-first-window` | First tile opened (onboarding) |
 | `mrgrey-terminal-cmd` | First terminal command run |
+| `mrgrey-open-personalize` | Systray "Personalize…" requests the personalize dialog |
+| `mrgrey-guide-dismissed` | Welcome guide closed |
 
 ---
 
