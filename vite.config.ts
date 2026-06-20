@@ -66,10 +66,10 @@ export default defineConfig({
       // Floor a few points under current (DOM-heavy tiles run thin in Node) so a
       // real regression trips CI without flaking. Raise as coverage grows.
       thresholds: {
-        statements: 40,
-        branches: 34,
-        functions: 37,
-        lines: 40,
+        statements: 70,
+        branches: 60,
+        functions: 64,
+        lines: 72,
       },
     },
   },
