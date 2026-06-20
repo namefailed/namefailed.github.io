@@ -127,6 +127,24 @@ export function windowChromeCallbacks(
   }
 }
 
+type MiniGameCtor = new (cb: ReturnType<typeof windowChromeCallbacks>) => TiledWin
+
+/** Lazy-load each mini-game tile's constructor; all three share the same 4-callback options. */
+const MINI_GAME_LOADERS: Record<string, () => Promise<MiniGameCtor | null>> = {
+  paint: async () => (await lazyImportModule(() => import('./paint-window'), 'paint'))?.PaintWindow ?? null,
+  snake: async () => (await lazyImportModule(() => import('./snake-window'), 'snake'))?.SnakeWindow ?? null,
+  pong: async () => (await lazyImportModule(() => import('./pong-window'), 'pong'))?.PongWindow ?? null,
+}
+
+/** Construct a mini-game tile with self-referencing WM callbacks, then mount it. */
+async function openMiniGameTile(host: OpenWindowHost, load: () => Promise<MiniGameCtor | null>): Promise<void> {
+  const Ctor = await load()
+  if (!Ctor) return
+  let win!: TiledWin
+  win = new Ctor(windowChromeCallbacks(host, () => win))
+  mountContentWindow(host, win)
+}
+
 type PathKeyedWin = TiledWin & { pathMatches(path: string): boolean }
 
 async function openPathKeyedWindow<T extends PathKeyedWin>(
@@ -314,41 +332,8 @@ export async function dispatchOpenWindow(
       return
     }
 
-    host.enforceTileLimit()
-
-    if (cmd === 'paint') {
-      const mod = await lazyImportModule(() => import('./paint-window'), 'paint')
-      if (!mod) return
-      const { PaintWindow: PaintWindowCtor } = mod
-      let pw!: PaintWindow
-      pw = new PaintWindowCtor(windowChromeCallbacks(host, () => pw))
-      host.appendToRightPane(pw)
-      host.windows.push(pw)
-      host.attachVerticalSplitters()
-      host.focusWindow(pw)
-      return
-    }
-    if (cmd === 'snake') {
-      const mod = await lazyImportModule(() => import('./snake-window'), 'snake')
-      if (!mod) return
-      const { SnakeWindow: SnakeWindowCtor } = mod
-      let sw!: SnakeWindow
-      sw = new SnakeWindowCtor(windowChromeCallbacks(host, () => sw))
-      host.appendToRightPane(sw)
-      host.windows.push(sw)
-      host.attachVerticalSplitters()
-      host.focusWindow(sw)
-      return
-    }
-    const pongMod = await lazyImportModule(() => import('./pong-window'), 'pong')
-    if (!pongMod) return
-    const { PongWindow: PongWindowCtor } = pongMod
-    let pong!: PongWindow
-    pong = new PongWindowCtor(windowChromeCallbacks(host, () => pong))
-    host.appendToRightPane(pong)
-    host.windows.push(pong)
-    host.attachVerticalSplitters()
-    host.focusWindow(pong)
+    const load = MINI_GAME_LOADERS[cmd]
+    if (load) await openMiniGameTile(host, load)
     return
   }
 

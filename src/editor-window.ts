@@ -46,6 +46,18 @@ export interface EditorWindowOptions {
 type EditMode = 'normal' | 'insert' | 'cmd'
 
 /**
+ * Map a keydown to the char it should insert: a single char as-is, Enter → \n,
+ * and (with allowTab) Tab → \t. Modified keys (Ctrl/Meta/Alt) never produce one.
+ */
+function printableCharFromKey(e: KeyboardEvent, opts: { allowTab?: boolean } = {}): string | null {
+  if (e.ctrlKey || e.metaKey || e.altKey) return null
+  if (e.key.length === 1) return e.key
+  if (e.key === 'Enter') return '\n'
+  if (opts.allowTab && e.key === 'Tab') return '\t'
+  return null
+}
+
+/**
  * Modal vim-style editor over the VFS — NORMAL / INSERT / EX modes, counts, and
  * a bounded undo stack. Distinct from the terminal's one-line widget (`vim.ts`).
  * `dispose()` drops its selectionchange and resize listeners and clears any
@@ -749,12 +761,7 @@ export class EditorWindow {
         this.refreshModeMeta()
         return
       }
-      const ch =
-        !e.ctrlKey && !e.metaKey && !e.altKey && k.length === 1
-          ? k
-          : !e.ctrlKey && !e.metaKey && !e.altKey && k === 'Enter'
-            ? '\n'
-            : null
+      const ch = printableCharFromKey(e)
       if (ch != null) {
         e.preventDefault()
         const nr = this.replacePending.nRuns
@@ -773,14 +780,7 @@ export class EditorWindow {
         this.refreshModeMeta()
         return
       }
-      const pick =
-        !e.ctrlKey && !e.metaKey && !e.altKey && k.length === 1
-          ? k
-          : !e.ctrlKey && !e.metaKey && !e.altKey && k === 'Enter'
-            ? '\n'
-            : !e.ctrlKey && !e.metaKey && !e.altKey && k === 'Tab'
-              ? '\t'
-              : null
+      const pick = printableCharFromKey(e, { allowTab: true })
       if (pick != null) {
         const kind = this.findAwait
         this.findAwait = null

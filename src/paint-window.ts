@@ -12,6 +12,48 @@ export interface PaintWindowOptions {
 type PaintTool = 'brush' | 'eraser' | 'line' | 'fill'
 
 /**
+ * Flood fill over RGBA pixel data, in place: replace the region connected to
+ * (px, py) that matches the seed colour with [nr, ng, nb, 255]. Pure and DOM-free
+ * so it's unit-testable; a no-op when the seed already holds the fill colour.
+ */
+export function floodFillPixels(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  px: number,
+  py: number,
+  nr: number,
+  ng: number,
+  nb: number,
+): void {
+  const tgt = (py * w + px) * 4
+  const tr = d[tgt]!
+  const tg = d[tgt + 1]!
+  const tb = d[tgt + 2]!
+  const ta = d[tgt + 3]!
+  if (tr === nr && tg === ng && tb === nb) return
+  const stack: number[] = [px, py]
+  const vis = new Uint8Array(w * h)
+  const match = (i: number): boolean =>
+    d[i] === tr && d[i + 1] === tg && d[i + 2] === tb && d[i + 3] === ta
+  while (stack.length) {
+    const y = stack.pop()!
+    const x = stack.pop()!
+    if (x < 0 || y < 0 || x >= w || y >= h) continue
+    const p = y * w + x
+    if (vis[p]) continue
+    vis[p] = 1
+    const i = p * 4
+    if (!match(i)) continue
+    d[i] = nr
+    d[i + 1] = ng
+    d[i + 2] = nb
+    d[i + 3] = 255
+    stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1)
+  }
+}
+
+/**
  * Raster paint tile — brush / eraser-to-bg / line / flood-fill, mouse + touch.
  * The canvas bitmap is the only state; `dispose()` releases the resize observer.
  */
@@ -233,36 +275,17 @@ export class PaintWindow {
       const w = this.canvas.width
       const h = this.canvas.height
       const idata = this.ctx.getImageData(0, 0, w, h)
-      const d = idata.data
-      const tgt = (py * w + px) * 4
-      const tr = d[tgt]!
-      const tg = d[tgt + 1]!
-      const tb = d[tgt + 2]!
-      const ta = d[tgt + 3]!
       const hex = color.value
-      const nr = parseInt(hex.slice(1, 3), 16)
-      const ng = parseInt(hex.slice(3, 5), 16)
-      const nb = parseInt(hex.slice(5, 7), 16)
-      if (tr === nr && tg === ng && tb === nb) return
-      const stack: number[] = [px, py]
-      const vis = new Uint8Array(w * h)
-      const match = (i: number): boolean =>
-        d[i] === tr && d[i + 1] === tg && d[i + 2] === tb && d[i + 3] === ta
-      while (stack.length) {
-        const y = stack.pop()!
-        const x = stack.pop()!
-        if (x < 0 || y < 0 || x >= w || y >= h) continue
-        const p = y * w + x
-        if (vis[p]) continue
-        vis[p] = 1
-        const i = p * 4
-        if (!match(i)) continue
-        d[i] = nr
-        d[i + 1] = ng
-        d[i + 2] = nb
-        d[i + 3] = 255
-        stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1)
-      }
+      floodFillPixels(
+        idata.data,
+        w,
+        h,
+        px,
+        py,
+        parseInt(hex.slice(1, 3), 16),
+        parseInt(hex.slice(3, 5), 16),
+        parseInt(hex.slice(5, 7), 16),
+      )
       this.ctx.putImageData(idata, 0, 0)
     }
 

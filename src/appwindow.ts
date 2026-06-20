@@ -103,6 +103,20 @@ export interface AppWindowOptions extends WindowSpec {
 }
 
 /**
+ * Render ANSI-ish lines as `.win-line` HTML (empty lines keep their height via a
+ * space). With `hang`, bullet (·) lines get a hanging indent when they wrap.
+ */
+function renderAnsiLines(lines: string[], hang = false): string {
+  return lines
+    .map(line => {
+      const bullet = hang && /^\s*·/.test(line.replace(/\x1b\[[0-9;]*m/g, ''))
+      const cls = bullet ? 'win-line win-line--hang' : 'win-line'
+      return `<div class="${cls}">${ansiToHtmlWithLinks(line) || ' '}</div>`
+    })
+    .join('')
+}
+
+/**
  * Read-only content tile (résumé, projects, about, contact). Renders ANSI-ish
  * lines as HTML in `.win-body`; editing happens in EditorWindow or the terminal.
  * The only eagerly-loaded tile — every other `*-window` is imported on demand.
@@ -159,9 +173,7 @@ export class AppWindow {
   }
 
   private render(lines: string[]): void {
-    this.bodyEl.innerHTML = lines
-      .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
-      .join('')
+    this.bodyEl.innerHTML = renderAnsiLines(lines)
   }
 
   /**
@@ -186,20 +198,6 @@ export class AppWindow {
 
     const stripAnsiForDetect = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '')
 
-    const mapLines = (raw: string[]) =>
-      raw.map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`).join('')
-
-    /** Body bullets (·) get a hanging indent when wrapped */
-    const mapBodyLines = (raw: string[]) =>
-      raw
-        .map(line => {
-          const visual = stripAnsiForDetect(line)
-          const hang = /^\s*·/.test(visual)
-          const cls = hang ? 'win-line win-line--hang' : 'win-line'
-          return `<div class="${cls}">${ansiToHtmlWithLinks(line) || ' '}</div>`
-        })
-        .join('')
-
     const narrativeCol = document.createElement('div')
     narrativeCol.className = 'resume-main-col resume-text-col'
 
@@ -219,16 +217,16 @@ export class AppWindow {
 
       const leadText = document.createElement('div')
       leadText.className = 'resume-lead-text'
-      leadText.innerHTML = mapLines(dropVisuallyBlank(leadLines!))
+      leadText.innerHTML = renderAnsiLines(dropVisuallyBlank(leadLines!))
 
       const bodyBlock = document.createElement('div')
       bodyBlock.className = 'resume-body-block'
-      bodyBlock.innerHTML = mapBodyLines(dropVisuallyBlank(bodyLines!))
+      bodyBlock.innerHTML = renderAnsiLines(dropVisuallyBlank(bodyLines!), true)
 
       leadGrid.append(leadText, bodyBlock)
       narrativeCol.appendChild(leadGrid)
     } else {
-      narrativeCol.innerHTML = mapLines(lines)
+      narrativeCol.innerHTML = renderAnsiLines(lines)
     }
 
     wrap.appendChild(narrativeCol)
@@ -306,9 +304,7 @@ export class AppWindow {
 
     const col = document.createElement('div')
     col.className = 'about-text-col'
-    col.innerHTML = lines
-      .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
-      .join('')
+    col.innerHTML = renderAnsiLines(lines)
     this.bodyEl.appendChild(col)
   }
 
@@ -347,9 +343,7 @@ export class AppWindow {
 
     const col = document.createElement('div')
     col.className = 'contact-text-col'
-    col.innerHTML = lines
-      .map(line => `<div class="win-line">${ansiToHtmlWithLinks(line) || ' '}</div>`)
-      .join('')
+    col.innerHTML = renderAnsiLines(lines)
 
     wrap.appendChild(aside)
     wrap.appendChild(col)
