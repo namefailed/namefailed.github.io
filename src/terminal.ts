@@ -17,15 +17,17 @@ import { createWindowChrome } from './window-chrome'
 import { prefersReducedMotion } from './prefers-reduced-motion'
 
 /**
- * Lines shown as the terminal's welcome message (motd).
- * Returns plain strings (may contain ANSI codes) — no side effects.
+ * The terminal's welcome message (motd), as plain strings that may contain ANSI
+ * codes — no side effects. `showMotd()` renders exactly these, so this is the one
+ * place the greeting lives (and what the test checks).
  */
 export function terminalMotdLines(): string[] {
   return [
     ...BANNER,
     '',
     `  ${c.pink}mrgrey.site${c.reset} — portfolio OS`,
-    `  ${c.dim}Desktop: Portfolio · Apps · Games — type ${c.reset}help${c.dim} for commands.${c.reset}`,
+    `  ${c.dim}Desktop: ${c.reset}Portfolio${c.dim} · ${c.reset}Apps${c.dim} · ${c.reset}Games` +
+      `${c.dim} folders — or type ${c.reset}help${c.dim} for commands.${c.reset}`,
   ]
 }
 
@@ -143,17 +145,12 @@ export class TerminalApp {
   /** Animate the MOTD banner line-by-line, then drop to the prompt. */
   private async showMotd(): Promise<void> {
     const reduced = prefersReducedMotion()
-    for (const line of BANNER) {
-      this.xterm.writeln(line)
-      if (!reduced) await sleep(55)
+    const lines = terminalMotdLines()
+    // Animate the banner rows; the blank + subtitle beneath them land instantly.
+    for (let i = 0; i < lines.length; i++) {
+      this.xterm.writeln(lines[i]!)
+      if (!reduced && i < BANNER.length - 1) await sleep(55)
     }
-    // Subtitle + help hint appear instantly after the banner completes
-    this.xterm.writeln('')
-    this.xterm.writeln(`  ${c.pink}mrgrey.site${c.reset} — portfolio OS`)
-    this.xterm.writeln(
-      `  ${c.dim}Desktop: ${c.reset}Portfolio${c.dim} · ${c.reset}Apps${c.dim} · ${c.reset}Games` +
-        `${c.dim} folders — or type ${c.reset}help${c.dim} for commands.${c.reset}`,
-    )
     this.xterm.writeln('')
     this.prompt()
   }

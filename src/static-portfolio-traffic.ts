@@ -1,6 +1,8 @@
 /**
- * Redirect recruiter / social traffic to the readable `/static/` brochure.
- * Runs synchronously before the shell boots (see `index.html`).
+ * Recruiter / social → `/static/` brochure redirect logic. The live redirect is a
+ * hand-mirrored copy inlined in `index.html` (it has to run before the ES module
+ * bundle loads, or the desktop flashes before redirecting). This module is the
+ * unit-tested reference for that logic — keep the two in sync.
  */
 
 const RECRUITER_QUERY = /\b(?:ref|utm_source|from)=(linkedin|indeed|glassdoor|hiring|jobs|recruiter|job)\b/i

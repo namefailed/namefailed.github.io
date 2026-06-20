@@ -137,6 +137,7 @@ function ensureLightbox(): HTMLElement {
   const img = document.createElement('img')
   img.className = 'project-preview-lightbox-img'
   img.alt = ''
+  img.decoding = 'async'
 
   panel.append(header, img)
   root.append(backdrop, panel)

@@ -9,6 +9,11 @@
     <meta name="theme-color" content="#181825" />
     <meta name="color-scheme" content="dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--
+      Recruiter / social / mobile redirect to /static/. Inlined (not a module) so
+      it runs before the desktop bundle loads. Mirrors the unit-tested logic in
+      src/static-portfolio-traffic.ts — keep the two in sync.
+    -->
     <script>
       (function () {
         var p = location.pathname || ''
