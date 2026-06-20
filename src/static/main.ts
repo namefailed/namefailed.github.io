@@ -85,7 +85,7 @@ function statsStrip(): HTMLElement {
   const items: Array<{ val: number; suf: string; label: string }> = [
     { val: 9, suf: '+', label: 'years building' },
     { val: 15, suf: '+', label: 'projects shipped' },
-    { val: 3, suf: '', label: 'industries' },
+    { val: 4, suf: '', label: 'client industries' },
   ]
   for (const { val, suf, label } of items) {
     const item = el('div', 'plain-stat')
@@ -348,7 +348,7 @@ function mount(): void {
     backLabel: '← Desktop',
     backTitle: 'Full desktop experience',
     title: 'Classic portfolio',
-    subtitle: 'Readable view',
+    subtitle: 'The no-frills version',
   })
 
   // ── Hero ───────────────────────────────────────────────────────────────
@@ -467,7 +467,7 @@ function mount(): void {
 
   root.replaceChildren(banner, main, sectionNav)
 
-  document.title = `${PROFILE.name} — Portfolio`
+  document.title = `${PROFILE.name} — Software Engineer · mrgrey.site`
 
   requestAnimationFrame(() => {
     observeAnimations()

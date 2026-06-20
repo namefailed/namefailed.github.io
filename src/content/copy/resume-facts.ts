@@ -29,7 +29,7 @@ export const PROFILE = {
   location: 'Killeen–Temple, TX · US Central',
   statusOpen: true,
   summary:
-    'Web developer with 9 years delivering end-to-end — scoping, design, implementation, and handoff. Shipped the full public-facing site for Vertalo (fintech / digital-asset infrastructure) and built across nonprofits, military-adjacent agencies, and independent clients. TypeScript-first; bias toward layouts that survive real conditions: narrow viewports, zoom, reduced-motion, and the next developer who reads the code.',
+    'Solo software engineer, freelancing since 2017 — I own the whole arc: scoping, design, build, and handoff. Shipped the full public site for Vertalo (digital-asset / fintech infrastructure) and built for nonprofits, agencies, and independent clients. TypeScript-first, with a bias toward layouts that survive real conditions: narrow viewports, zoom, reduced-motion, and the next developer who reads the code.',
 } as const
 
 export const CONTACT = [
@@ -74,10 +74,10 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     location: 'Remote / hybrid',
     type: 'freelance',
     bullets: [
-      'Owned the full project lifecycle for 15+ client engagements — discovery, design, development, deployment, and training — no hand-offs, full accountability at every stage.',
+      "Ran 15+ client projects end-to-end — discovery, design, build, deploy, and training. No hand-offs; I'm the one accountable.",
       'Shipped responsive, accessible web experiences across TypeScript, React, Vite, Node.js, and CMS platforms; stack chosen per project, not habit.',
       'Managed hosting environments and long-term feature cadence for retainer clients, keeping production healthy well past launch day.',
-      'Built lasting client relationships through direct ownership and transparent communication — primary contact from first conversation through post-launch iterations.',
+      'One point of contact, start to finish — the same person who scoped it builds it and is still around after launch.',
     ],
   },
   {
@@ -87,7 +87,7 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     location: 'Killeen–Temple Area · hybrid',
     type: 'volunteer',
     bullets: [
-      "Maintained and improved the official website for one of the world's largest volunteer-driven historical organizations, ensuring compliance with SCA digital governance policies.",
+      "Kept the official site for one of the world's largest volunteer historical groups current and in line with SCA's web policies.",
       'Restructured site content, officer rosters, and event listings to improve clarity and usability for members and organizers across multiple regional branches.',
       'Coordinated cross-branch publishing with the Web Minister and regional officers; maintained consistency and timeliness during a high-volume event season.',
       'Handled technical troubleshooting and CMS administration in a fully volunteer, distributed environment — reliable delivery without a conventional support chain.',
@@ -101,10 +101,10 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     type: 'contract',
     featured: true,
     bullets: [
-      'Sole front-end developer: designed and built the entire Vertalo.com public site from scratch — responsive, high-performance, and accessible for an institutional audience.',
-      "Implemented on Craft CMS, fully integrated with Vertalo's React / PostgreSQL / AWS stack; engineered scalable front-end architecture for ongoing content management.",
-      'Applied SEO best practices and performance optimisation across all pages; met full accessibility standards for an enterprise client base.',
-      'Translated complex blockchain and digital-asset concepts into clear, institutional-grade copy and layout for fund managers and investors.',
+      'Sole front-end dev: designed and built the entire public Vertalo.com from scratch — responsive, fast, and accessible for an institutional audience.',
+      "Built it on Craft CMS, wired into Vertalo's React / PostgreSQL / AWS stack, so non-developers could manage content after launch.",
+      'Applied SEO and performance work across the site; built to accessibility standards (semantic markup, keyboard nav, contrast) for an institutional audience.',
+      'Turned dense blockchain and digital-asset material into plain, credible copy and layout for fund managers and investors.',
       'Collaborated directly with company leadership on messaging, UX, and content — from first commit through post-launch refinement and handoff.',
     ],
   },
@@ -116,8 +116,8 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     type: 'fulltime',
     bullets: [
       'Built and maintained responsive, accessible marketing sites for military-adjacent clients using HTML, CSS, JavaScript, and React — cross-browser QA and accessible UI under agency deadlines.',
-      'Customised CMS platforms to streamline client content workflows and reduce editorial overhead across multiple concurrent accounts.',
-      'Managed hosting, deployments, and support queues; delivered iterative features and bug fixes with minimal downtime across a live production portfolio.',
+      'Customized CMS platforms to streamline client content workflows and reduce editorial overhead across multiple concurrent accounts.',
+      'Handled hosting, deploys, and the support queue; shipped features and fixes to live client sites without taking them down.',
       'Represented the agency at regional conventions — live demos, booth setup, and direct prospect engagement.',
     ],
   },
@@ -129,7 +129,7 @@ export const EXPERIENCE: readonly ExperienceEntry[] = [
     type: 'fulltime',
     bullets: [
       'Tier-2 technical support: diagnosed complex hardware, OS, and application-layer issues under high call-volume conditions.',
-      'Communicated technical resolutions clearly and patiently to non-technical customers; maintained consistently strong CSAT scores.',
+      'Explained fixes plainly to non-technical callers and kept satisfaction high.',
       'Documented edge cases and escalated to appropriate teams; contributed resolved patterns to the team knowledge base.',
     ],
   },

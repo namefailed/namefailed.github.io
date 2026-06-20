@@ -37,7 +37,7 @@ export const PHOEME = {
   headlineBefore: 'Turn voice into a searchable ',
   headlineAccent: 'local archive.',
   intro:
-    'You think faster than you type. The average person speaks at 150 words per minute but types at only 40. Phoneme bridges that gap. It runs **100% offline** by default, turning your voice into text anywhere. It cleans up the result when asked, and saves everything in a local catalog you can search, edit, export, or automate.',
+    'You think faster than you type — most people talk at around 150 words a minute and type at maybe 40. Phoneme closes that gap. Hit a hotkey, speak, and get text anywhere, **100% offline** by default. It cleans the result up when you ask, and keeps everything in a local catalog you can search, edit, export, or script.',
   repo: 'https://github.com/namefailed/phoneme',
   releases: 'https://github.com/namefailed/phoneme/releases',
   docs: 'https://github.com/namefailed/phoneme/tree/master/docs/README.md',
@@ -71,7 +71,7 @@ export const PHOEME_WORKFLOWS: readonly PhoemeCard[] = [
   {
     title: 'Capture thoughts before they evaporate',
     kicker: 'Transcribe-in-Place',
-    body: 'Start Transcribe-in-Place (`Ctrl+Alt+I`), focus Slack, Word, Discord, or your editor, then speak. Phoneme records quietly, runs the transcript pipeline locally, and types the finished text into the focused window without missing a beat.',
+    body: 'Start Transcribe-in-Place (`Ctrl+Alt+I`), focus Slack, Word, Discord, or your editor, then speak. Phoneme records quietly, runs the transcript pipeline locally, and types the finished text straight into the focused window — a zero-latency fast lane skips the queue when you need it instant.',
   },
   {
     title: 'Record calls without losing the thread',
@@ -94,17 +94,17 @@ export const PHOEME_PIPELINE: readonly PhoemePipelineStage[] = [
   {
     title: 'Capture',
     signal: 'Mic / loopback / file',
-    body: 'Start from the GUI, `phoneme record`, Meeting Mode, or imported `.wav`, `.mp3`, and `.m4a` audio. Pre-roll can preserve the first syllable before the trigger lands.',
+    body: 'Start from the GUI, `phoneme record`, Meeting Mode, or imported `.wav`, `.mp3`, `.m4a`, and `.flac` audio. Pre-roll can preserve the first syllable before the trigger lands.',
   },
   {
     title: 'Transcribe',
     signal: 'Local first, cloud optional',
-    body: 'The default path runs whisper.cpp on your machine. If you choose cloud speed, transcription can use OpenAI, Groq, Deepgram, AssemblyAI, ElevenLabs, or an OpenAI-compatible endpoint.',
+    body: 'The default path runs whisper.cpp on your machine. If you choose cloud speed, transcription can use OpenAI, Gemini, Groq, Deepgram, AssemblyAI, ElevenLabs, or any OpenAI-compatible endpoint.',
   },
   {
     title: 'Process',
     signal: 'Cleanup, summary, translation',
-    body: 'Speak naturally to the AI, with pauses and emphasis. Smart Cleanup can remove stutters, format notes, translate, or summarize using Ollama or cloud models. Phoneme preserves raw and cleaned layers so edits are always reversible.',
+    body: 'Speak naturally — stutters and false starts are fine. Smart Cleanup can fix them, reformat notes, translate, or summarize using Ollama or cloud models. Phoneme preserves raw and cleaned layers so edits are always reversible.',
   },
   {
     title: 'Route',
@@ -185,7 +185,7 @@ export const PHOEME_COMPARISON = {
     {
       cloud: 'Automation is limited to what the vendor exposes.',
       phoneme:
-        'The CLI, hook payload, and JSON-line daemon protocol make it scriptable from your own shortcuts, shells, and note systems.',
+        'The CLI, hook payload, and a newline-delimited JSON (NDJSON) daemon protocol make it scriptable from your own shortcuts, shells, and note systems.',
     },
   ] satisfies readonly PhoemeComparisonPoint[],
 } as const
@@ -199,7 +199,7 @@ export const PHOEME_FAQS: readonly PhoemeFaq[] = [
   {
     question: 'Does Phoneme work on macOS or Linux?',
     answer:
-      'Windows only today. macOS and Linux are on the v2.0 roadmap; Meeting Mode on macOS will require a virtual loopback device.',
+      "Windows only today. macOS and Linux are something I'd like to get to; Meeting Mode on macOS would need a virtual loopback device.",
   },
   {
     question: "What's the difference between Record and Meeting Mode?",

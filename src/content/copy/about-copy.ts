@@ -27,7 +27,7 @@ export function aboutInfoLines(): string[] {
     `${c.dim}I build interfaces people can steer without reading a manual.${c.reset}`,
     `${c.dim}Freelance + product-minded delivery; calm git history matters.${c.reset}`,
     `${c.dim}Recent focus:${c.reset} portfolio OS ${c.dim}(this site)${c.reset}, tightening`,
-    `${c.dim}accessibility where it costs little, and shipping with measurable loops.${c.reset}`,
+    `${c.dim}accessibility where it costs little, and shipping in small reviewable slices.${c.reset}`,
     `${c.dim}Side projects:${c.reset} browser UI experiments, readable CSS/DOM,`,
     `${c.dim}and interfaces that behave under theme and zoom changes.${c.reset}`,
   ]

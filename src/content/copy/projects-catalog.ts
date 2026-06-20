@@ -43,7 +43,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     lines: [
       `Local-first Windows transcription — hotkey dictation, meeting dual-track capture, semantic search, hooks, and CLI.`,
       `Offline whisper.cpp by default; independent STT/LLM providers per pipeline step. Rust + Tauri + Lit.`,
-      `Open source (MIT/Apache-2.0). Product page and docs at /phoeme/.`,
+      `Open source (MIT/Apache-2.0). Product page and docs at mrgrey.site/phoeme/.`,
     ],
     repo: 'https://github.com/namefailed/phoneme',
     web: 'https://mrgrey.site/phoeme/',
@@ -68,7 +68,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
     skipLiveScreenshot: true,
   },
   {
-    title: 'Army Women’s Foundation',
+    title: "Army Women's Foundation",
     period: 'awfdn.org',
     lines: [`Live nonprofit / program marketing site.`],
     web: 'https://awfdn.org/',
@@ -121,7 +121,7 @@ export const PORTFOLIO_PROJECTS: readonly PortfolioProjectEntry[] = [
 
 /** Lines printed by the `projects` shell command */
 export function projectsLines(): string[] {
-  const out: string[] = ['', `  ${c.pink}work & roadmap${c.reset}`, `  ${c.dim}${'─'.repeat(44)}${c.reset}`, '']
+  const out: string[] = ['', `  ${c.pink}selected work${c.reset}`, `  ${c.dim}${'─'.repeat(44)}${c.reset}`, '']
 
   for (const p of PORTFOLIO_PROJECTS) {
     const head =
