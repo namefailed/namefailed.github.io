@@ -59,9 +59,9 @@ function installFinale(
 ): string[] {
   switch (outcome) {
     case 'new':
+      // Only cowsay is installable today (see KNOWN), so the run hint stays cowsay-specific.
       return [
-        `  ${c.green}(✓)${c.reset} ${c.dim}cowsay is on disk (pretend-but-real listing). Run ${c.blue}cowsay moo${c.reset}${c.dim}.${c.reset}`,
-
+        `  ${c.green}(✓)${c.reset} ${c.dim}${pkgDisplay} is on disk (pretend-but-real listing). Run ${c.blue}cowsay moo${c.reset}${c.dim}.${c.reset}`,
         '',
       ]
 

@@ -155,20 +155,18 @@ function handleRetro(host: TerminalCommandHost, args: string[]): void {
     return
   }
 
+  // status / --help / -h already returned above, so the only cases left are
+  // on, off, and "bare word or unknown arg" (which toggles).
   if (sub === 'on') setRetroFx(true)
   else if (sub === 'off') setRetroFx(false)
-  else if (sub !== 'status' && sub !== '--help' && sub !== '-h') toggleRetroFx()
+  else toggleRetroFx()
 
-  if (!sub || sub === 'on' || sub === 'off' || (sub !== 'status' && sub !== '--help' && sub !== '-h')) {
-    const on = getRetroFx()
-    if (sub !== 'status' && sub !== '--help' && sub !== '-h') {
-      host.writeln(
-        on
-          ? `  ${c.green}retro on${c.reset}  ${c.dim}(grain · scanlines · guilty nostalgia)${c.reset}`
-          : `  ${c.dim}retro off — pixels unpunished.${c.reset}`,
-      )
-    }
-  }
+  const on = getRetroFx()
+  host.writeln(
+    on
+      ? `  ${c.green}retro on${c.reset}  ${c.dim}(grain · scanlines · guilty nostalgia)${c.reset}`
+      : `  ${c.dim}retro off — pixels unpunished.${c.reset}`,
+  )
 }
 
 function handleMatrix(host: TerminalCommandHost, args: string[]): void {

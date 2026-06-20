@@ -201,6 +201,19 @@ function load(): void {
   }
 }
 
+/**
+ * Drop back to home if the persisted cwd no longer resolves to a directory — e.g.
+ * a dir removed or renamed since it was saved. Returns true if it had to reset.
+ */
+function ensureCwdExists(): boolean {
+  const hit = walk(state.cwd)
+  if (!hit?.node || hit.node.t !== 'd') {
+    state.cwd = FS_HOME
+    return true
+  }
+  return false
+}
+
 /** Trigger a debounced save. Accumulates rapid changes into a single localStorage write. */
 function save(): void {
   if (saveTimeout) clearTimeout(saveTimeout)
@@ -220,6 +233,7 @@ function saveSync(): void {
 }
 
 load()
+ensureCwdExists()
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
@@ -231,9 +245,7 @@ if (typeof window !== 'undefined') {
 export function vfsReloadFromStorage(): string | null {
   vfsOldPwd = null
   load()
-  const hit = walk(state.cwd)
-  if (!hit?.node || hit.node.t !== 'd') {
-    state.cwd = FS_HOME
+  if (ensureCwdExists()) {
     saveSync()
     return 'working directory reset to ~ (saved cwd no longer exists)'
   }

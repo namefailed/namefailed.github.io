@@ -542,6 +542,7 @@ export class PongWindow {
   }
 
   dispose(): void {
+    if (!this.alive) return // close button + WM finalize both call this
     this.alive = false
     this.detachInput()
     this.keys.clear()

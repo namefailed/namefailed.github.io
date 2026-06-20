@@ -17,7 +17,7 @@
 
 import type { WindowSpec } from './appwindow'
 import { createWindowChrome } from './window-chrome'
-import { P5_EXAMPLES } from './p5-sketches'
+import { P5_EXAMPLES, sketchFilename } from './p5-sketches'
 import { vfsReadRaw, vfsMkdir, vfsWrite } from './os-fs'
 
 export interface P5WindowOptions {
@@ -269,7 +269,9 @@ export class P5Window {
 
   private runExample(label: string, code: string): void {
     this.currentVfsPath = null
-    this.currentLabel = `${label}.js`
+    // Use the same slug the VFS seeded the example under, so editing it reuses
+    // that file instead of saving a "Title Case.js" duplicate next to it.
+    this.currentLabel = sketchFilename(label)
     this.labelEl.textContent = label
     this.run(code)
   }

@@ -361,7 +361,11 @@ function mountFinalCta(): HTMLElement {
   )
 
   const actions = el('div', 'pm-actions')
-  actions.append(ctaLink(PHOEME.ctas[0]), ctaLink(PHOEME.ctas[1]))
+  // Show the primary + secondary CTAs (skip the ghost GitHub link); pick by
+  // variant so reordering the data can't silently swap which two appear.
+  for (const link of PHOEME.ctas.filter((cta) => cta.variant !== 'ghost')) {
+    actions.appendChild(ctaLink(link))
+  }
   panel.appendChild(actions)
   section.appendChild(panel)
   return section

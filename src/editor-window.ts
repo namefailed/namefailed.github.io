@@ -415,9 +415,14 @@ export class EditorWindow {
     }
   }
 
+  /** Shared "buffer is dirty" warning; `forceHint` names the override for this context. */
+  private flashUnsavedGuard(forceHint: string): void {
+    this.flashStatus(`No write since last change (${forceHint})`, true)
+  }
+
   private tryCloseFromChrome(): void {
     if (this.dirty) {
-      this.flashStatus('No write since last change — use :wq or :q!', true)
+      this.flashUnsavedGuard(':wq to save, :q! to discard')
       return
     }
     this.onClose()
@@ -444,7 +449,7 @@ export class EditorWindow {
         return
       case 'quit':
         if (this.dirty) {
-          this.flashStatus('No write since last change (use :q! to force)', true)
+          this.flashUnsavedGuard(':q! to force')
           this.leaveCmd()
           return
         }
@@ -462,7 +467,7 @@ export class EditorWindow {
         return
       case 'edit':
         if (this.dirty && !action.force) {
-          this.flashStatus('No write since last change (use :e! to force)', true)
+          this.flashUnsavedGuard(':e! to force')
           this.leaveCmd()
           return
         }

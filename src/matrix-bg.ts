@@ -3,7 +3,7 @@
 import { getMatrixRainPalette } from './theme-control'
 import { createCssVarCache, type CssVarCache } from './css-var-cache'
 import { storageGet, storageSet } from './storage'
-import { WALLPAPER_KEY, WALLPAPER_DEFAULT } from './wallpaper'
+import { WALLPAPER_DEFAULT, currentWallpaperValue } from './wallpaper'
 import { prefersReducedMotion } from './prefers-reduced-motion'
 
 const STORAGE_KEY = 'mrgrey-matrix-bg'
@@ -113,8 +113,8 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const isImgUrl = (v: string): boolean =>
     v.startsWith('/') || v.startsWith('http') || v.startsWith('data:')
   const bgImg = new Image()
-  const savedWp = window.localStorage?.getItem(WALLPAPER_KEY) ?? ''
-  bgImg.src = savedWp && isImgUrl(savedWp) ? savedWp : WALLPAPER_DEFAULT
+  const savedWp = currentWallpaperValue()
+  bgImg.src = isImgUrl(savedWp) ? savedWp : WALLPAPER_DEFAULT
   bgImg.decoding = 'async'
   // The default wallpaper is a remote PNG that usually hasn't decoded when the
   // one-shot static paint runs, so the reduced-motion path falls through to the
