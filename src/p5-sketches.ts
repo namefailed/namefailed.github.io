@@ -7,7 +7,7 @@ export interface P5Example {
 
 /**
  * Stable filename for a sketch label — used both for the dropdown's display
- * and to seed `/home/namefailed/sketches/` in the VFS. Slug rules: lowercase,
+ * and to seed `/home/namefailed/p5.js/` in the VFS. Slug rules: lowercase,
  * non-alphanumerics become single hyphens, no leading/trailing hyphens.
  */
 export function sketchFilename(label: string): string {
@@ -18,7 +18,7 @@ export function sketchFilename(label: string): string {
   return `${slug}.js`
 }
 
-/** All built-in sketches. Seeded into `~/sketches/` in the VFS on first visit. */
+/** All built-in sketches. Seeded into `~/p5.js/` in the VFS on first visit. */
 export const P5_EXAMPLES: P5Example[] = [
   {
     label: 'Flow Field',

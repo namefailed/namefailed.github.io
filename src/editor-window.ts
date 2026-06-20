@@ -285,7 +285,7 @@ export class EditorWindow {
     return n
   }
 
-  /** First line touched by `:e` counts as line 1. */
+  /** Take the pending NORMAL-mode count prefix (e.g. the 5 in `5j`), or null. */
   private consumeOptionalNat(): number | null {
     const n = consumeOptionalNat(this.countDigits)
     this.countDigits = ''

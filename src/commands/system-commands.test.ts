@@ -1,6 +1,6 @@
 /**
  * Tests for system-level shell commands.
- * Only the pure/text commands are tested here (echo, date, whoami, neofetch, cowsay).
+ * Only the pure/text commands are tested here (echo, date, cowsay, uptime, cal).
  * Commands that require DOM (notify, desktop) are excluded.
  */
 

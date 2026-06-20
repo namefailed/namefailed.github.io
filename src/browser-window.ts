@@ -392,8 +392,10 @@ export class BrowserWindow {
   }
 
   /**
-   * Drop the tip overlay without counting as dismissed — e.g. window closed while open.
-   * @param recordDismissal When true, user chose Got it (session / optional permanent flag).
+   * Dismiss the iframe tip: remove the backdrop and the document-level Escape
+   * handler. With `recordDismissal` false it just tears down (e.g. on close/minimize).
+   * @param permanent When true, also persist the never-show-again flag.
+   * @param recordDismissal When true, mark the tip seen for this session.
    */
   private dismissIframeTip(permanent: boolean, recordDismissal = true): void {
     if (this.tipEscHandler) {

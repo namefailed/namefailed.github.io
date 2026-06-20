@@ -43,7 +43,7 @@ function rotFaceCW(face: number[]): void {
  * The R and L faces are stored "mirror-indexed" relative to U/D/F/B (their
  * column axis runs opposite the others in the 3D lattice), so a geometric
  * clockwise turn of those faces corresponds to a CCW array rotation. See
- * rubik-stickers-layout.test.ts for the geometry that pins this down.
+ * rubik-model.test.ts for the sticker-cycle cases that pin this down.
  */
 function rotFaceCCW(face: number[]): void {
   const orig = face.slice()

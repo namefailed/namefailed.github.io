@@ -18,7 +18,7 @@ export function sectionHeadingLine(title: string, ruleTargetWidth = 44): string 
   return `  ${c.pink}${title}${c.reset}  ${c.dim}${'─'.repeat(dashes)}${c.reset}`
 }
 
-/** ANSI bar segment only (█/░) — used by `skillMeterLine` and résumé tile HTML */
+/** ANSI bar segment only (█/░) — used by `skillMeterLine`. */
 export function skillMeterBarAnsi(pct: number, width = 18): string {
   const filled = Math.round((pct / 100) * width)
   const empty = width - filled

@@ -44,7 +44,7 @@ export const PORTFOLIO_CMDS: ReadonlySet<string> = new Set(['resume', 'projects'
 /** Games/fun tiles inside the Games folder */
 export const GAME_CMDS: ReadonlySet<string> = new Set(['paint', 'snake', 'pong', 'p5'])
 
-/** All 11 tile definitions — used for persistence / tests. */
+/** All 12 tile definitions — used for persistence / tests. */
 export function visibleDesktopTiles(): readonly DesktopTile[] {
   return TILES
 }

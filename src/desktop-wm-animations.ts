@@ -1,4 +1,4 @@
-/** Tiled window mount/unmount animations (matches `desktop.ts` slack timers). */
+/** Tiled window mount/unmount animations and their durations. */
 
 export const WM_MOUNT_MS = 640
 export const WM_UNMOUNT_MS = 400
