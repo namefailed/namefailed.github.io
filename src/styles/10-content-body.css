@@ -629,8 +629,11 @@
 }
 
 /*
- * Fallback when container queries unavailable — mirror @container resume rules above.
- * Narrative on top, skills at bottom (single column stack).
+ * Viewport fallback that MUST stay in sync with the `@container resume` rules
+ * above — edit the two together. It earns its keep two ways: it covers browsers
+ * without container-query support, and its `max-height: 720px` arm handles short
+ * viewports, which a width-based container query can't see. Same single-column
+ * stack: narrative on top, skills at the bottom.
  */
 @media (max-width: 679px), (max-height: 720px) {
   .resume-layout.resume-layout--with-skills {
@@ -778,3 +781,7 @@
     padding: var(--ui-space-3) var(--ui-space-3);
   }
 }
+
+/* ANSI class helpers (emitted by ansi.ts → rendered in .win-line content) */
+.a-bold { font-weight: 700; }
+.a-dim  { opacity: 0.45; }

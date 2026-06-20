@@ -361,11 +361,3 @@
 .browser-iframe-tip-ok:active {
   transform: scale(0.99);
 }
-
-.editor-status.editor-status--msg.editor-status--error {
-  color: var(--th-dot-close);
-}
-
-/* ANSI class helpers */
-.a-bold { font-weight: 700; }
-.a-dim  { opacity: 0.45; }

@@ -204,3 +204,32 @@
   border-top-width: 1px;
   color: var(--th-accent);
 }
+
+.editor-status.editor-status--msg.editor-status--error {
+  color: var(--th-dot-close);
+}
+
+.editor-textarea--normal {
+  cursor: cell;
+  caret-color: rgb(var(--th-accent-rgb));
+}
+
+.editor-textarea--insert {
+  cursor: text;
+  caret-color: var(--th-badge-insert);
+}
+
+.editor-textarea--cmd {
+  cursor: default;
+}
+
+/* Block caret in NORMAL, bar in INSERT — where the engine supports caret-shape */
+@supports (caret-shape: block) {
+  .editor-textarea--normal {
+    caret-shape: block;
+  }
+
+  .editor-textarea--insert {
+    caret-shape: bar;
+  }
+}
