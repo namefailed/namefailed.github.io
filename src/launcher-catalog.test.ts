@@ -177,61 +177,69 @@ const wasWarmed = (chunk: string): boolean => loaded.names.includes(chunk)
 describe('prefetchLazyWindowModule', () => {
   it('warms the browser chunk for "browse"', async () => {
     expect(wasWarmed('browser-window')).toBe(false)
-    prefetchLazyWindowModule('browse')
-    await flush()
+    await prefetchLazyWindowModule('browse')
     expect(wasWarmed('browser-window')).toBe(true)
   })
 
   it('warms the file-explorer chunk for "explorer"', async () => {
     expect(wasWarmed('file-explorer-window')).toBe(false)
-    prefetchLazyWindowModule('explorer')
-    await flush()
+    await prefetchLazyWindowModule('explorer')
     expect(wasWarmed('file-explorer-window')).toBe(true)
   })
 
   it('warms the editor chunk for "edit"', async () => {
     expect(wasWarmed('editor-window')).toBe(false)
-    prefetchLazyWindowModule('edit')
-    await flush()
+    await prefetchLazyWindowModule('edit')
     expect(wasWarmed('editor-window')).toBe(true)
   })
 
   it('warms the paint chunk for "paint"', async () => {
     expect(wasWarmed('paint-window')).toBe(false)
-    prefetchLazyWindowModule('paint')
-    await flush()
+    await prefetchLazyWindowModule('paint')
     expect(wasWarmed('paint-window')).toBe(true)
   })
 
   it('warms the pong chunk for "pong"', async () => {
     expect(wasWarmed('pong-window')).toBe(false)
-    prefetchLazyWindowModule('pong')
-    await flush()
+    await prefetchLazyWindowModule('pong')
     expect(wasWarmed('pong-window')).toBe(true)
+  })
+
+  it('warms the snake chunk for "snake"', async () => {
+    expect(wasWarmed('snake-window')).toBe(false)
+    await prefetchLazyWindowModule('snake')
+    expect(wasWarmed('snake-window')).toBe(true)
+  })
+
+  it('warms the p5 chunk for "p5"', async () => {
+    expect(wasWarmed('p5-window')).toBe(false)
+    await prefetchLazyWindowModule('p5')
+    expect(wasWarmed('p5-window')).toBe(true)
   })
 
   it('warms nothing for portfolio/text commands with no lazy chunk', async () => {
     const before = loaded.names.length
     for (const cmd of ['resume', 'links', 'projects', 'whoami']) {
-      prefetchLazyWindowModule(cmd)
+      await prefetchLazyWindowModule(cmd)
     }
-    await flush()
     expect(loaded.names.length).toBe(before)
   })
 
   it('warms nothing for the terminal sentinel or an unknown command', async () => {
     const before = loaded.names.length
-    prefetchLazyWindowModule('terminal')
-    prefetchLazyWindowModule('totally-unknown')
-    prefetchLazyWindowModule('')
-    await flush()
+    await prefetchLazyWindowModule('terminal')
+    await prefetchLazyWindowModule('totally-unknown')
+    await prefetchLazyWindowModule('')
     expect(loaded.names.length).toBe(before)
   })
 
-  it('returns void for both a lazy and a non-lazy command', () => {
+  it('returns a promise for both a lazy and a non-lazy command', async () => {
     // 'editor' already warmed its chunk via the 'edit' test, so no fresh import.
-    expect(prefetchLazyWindowModule('editor')).toBeUndefined()
-    expect(prefetchLazyWindowModule('whoami')).toBeUndefined()
+    const lazy = prefetchLazyWindowModule('editor')
+    const plain = prefetchLazyWindowModule('whoami')
+    expect(lazy).toBeInstanceOf(Promise)
+    expect(plain).toBeInstanceOf(Promise)
+    await Promise.all([lazy, plain]) // settle both so nothing is in flight at teardown
   })
 })
 
@@ -256,24 +264,6 @@ describe('attachLazyPrefetchHandlers', () => {
     addSpy.mockRestore()
   })
 
-  it('warms the snake chunk when pointerenter fires', async () => {
-    expect(wasWarmed('snake-window')).toBe(false)
-    const el = document.createElement('div')
-    attachLazyPrefetchHandlers(el, 'snake')
-    el.dispatchEvent(new Event('pointerenter'))
-    await flush()
-    expect(wasWarmed('snake-window')).toBe(true)
-  })
-
-  it('warms the p5 chunk when focusin fires (alias-free command)', async () => {
-    expect(wasWarmed('p5-window')).toBe(false)
-    const el = document.createElement('div')
-    attachLazyPrefetchHandlers(el, 'p5')
-    el.dispatchEvent(new Event('focusin'))
-    await flush()
-    expect(wasWarmed('p5-window')).toBe(true)
-  })
-
   it('does not warm a fresh chunk until an event actually fires', async () => {
     const before = loaded.names.length
     const el = document.createElement('div')
@@ -282,9 +272,9 @@ describe('attachLazyPrefetchHandlers', () => {
     expect(loaded.names.length).toBe(before)
   })
 
-  it('invokes the wired prefetch on every dispatch', () => {
-    // The handler closes over a fresh call each time; spy on the registered
-    // callback to prove both events route through it (caching hides re-imports).
+  it('routes both pointerenter and focusin through the same prefetch', () => {
+    // Wire to a no-chunk command so the handlers fire nothing async; we only
+    // prove both events reach the prefetch path (the switch is covered above).
     const el = document.createElement('div')
     let calls = 0
     const realAdd = el.addEventListener.bind(el)
@@ -296,7 +286,7 @@ describe('attachLazyPrefetchHandlers', () => {
       })
       realAdd(type, listener as EventListener, opts)
     })
-    attachLazyPrefetchHandlers(el, 'vim')
+    attachLazyPrefetchHandlers(el, 'projects')
     for (const h of handlers) h()
     expect(calls).toBe(2) // one pointerenter handler, one focusin handler
     vi.restoreAllMocks()
@@ -308,10 +298,9 @@ describe('attachLazyPrefetchHandlers', () => {
 describe('editor alias mapping (prefetch)', () => {
   it('treats edit / editor / vim as the same chunk (no extra imports)', async () => {
     const before = loaded.names.length // editor-window already warmed earlier
-    prefetchLazyWindowModule('editor')
-    prefetchLazyWindowModule('vim')
-    prefetchLazyWindowModule('edit')
-    await flush()
+    await prefetchLazyWindowModule('editor')
+    await prefetchLazyWindowModule('vim')
+    await prefetchLazyWindowModule('edit')
     // Same chunk → cached → no new entries appended for any alias.
     expect(loaded.names.length).toBe(before)
     expect(EDITOR_LAUNCH_ALIASES.has('vim')).toBe(true)

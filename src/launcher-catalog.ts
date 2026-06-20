@@ -67,39 +67,38 @@ export const LAUNCHER_ICON_ROWS: ReadonlyArray<
   { kind: 'terminal',             label: 'Terminal', glyph: '~' },
 ]
 
-/** Hover/focus on launcher row → kick dynamic import before click */
-export function prefetchLazyWindowModule(invokedCmd: string): void {
+/**
+ * Hover/focus on a launcher row → kick the dynamic import before the click.
+ * Returns the in-flight import promise so callers (and tests) can await it;
+ * the event handlers below just fire it and forget.
+ */
+export function prefetchLazyWindowModule(invokedCmd: string): Promise<unknown> {
   const cmd = EDITOR_LAUNCH_ALIASES.has(invokedCmd) ? 'edit' : invokedCmd
   switch (cmd) {
     case 'browse':
-      void import('./browser-window')
-      return
+      return import('./browser-window')
     case 'explorer':
-      void import('./file-explorer-window')
-      return
+      return import('./file-explorer-window')
     case 'edit':
-      void import('./editor-window')
-      return
+      return import('./editor-window')
     case 'paint':
-      void import('./paint-window')
-      return
+      return import('./paint-window')
     case 'snake':
-      void import('./snake-window')
-      return
+      return import('./snake-window')
     case 'pong':
-      void import('./pong-window')
-      return
+      return import('./pong-window')
     case 'p5':
-      void import('./p5-window')
-      return
+      return import('./p5-window')
     default:
-      return
+      return Promise.resolve()
   }
 }
 
 /** Wire `prefetchLazyWindowModule` to pointer-enter and focus-in on a launcher element. */
 export function attachLazyPrefetchHandlers(el: HTMLElement, invokedCmd: string): void {
-  const run = (): void => prefetchLazyWindowModule(invokedCmd)
+  const run = (): void => {
+    void prefetchLazyWindowModule(invokedCmd)
+  }
   el.addEventListener('pointerenter', run, { passive: true })
   el.addEventListener('focusin', run)
 }
