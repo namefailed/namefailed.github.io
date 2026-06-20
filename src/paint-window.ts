@@ -11,6 +11,10 @@ export interface PaintWindowOptions {
 
 type PaintTool = 'brush' | 'eraser' | 'line' | 'fill'
 
+/**
+ * Raster paint tile — brush / eraser-to-bg / line / flood-fill, mouse + touch.
+ * The canvas bitmap is the only state; `dispose()` releases the resize observer.
+ */
 export class PaintWindow {
   readonly el: HTMLElement
   readonly command = 'paint' as const

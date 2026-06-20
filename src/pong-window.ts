@@ -15,6 +15,10 @@ export type PongMode = 'cpu' | 'p2'
 const LOGICAL_W = 960
 const LOGICAL_H = 540
 
+/**
+ * Pong tile — CPU or two-player (W/S vs arrows), fixed-step physics on rAF.
+ * `dispose()` cancels the loop, drops the resize observer, and clears held keys.
+ */
 export class PongWindow {
   readonly el: HTMLElement
   readonly command = 'pong' as const

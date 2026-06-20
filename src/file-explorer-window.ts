@@ -55,6 +55,10 @@ function parseFePrefs(raw: string | null): Partial<ExplorerPrefs> {
   }
 }
 
+/**
+ * File-explorer tile over the VFS: navigate, open, rename, delete, and cut /
+ * copy / paste. View prefs (sort, show-hidden) persist under portfolio-fe-prefs-v1.
+ */
 export class FileExplorerWindow {
   readonly el: HTMLElement
   readonly command = 'explorer' as const

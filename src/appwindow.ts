@@ -102,6 +102,11 @@ export interface AppWindowOptions extends WindowSpec {
   onFocus: () => void
 }
 
+/**
+ * Read-only content tile (résumé, projects, about, contact). Renders ANSI-ish
+ * lines as HTML in `.win-body`; editing happens in EditorWindow or the terminal.
+ * The only eagerly-loaded tile — every other `*-window` is imported on demand.
+ */
 export class AppWindow {
   readonly el: HTMLElement
   readonly command: string

@@ -49,6 +49,11 @@ export interface BrowserWindowOptions {
   onFocus: () => void
 }
 
+/**
+ * Embedded browser tile: URL bar + sandboxed iframe. URLs pass through the
+ * `browser-url.ts` allowlist; the first visit shows a one-time tip explaining why
+ * many sites refuse to embed. `dispose()` tears that tip down with its global handler.
+ */
 export class BrowserWindow {
   readonly el: HTMLElement
   readonly command = 'browse' as const

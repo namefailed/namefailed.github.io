@@ -126,6 +126,7 @@ export class Desktop {
     this.sync()
   }
 
+  /** Fake `ps` rows (one per open or minimized tile) for the terminal MOTD and neofetch. */
   getPsSnapshot(): PsSnapshotRow[] {
     return buildPsSnapshot(this.windows, this.minimized, this.focusedId)
   }
@@ -167,10 +168,16 @@ export class Desktop {
     return this.wmSelf
   }
 
+  /**
+   * Open the tile for `spec`, lazily importing its module. If that command is
+   * already open the call focuses (or toggles) the existing tile instead of
+   * stacking a duplicate — dispatchOpenWindow owns those rules.
+   */
   async openWindow(spec: WindowSpec): Promise<void> {
     await dispatchOpenWindow(spec, openWindowHost(this.wm()))
   }
 
+  /** Open the terminal tile, or focus it if it is already open. */
   focusTerminal(): void {
     void this.openWindow({ command: 'terminal', title: 'terminal', content: [] })
   }

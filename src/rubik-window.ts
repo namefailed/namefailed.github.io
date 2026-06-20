@@ -23,6 +23,11 @@ type CubeMoveFace = 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
 
 const CUBING_REPO = 'https://github.com/cubing/cubing.js'
 
+/**
+ * Rubik's cube tile built on cubing.js `TwistyPlayer`. Scramble / solve / reset and
+ * free-typed algorithms run behind a `busy` gate so inputs can't overlap a running
+ * animation. `dispose()` tears the player down.
+ */
 export class RubikWindow {
   readonly el: HTMLElement
   readonly command = 'cube' as const
@@ -454,6 +459,7 @@ export class RubikWindow {
     void this.queueKeyboardTurn(base, e.shiftKey)
   }
 
+  /** Focus the window element (not the canvas) so WM chords route here. */
   focusCanvas(): void {
     this.el.focus()
   }

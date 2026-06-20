@@ -75,6 +75,10 @@ ${code}
 </html>`
 }
 
+/**
+ * p5.js viewer tile. Runs a sketch in a sandboxed iframe, accepts drag-and-dropped
+ * .js files, and saves edits back to the VFS. `dispose()` revokes the blob URL.
+ */
 export class P5Window {
   readonly el: HTMLElement
   /** Literal — must match a launcher cmd so dock/taskbar icon lookup succeeds. */

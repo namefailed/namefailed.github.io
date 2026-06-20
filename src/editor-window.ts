@@ -45,6 +45,11 @@ export interface EditorWindowOptions {
 
 type EditMode = 'normal' | 'insert' | 'cmd'
 
+/**
+ * Modal vim-style editor over the VFS — NORMAL / INSERT / EX modes, counts, and
+ * a bounded undo stack. Distinct from the terminal's one-line widget (`vim.ts`).
+ * `dispose()` removes its key and resize listeners.
+ */
 export class EditorWindow {
   readonly el: HTMLElement
   readonly command = 'edit' as const

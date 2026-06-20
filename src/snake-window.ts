@@ -20,6 +20,11 @@ const LENGTH_SPEED_STEP = 2.1 /** ms faster per segment beyond starter length */
 
 type PowerKind = 'ghost' | 'gem' | 'trim' | 'growth'
 
+/**
+ * Snake tile. One instance per open; the grid tracks the window size, so a
+ * resize mid-game restarts the round. `dispose()` stops the tick loop and the
+ * resize observer.
+ */
 export class SnakeWindow {
   readonly el: HTMLElement
   readonly command = 'snake' as const
@@ -702,6 +707,7 @@ export class SnakeWindow {
     ctx.restore()
   }
 
+  /** Focus the window element (not the canvas) so WM chords and arrow keys land here. */
   focusCanvas(): void {
     this.el.focus()
   }
