@@ -21,9 +21,32 @@ const LENGTH_SPEED_STEP = 2.1 /** ms faster per segment beyond starter length */
 type PowerKind = 'ghost' | 'gem' | 'trim' | 'growth'
 
 /**
- * Snake tile. One instance per open; the grid tracks the window size, so a
- * resize mid-game restarts the round. `dispose()` stops the tick loop and the
- * resize observer.
+ * Keep a Snake round alive across a grid resize: return the head plus the
+ * contiguous run of body segments that still fit the new bounds. Returns null
+ * when the head itself no longer fits (the round can't continue). The score is
+ * untouched — only the body may shorten.
+ */
+export function reflowSnakeIntoGrid(
+  snake: ReadonlyArray<{ x: number; y: number }>,
+  cols: number,
+  rows: number,
+): { x: number; y: number }[] | null {
+  const inBounds = (c: { x: number; y: number }): boolean =>
+    c.x >= 0 && c.x < cols && c.y >= 0 && c.y < rows
+  const head = snake[0]
+  if (!head || !inBounds(head)) return null
+  const kept: { x: number; y: number }[] = []
+  for (const seg of snake) {
+    if (!inBounds(seg)) break
+    kept.push({ x: seg.x, y: seg.y })
+  }
+  return kept
+}
+
+/**
+ * Snake tile. One instance per open; the grid tracks the window size, and a
+ * resize mid-game re-fits the snake into the new bounds rather than wiping the
+ * score. `dispose()` stops the tick loop and the resize observer.
  */
 export class SnakeWindow {
   readonly el: HTMLElement
@@ -174,10 +197,26 @@ export class SnakeWindow {
     this.syncGridFromWrap()
     if (this.cols !== prevC || this.rows !== prevR) {
       if (this.playing && !this.gameOverActive) {
-        this.resetGame()
+        this.reflowIntoGrid()
         return
       }
     }
+    this.draw()
+  }
+
+  /** Re-fit the snake, food, and powerup after a grid resize without resetting the score. */
+  private reflowIntoGrid(): void {
+    const kept = reflowSnakeIntoGrid(this.snake, this.cols, this.rows)
+    if (!kept) {
+      this.enterGameOver()
+      return
+    }
+    this.snake = kept
+    this.lengthEl.textContent = String(this.snake.length)
+    const inBounds = (c: { x: number; y: number }): boolean =>
+      c.x >= 0 && c.x < this.cols && c.y >= 0 && c.y < this.rows
+    if (!inBounds(this.food)) this.placeFood()
+    if (this.powerup && !inBounds(this.powerup)) this.powerup = null
     this.draw()
   }
 
