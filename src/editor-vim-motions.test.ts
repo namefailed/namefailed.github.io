@@ -80,10 +80,10 @@ describe('lineEndCaretPos', () => {
 describe('word motions', () => {
   const text = 'foo bar baz'
 
-  it('wordForwardPos skips token and punctuation', () => {
-    expect(wordForwardPos(text, 0)).toBe(3)
-    expect(wordForwardPos(text, 4)).toBe(7)
-    expect(wordForwardPos(text, 8)).toBe(11)
+  it('wordForwardPos lands on the next word start (not the trailing space)', () => {
+    expect(wordForwardPos(text, 0)).toBe(4) // foo -> bar
+    expect(wordForwardPos(text, 4)).toBe(8) // bar -> baz
+    expect(wordForwardPos(text, 8)).toBe(11) // baz -> end of line
   })
 
   it('wordBackPos finds previous token start', () => {
@@ -133,8 +133,8 @@ describe('moveVertRepeat', () => {
 describe('word repeats', () => {
   const text = 'foo bar baz'
 
-  it('wordForwardRepeat', () => {
-    expect(wordForwardRepeat(text, 0, 2)).toBe(7)
+  it('wordForwardRepeat advances two word starts (foo -> baz)', () => {
+    expect(wordForwardRepeat(text, 0, 2)).toBe(8)
   })
 
   it('wordBackRepeat', () => {

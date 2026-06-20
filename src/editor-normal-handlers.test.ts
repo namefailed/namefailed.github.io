@@ -177,21 +177,21 @@ describe('motion handlers', () => {
     const ctx = new FakeCtx({ text: 'foo bar baz', cur: 0, counts: [2] })
     run('w', ctx)
     expect(ctx.consumeCountCalls).toEqual([1])
-    // 0 -> end of 'foo' (3) -> 'bar' consumed, lands on trailing space (7)
-    expect(ctx.setCurCalls).toEqual([7])
+    // 2w: foo -> bar (4) -> baz (8), each hop landing on the next word start
+    expect(ctx.setCurCalls).toEqual([8])
   })
 
-  it("'w' with count 1 advances past the current word", () => {
+  it("'w' with count 1 moves to the next word start", () => {
     const ctx = new FakeCtx({ text: 'foo bar', cur: 0 })
     run('w', ctx)
-    expect(ctx.setCurCalls).toEqual([3]) // just past 'foo'
+    expect(ctx.setCurCalls).toEqual([4]) // start of 'bar', not the trailing space
   })
 
-  it("'w' from whitespace consumes the following word", () => {
-    // 'a bc d': from the space at 1, skip ws (->2) then word 'bc' (->4)
+  it("'w' from whitespace moves to the start of the following word", () => {
+    // 'a bc d': from the space at 1, skip the space to land on 'bc' (2)
     const ctx = new FakeCtx({ text: 'a bc d', cur: 1 })
     run('w', ctx)
-    expect(ctx.setCurCalls).toEqual([4])
+    expect(ctx.setCurCalls).toEqual([2])
   })
 
   it("'b' moves back a word", () => {

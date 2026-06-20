@@ -98,8 +98,10 @@ export function isWordChar(ch: string): boolean {
 /** Next word start — vim-like `w` on [A-Za-z0-9_] tokens */
 export function wordForwardPos(text: string, pos: number): number {
   let p = Math.min(pos, text.length)
-  while (p < text.length && !isWordChar(text[p]!)) p++
+  // Skip the rest of the current word, then the separators after it, so the
+  // caret lands on the start of the next word — not on the trailing space.
   while (p < text.length && isWordChar(text[p]!)) p++
+  while (p < text.length && !isWordChar(text[p]!)) p++
   return p
 }
 
