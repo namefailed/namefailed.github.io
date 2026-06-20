@@ -48,6 +48,7 @@ export class RubikWindow {
 
   private disposed = false
   private movePollTimer = 0
+  private playbackTimer: ReturnType<typeof window.setTimeout> | null = null
 
   private onClose: () => void
   private onMinimize: () => void
@@ -329,6 +330,12 @@ export class RubikWindow {
   }
 
   private stopPlayback(): void {
+    // Cancel the pending markPlayback timer, or it would later flip busy off,
+    // overwrite "Paused", and reset the solve anchor mid-pause.
+    if (this.playbackTimer != null) {
+      window.clearTimeout(this.playbackTimer)
+      this.playbackTimer = null
+    }
     this.player?.pause()
     this.busy = false
     void this.updateStatus('Paused')
@@ -353,7 +360,9 @@ export class RubikWindow {
     // slow tempo re-enables the buttons while the cube is still turning.
     const tempo = this.player?.tempoScale ?? 1
     const wait = tempo > 0 ? durationMs / tempo : durationMs
-    window.setTimeout(() => {
+    if (this.playbackTimer != null) window.clearTimeout(this.playbackTimer)
+    this.playbackTimer = window.setTimeout(() => {
+      this.playbackTimer = null
       if (this.disposed) return
       this.busy = false
       onDone?.()
@@ -484,6 +493,7 @@ export class RubikWindow {
     if (this.disposed) return
     this.disposed = true
     window.clearTimeout(this.movePollTimer)
+    if (this.playbackTimer != null) window.clearTimeout(this.playbackTimer)
     this.player?.pause()
     this.player?.remove()
     this.player = null

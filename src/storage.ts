@@ -64,14 +64,14 @@ export function storageGetNumber(key: string, fallback: number, min?: number, ma
   return result
 }
 
-/** Store boolean as '1'/'0' in localStorage. */
+/** Read a boolean stored as '1'/'0'; returns `fallback` when the key is unset. */
 export function storageGetBool(key: string, fallback: boolean): boolean {
   const raw = storageGet(key)
   if (raw === null) return fallback
   return raw !== '0' && raw !== 'false'
 }
 
-/** Retrieve boolean from localStorage. */
+/** Store a boolean as '1'/'0' in localStorage. */
 export function storageSetBool(key: string, value: boolean): boolean {
   return storageSet(key, value ? '1' : '0')
 }

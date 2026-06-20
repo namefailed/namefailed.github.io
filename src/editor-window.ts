@@ -85,6 +85,7 @@ export class EditorWindow {
   private pendingChordTimer: ReturnType<typeof window.setTimeout> | null = null
   /** First `g` in `gg`. */
   private gArm = false
+  private gArmTimer: ReturnType<typeof window.setTimeout> | null = null
   /** Digits buffered before an operator/motion (`3dd`, `15G`, …). */
   private countDigits = ''
   /** `r` / `{count}r`, awaiting the replacement glyph */
@@ -249,12 +250,22 @@ export class EditorWindow {
     this.resizeObserver = null
     this.clearPendingDy()
     this.clearShiftChordArms()
+    this.disarmGChord()
+  }
+
+  /** Disarm the pending `g` of a `gg` chord and cancel its timeout. */
+  private disarmGChord(): void {
+    this.gArm = false
+    if (this.gArmTimer != null) {
+      window.clearTimeout(this.gArmTimer)
+      this.gArmTimer = null
+    }
   }
 
   /** Clear motion / chord / count state (buffers + pending operators). */
   private clearChordStateHard(): void {
     this.clearPendingDy()
-    this.gArm = false
+    this.disarmGChord()
     this.countDigits = ''
     this.replacePending = null
     this.findAwait = null
@@ -903,7 +914,9 @@ export class EditorWindow {
         return
       }
       this.gArm = true
-      window.setTimeout(() => {
+      if (this.gArmTimer != null) window.clearTimeout(this.gArmTimer)
+      this.gArmTimer = window.setTimeout(() => {
+        this.gArmTimer = null
         this.gArm = false
         this.refreshModeMeta()
       }, G_CHORD_MS)

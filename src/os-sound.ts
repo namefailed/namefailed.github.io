@@ -95,6 +95,9 @@ export function playOsSound(kind: OsSoundKind): void {
   }
 
   vol *= volume
+  // exponentialRampToValueAtTime throws on a non-positive target, so a muted
+  // slider (volume 0) would crash every UI sound — just play nothing instead.
+  if (vol <= 0) return
 
   osc.type = 'sine'
   osc.frequency.setValueAtTime(freq, now)

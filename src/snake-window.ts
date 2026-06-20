@@ -195,11 +195,16 @@ export class SnakeWindow {
     const prevC = this.cols
     const prevR = this.rows
     this.syncGridFromWrap()
-    if (this.cols !== prevC || this.rows !== prevR) {
-      if (this.playing && !this.gameOverActive) {
-        this.reflowIntoGrid()
-        return
-      }
+    // Reflow whenever a live round exists (playing OR paused) so resuming after a
+    // resize doesn't drop the snake out of bounds into an instant game-over. Skip
+    // it before the first round (no snake yet) and once the game is over.
+    if (
+      (this.cols !== prevC || this.rows !== prevR) &&
+      this.snake.length > 0 &&
+      !this.gameOverActive
+    ) {
+      this.reflowIntoGrid()
+      return
     }
     this.draw()
   }

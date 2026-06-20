@@ -25,9 +25,11 @@ export function runUnixDate(): string[] {
   const d = new Date()
   let friendly: string
   try {
-    friendly = d.toLocaleString(undefined, { weekday: 'long', dateStyle: 'full', timeStyle: 'medium' })
+    // dateStyle:'full' already includes the weekday — pairing it with a `weekday`
+    // option is illegal and throws, so keep them apart.
+    friendly = d.toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'medium' })
   } catch {
-    // Fallback for environments without full ICU (e.g. Node.js without --icu-data-dir)
+    // Fallback for environments without full ICU date formatting.
     friendly = d.toString()
   }
   return [
