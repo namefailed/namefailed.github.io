@@ -230,8 +230,12 @@ export class P5Window {
       e.preventDefault()
       this.dropOverlay.classList.add('p5-drop-overlay--active')
     })
-    iframeHost.addEventListener('dragleave', () => {
-      this.dropOverlay.classList.remove('p5-drop-overlay--active')
+    iframeHost.addEventListener('dragleave', e => {
+      // dragleave also fires when the pointer crosses onto a child node, so only
+      // clear once it has actually left the host — otherwise the overlay flickers.
+      if (!iframeHost.contains(e.relatedTarget as Node | null)) {
+        this.dropOverlay.classList.remove('p5-drop-overlay--active')
+      }
     })
     iframeHost.addEventListener('drop', e => {
       e.preventDefault()

@@ -343,11 +343,16 @@ export class RubikWindow {
   private markPlayback(durationMs: number, status: string): void {
     this.busy = true
     void this.updateStatus(status)
+    // The estimate assumes 1× tempo; the player actually animates at tempoScale
+    // (0.4–2.4 from the speed slider), so scale the wait to match — otherwise a
+    // slow tempo re-enables the buttons while the cube is still turning.
+    const tempo = this.player?.tempoScale ?? 1
+    const wait = tempo > 0 ? durationMs / tempo : durationMs
     window.setTimeout(() => {
       if (this.disposed) return
       this.busy = false
       void this.updateStatus()
-    }, durationMs)
+    }, wait)
   }
 
   private async runScramble(): Promise<void> {

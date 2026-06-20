@@ -491,6 +491,10 @@ export class BrowserWindow {
   }
 
   setMinimized(min: boolean): void {
+    // The tip is parented to document.body with a global Escape handler, so a
+    // CSS-only minimize would leave the modal floating and swallowing Escape
+    // app-wide. Drop it like close does, without marking it seen.
+    if (min) this.dismissIframeTip(false, false)
     this.el.classList.toggle('minimized', min)
   }
 

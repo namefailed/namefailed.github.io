@@ -60,6 +60,7 @@ export class PongWindow {
   private rightY = this.leftY
 
   private keys = new Set<string>()
+  private detachInput: () => void = () => {}
   private scoreL = 0
   private scoreR = 0
   private cssVars: CssVarCache
@@ -192,8 +193,20 @@ export class PongWindow {
       if (!nk) return
       this.keys.delete(nk)
     }
+    // A keyup never arrives if focus leaves mid-press (alt-tab, or focus moves
+    // to the mode <select>), so drop every held key when we lose focus —
+    // otherwise the paddle keeps drifting forever.
+    const clearKeys = (): void => this.keys.clear()
     this.el.addEventListener('keydown', kd, true)
     this.el.addEventListener('keyup', ku, true)
+    this.el.addEventListener('focusout', clearKeys)
+    window.addEventListener('blur', clearKeys)
+    this.detachInput = () => {
+      this.el.removeEventListener('keydown', kd, true)
+      this.el.removeEventListener('keyup', ku, true)
+      this.el.removeEventListener('focusout', clearKeys)
+      window.removeEventListener('blur', clearKeys)
+    }
 
     this.wrap.addEventListener('mousedown', () => {
       opts.onFocus()
@@ -526,6 +539,8 @@ export class PongWindow {
 
   dispose(): void {
     this.alive = false
+    this.detachInput()
+    this.keys.clear()
     this.ro.disconnect()
     this.cssVars.destroy()
     if (this.raf != null) cancelAnimationFrame(this.raf)

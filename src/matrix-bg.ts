@@ -116,6 +116,13 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   const savedWp = window.localStorage?.getItem(WALLPAPER_KEY) ?? ''
   bgImg.src = savedWp && isImgUrl(savedWp) ? savedWp : WALLPAPER_DEFAULT
   bgImg.decoding = 'async'
+  // The default wallpaper is a remote PNG that usually hasn't decoded when the
+  // one-shot static paint runs, so the reduced-motion path falls through to the
+  // gradient and never shows the photo. Repaint once the image lands; this also
+  // covers wallpaper changes (which reassign src and re-fire onload).
+  bgImg.onload = (): void => {
+    if (reduceMotion && enabled) paintStaticBackdrop()
+  }
 
   /** Keep backdrop in sync when the user changes the wallpaper. */
   const onWallpaperChange = (e: Event): void => {
@@ -294,6 +301,7 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
     isEnabled: () => enabled,
     destroy: () => {
       stopLoop()
+      bgImg.onload = null
       ro.disconnect()
       cssVars.destroy()
       window.removeEventListener('resize', onWinResize)

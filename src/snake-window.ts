@@ -35,6 +35,7 @@ export class SnakeWindow {
 
   private timer: ReturnType<typeof window.setTimeout> | null = null
   private playing = false
+  private disposed = false
   private gameOverActive = false
 
   private cols = 28
@@ -156,6 +157,7 @@ export class SnakeWindow {
     this.el.addEventListener('keydown', e => this.onKey(e), true)
 
     requestAnimationFrame(() => {
+      if (this.disposed) return
       this.syncGridFromWrap()
       this.resetGame()
     })
@@ -223,6 +225,7 @@ export class SnakeWindow {
   }
 
   private resetGame(): void {
+    if (this.disposed) return
     this.stopLoop()
     this.gameOverActive = false
     this.syncGridFromWrap()
@@ -720,6 +723,7 @@ export class SnakeWindow {
   }
 
   dispose(): void {
+    this.disposed = true
     this.stopLoop()
     this.ro?.disconnect()
     this.ro = null
