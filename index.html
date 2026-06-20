@@ -25,8 +25,7 @@
           /\bview=(classic|static|resume)\b/i.test(search) ||
           /linkedin\.com|indeed\.com|glassdoor\.com|jobs\.lever\.co|greenhouse\.io/i.test(ref)
         if (recruiter) {
-          var qs = search && search.length > 0 ? search : ''
-          location.replace(location.origin + '/static/' + qs)
+          location.replace(location.origin + '/static/' + (search || ''))
           return
         }
         var ua = navigator.userAgent || ''

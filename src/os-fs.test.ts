@@ -351,9 +351,11 @@ describe('vfsMoveIntoDirectory', () => {
   })
 
   it('prevents moving a directory into itself', () => {
+    // The destination must actually exist inside the source, or this passes via
+    // "No such folder" without ever exercising the self-containment guard.
+    vfsMkdir(`${FS_HOME}/Desktop/sub`)
     const err = vfsMoveIntoDirectory(`${FS_HOME}/Desktop`, `${FS_HOME}/Desktop/sub`)
-    // Either "into itself" or the sub-dir doesn't exist — both are errors
-    expect(err).not.toBeNull()
+    expect(err).toMatch(/into itself/)
   })
 })
 

@@ -63,6 +63,14 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts'],
+      // Floor a few points under current (DOM-heavy tiles run thin in Node) so a
+      // real regression trips CI without flaking. Raise as coverage grows.
+      thresholds: {
+        statements: 40,
+        branches: 34,
+        functions: 37,
+        lines: 40,
+      },
     },
   },
 })

@@ -6,7 +6,7 @@
  */
 
 import { beforeEach, describe, it, expect } from 'vitest'
-import { vfsReset, vfsCd } from '../os-fs'
+import { vfsReset, vfsCd, vfsWrite, FS_HOME } from '../os-fs'
 import { vfsCommands } from './vfs-commands'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -85,11 +85,10 @@ describe('cat command', () => {
     expect(out.toLowerCase()).toContain('cat:')
   })
 
-  it('reads a file that exists in the default VFS', () => {
-    // The default VFS has a README in ~ — ls to find one
-    const lsOut = run('ls')
-    // If there's any file listed, cat it; otherwise just confirm cat does not crash
-    expect(lsOut).toBeDefined()
+  it('prints the contents of a file that exists', () => {
+    vfsWrite(`${FS_HOME}/cat-test.txt`, 'hello from cat')
+    const out = run('cat', [`${FS_HOME}/cat-test.txt`])
+    expect(out).toContain('hello from cat')
   })
 })
 

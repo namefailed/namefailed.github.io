@@ -22,6 +22,5 @@ export function shouldRedirectToStaticPortfolio(
 }
 
 export function staticPortfolioRedirectUrl(origin: string, search: string): string {
-  const qs = search && search.length > 0 ? search : ''
-  return `${origin}/static/${qs}`
+  return `${origin}/static/${search || ''}`
 }

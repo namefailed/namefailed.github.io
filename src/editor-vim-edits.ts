@@ -137,10 +137,8 @@ export function indentLinesText(
   const take = Math.max(1, Math.min(nLines, lines.length - li))
   for (let j = 0; j < take; j++) lines[li + j] = indent + (lines[li + j] ?? '')
   const next = lines.join('\n')
-  const curLineIdx = text.slice(0, p0).split('\n').length - 1
-  let newP = p0
-  if (curLineIdx >= li && curLineIdx < li + take) newP += indent.length
-  return { text: next, pos: newP }
+  // The caret sits on the first indented line, so it always shifts one indent right.
+  return { text: next, pos: p0 + indent.length }
 }
 
 /** `<<` — unindent `nLines` from caret line downward. */
