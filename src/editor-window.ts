@@ -45,7 +45,7 @@ export interface EditorWindowOptions {
 
 type EditMode = 'normal' | 'insert' | 'cmd'
 
-// Multi-key chord arm windows (ms) — how long we wait for the second key.
+// Multi-key chord arm windows (ms) — how long to wait for the second key.
 const SHIFT_CHORD_MS = 520 // >> / <<
 const G_CHORD_MS = 560 // gg
 const OP_CHORD_MS = 640 // dd / cc / yy
