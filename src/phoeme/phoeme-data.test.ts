@@ -24,7 +24,7 @@ describe('phoeme-data', () => {
     expect(PHOEME_PIPELINE.map((stage) => stage.title)).toEqual([
       'Capture',
       'Transcribe',
-      'Enrich',
+      'Process',
       'Route',
     ])
     expect(PHOEME_FEATURES).toHaveLength(9)
@@ -47,7 +47,8 @@ describe('phoeme-data', () => {
     expect(allCopy).toContain('Meeting Mode')
     expect(allCopy).toContain('semantic')
     expect(allCopy).toContain('MIT / Apache-2.0')
-    expect(allCopy).not.toMatch(/Ctrl\+Alt/i)
+    // Transcribe-in-Place documents its real global shortcut in the workflow copy.
+    expect(allCopy).toContain('Ctrl+Alt+I')
     expect(allCopy).not.toContain('speakrs')
   })
 })
