@@ -159,6 +159,8 @@ export function resumeWindowMainLines(): string[] {
 /**
  * Header block only (name + contact) — no leading/trailing blank lines so the tile
  * does not reserve a tall “dead” gap before PROFILE when lead/body sit in separate grids.
+ * The slice offsets here and in {@link resumeWindowBodyLines} index into
+ * resumeEducationEndLines(); keep them in step if that line layout changes.
  */
 export function resumeWindowLeadLines(): string[] {
   return resumeEducationEndLines().slice(1, 4)
