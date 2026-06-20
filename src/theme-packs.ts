@@ -1,3 +1,10 @@
+/**
+ * Runtime colour packs. Each pack is { id, label, terminal (xterm ITheme),
+ * matrixRain (8 tints), css (every --th-* property) }. Non-default packs spread
+ * `mochaCss` and override only the deltas, so mocha holds the full --th-* key set
+ * — add a token there and every pack inherits it. The settings picker and the
+ * `theme` command enumerate THEME_PACKS automatically.
+ */
 import type { ITheme } from '@xterm/xterm'
 
 export interface ThemePack {

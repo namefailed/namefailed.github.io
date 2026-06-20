@@ -1,3 +1,8 @@
+/**
+ * Terminal theme facade: re-exports the runtime theme controls and provides a
+ * static Catppuccin Mocha `theme` for xterm to use before initThemeFromStorage
+ * runs, plus the `c` ANSI escape helpers used across CLI output.
+ */
 import type { ITheme } from '@xterm/xterm'
 export {
   getActiveTerminalTheme,

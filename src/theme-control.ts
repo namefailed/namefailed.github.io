@@ -1,3 +1,7 @@
+/**
+ * Apply and persist the active colour pack: set every --th-* var on <html>, swap
+ * the live xterm palette, and remember the choice in localStorage (mrgrey-theme).
+ */
 import type { ITheme } from '@xterm/xterm'
 import { storageGet, storageSet } from './storage'
 import { THEME_PACKS, type ThemePack } from './theme-packs'

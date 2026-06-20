@@ -1,3 +1,8 @@
+/**
+ * Entry for the /phoeme/ Phoneme product page. Builds the whole marketing layout
+ * (hero, features, pipeline, comparison, FAQ) from phoeme-data.ts — no desktop
+ * imports. /phoneme/ redirects here; the /phoeme/ spelling is the canonical URL.
+ */
 import './phoeme.css'
 import { initBrochureTheme } from '../brochure-theme'
 import {

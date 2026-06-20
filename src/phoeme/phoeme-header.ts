@@ -1,3 +1,4 @@
+/** Sticky header for the Phoneme page — brand mark, back-to-mrgrey.site link, and theme switcher. */
 import { mountBrochureThemeSwitcher } from '../brochure-theme'
 import { PHOEME } from './phoeme-data'
 

@@ -1,3 +1,8 @@
+/**
+ * Entry for the /static/ brochure — the readable, scroll-based portfolio served to
+ * mobile and recruiter traffic. Builds hero, experience, projects, and contact from
+ * the shared content modules; no desktop/WM imports.
+ */
 import './static.css'
 import { mountBrochureBanner } from '../brochure-banner'
 import { initBrochureTheme } from '../brochure-theme'

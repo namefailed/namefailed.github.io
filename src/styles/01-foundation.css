@@ -1,3 +1,13 @@
+/*
+ * Foundation: CSS reset + the design-token system. Two families used everywhere:
+ *   --th-*  themeable — colours swapped at runtime by theme-control.ts from the
+ *           active pack (theme-packs.ts). The mocha values below are the boot
+ *           defaults until JS applies the saved pack. `--th-*-rgb` holds a raw
+ *           "r, g, b" triplet for rgba() / color-mix compositing.
+ *   --ui-*  structural — spacing, radius, type scale, durations, z-index. Fixed
+ *           across themes; defined later in this file.
+ */
+
 /* ── reset ─────────────────────────────────────────────────────────────────── */
 
 *, *::before, *::after {
