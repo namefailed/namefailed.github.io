@@ -118,8 +118,8 @@ export function initMatrixBg(canvas: HTMLCanvasElement, root: HTMLElement): Matr
   bgImg.decoding = 'async'
   // The default wallpaper is a remote PNG that usually hasn't decoded when the
   // one-shot static paint runs, so the reduced-motion path falls through to the
-  // gradient and never shows the photo. Repaint once the image lands; this also
-  // covers wallpaper changes (which reassign src and re-fire onload).
+  // gradient and never shows the photo. Repaint once it lands — also catches
+  // wallpaper swaps, which reassign src and re-fire this.
   bgImg.onload = (): void => {
     if (reduceMotion && enabled) paintStaticBackdrop()
   }

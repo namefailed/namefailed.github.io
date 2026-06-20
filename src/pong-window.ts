@@ -194,8 +194,8 @@ export class PongWindow {
       this.keys.delete(nk)
     }
     // A keyup never arrives if focus leaves mid-press (alt-tab, or focus moves
-    // to the mode <select>), so drop every held key when we lose focus —
-    // otherwise the paddle keeps drifting forever.
+    // to the mode <select>), so drop every held key on focus loss — otherwise
+    // the paddle keeps drifting forever.
     const clearKeys = (): void => this.keys.clear()
     this.el.addEventListener('keydown', kd, true)
     this.el.addEventListener('keyup', ku, true)

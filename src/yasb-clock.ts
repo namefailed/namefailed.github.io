@@ -1,4 +1,4 @@
-/** YASB status-bar clock — HH:MM display, ticking on the minute boundary. */
+/** YASB status-bar clock — minute resolution is enough, so tick on the minute boundary. */
 
 export function initYasbClock(elementId = 'yasb-clock-text'): void {
   const el = document.getElementById(elementId)

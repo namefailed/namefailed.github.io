@@ -340,7 +340,7 @@ export class RubikWindow {
     void this.updateStatus()
   }
 
-  private markPlayback(durationMs: number, status: string): void {
+  private markPlayback(durationMs: number, status: string, onDone?: () => void): void {
     this.busy = true
     void this.updateStatus(status)
     // The estimate assumes 1× tempo; the player actually animates at tempoScale
@@ -351,6 +351,7 @@ export class RubikWindow {
     window.setTimeout(() => {
       if (this.disposed) return
       this.busy = false
+      onDone?.()
       void this.updateStatus()
     }, wait)
   }
@@ -386,11 +387,12 @@ export class RubikWindow {
       player.alg = inverse
       player.jumpToStart()
       player.play()
-      this.markPlayback(Math.max(1200, this.countMoves(inverse) * 380), 'Solving…')
-      window.setTimeout(() => {
-        if (this.disposed) return
+      // Restore the setup anchor only when playback actually ends — markPlayback
+      // owns the (tempo-scaled) timing, so a slow solve no longer resets the
+      // anchor mid-animation.
+      this.markPlayback(Math.max(1200, this.countMoves(inverse) * 380), 'Solving…', () => {
         player.experimentalSetupAnchor = 'start'
-      }, Math.max(1200, this.countMoves(inverse) * 380))
+      })
     } catch {
       void this.updateStatus('Could not solve from current state')
     }

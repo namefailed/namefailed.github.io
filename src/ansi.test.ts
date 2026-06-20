@@ -134,9 +134,9 @@ describe('ansiToHtmlWithLinks — URL linkification', () => {
 
   it('never nests anchors when a host repeats in generated link text', () => {
     const out = ansiToHtmlWithLinks('full https://github.com/namefailed plus bare github.com/x')
-    // One anchor per URL…
+    // one anchor per URL
     expect((out.match(/<a /g) ?? []).length).toBe(2)
-    // …and no <a> opened inside another before its </a> (would corrupt the href).
+    // no <a> opened before the previous </a> — nesting corrupts the href
     expect(out).not.toMatch(/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<a\b/)
   })
 
