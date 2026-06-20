@@ -2,6 +2,9 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import {
   applyTheme,
   getThemeId,
+  getActivePack,
+  getActiveTerminalTheme,
+  getMatrixRainPalette,
   listThemeSummaries,
   initThemeFromStorage,
 } from './theme-control'
@@ -26,13 +29,20 @@ const mockDocEl = {
   },
 }
 
+const dispatchedEventTypes: string[] = []
+
 beforeAll(() => {
   ;(globalThis as unknown as { document: unknown }).document = {
     documentElement: mockDocEl,
   }
+  // Minimal CustomEvent shim so applyTheme's `new CustomEvent(...)` works in Node.
+  ;(globalThis as unknown as { CustomEvent: unknown }).CustomEvent = class {
+    type: string
+    constructor(type: string) { this.type = type }
+  }
   ;(globalThis as unknown as { window: unknown }).window = {
     localStorage,
-    dispatchEvent: () => {},
+    dispatchEvent: (e: { type: string }) => { dispatchedEventTypes.push(e.type) },
   }
 })
 
@@ -40,8 +50,10 @@ beforeEach(() => {
   localStorage.clear()
   mockDocEl.dataset = {}
   Object.keys(appliedCssVars).forEach(k => { delete appliedCssVars[k] })
+  dispatchedEventTypes.length = 0
   // Reset active theme to mocha between tests
   applyTheme('mocha')
+  dispatchedEventTypes.length = 0
 })
 
 describe('listThemeSummaries', () => {
@@ -131,5 +143,111 @@ describe('initThemeFromStorage', () => {
     localStorage.setItem('mrgrey-theme', 'made-up-theme')
     initThemeFromStorage()
     expect(getThemeId()).toBe('mocha')
+  })
+
+  it('round-trips a non-default choice through storage', () => {
+    // applyTheme writes the id to storage...
+    applyTheme('one-dark')
+    const persisted = localStorage.getItem('mrgrey-theme')
+    expect(persisted).toBe('one-dark')
+    // ...and a later init (e.g. fresh page load) reads exactly that back.
+    // Reset the in-memory active id without touching storage, proving init
+    // restores from the persisted value rather than leftover module state.
+    applyTheme('mocha')
+    localStorage.setItem('mrgrey-theme', persisted!)
+    initThemeFromStorage()
+    expect(getThemeId()).toBe('one-dark')
+  })
+
+  it('treats an empty stored value as no preference (mocha)', () => {
+    localStorage.setItem('mrgrey-theme', '')
+    initThemeFromStorage()
+    expect(getThemeId()).toBe('mocha')
+  })
+})
+
+describe('getActivePack', () => {
+  it('returns the mocha pack by default', () => {
+    const pack = getActivePack()
+    expect(pack.id).toBe('mocha')
+    expect(pack).toBe(THEME_PACKS.find(p => p.id === 'mocha'))
+  })
+
+  it('returns the pack matching the last applied theme', () => {
+    applyTheme('nord')
+    const pack = getActivePack()
+    expect(pack.id).toBe('nord')
+    expect(pack.label).toBe('Nord')
+    expect(pack).toBe(THEME_PACKS.find(p => p.id === 'nord'))
+  })
+
+  it('returns the exact pack object for every known theme', () => {
+    for (const known of THEME_PACKS) {
+      applyTheme(known.id)
+      expect(getActivePack()).toBe(known)
+    }
+  })
+})
+
+describe('getActiveTerminalTheme', () => {
+  it('returns the active pack terminal palette (mocha default)', () => {
+    const terminal = getActiveTerminalTheme()
+    expect(terminal).toBe(THEME_PACKS.find(p => p.id === 'mocha')!.terminal)
+    expect(terminal.background).toBe('#1e1e2e')
+  })
+
+  it('tracks the terminal palette of the applied theme', () => {
+    applyTheme('dracula')
+    const terminal = getActiveTerminalTheme()
+    expect(terminal).toBe(THEME_PACKS.find(p => p.id === 'dracula')!.terminal)
+    expect(terminal.background).toBe('#282a36')
+    expect(terminal.foreground).toBe('#f8f8f2')
+  })
+})
+
+describe('getMatrixRainPalette', () => {
+  it('returns the active pack rain tints (mocha default)', () => {
+    const palette = getMatrixRainPalette()
+    expect(palette).toBe(THEME_PACKS.find(p => p.id === 'mocha')!.matrixRain)
+    expect(palette).toHaveLength(8)
+  })
+
+  it('tracks the rain palette of the applied theme', () => {
+    applyTheme('gruvbox')
+    const palette = getMatrixRainPalette()
+    expect(palette).toBe(THEME_PACKS.find(p => p.id === 'gruvbox')!.matrixRain)
+    expect(palette[0]).toBe('#fb4934')
+  })
+})
+
+describe('applyTheme side effects', () => {
+  it('dispatches the mrgrey-theme-change event on success', () => {
+    applyTheme('tokyo-night')
+    expect(dispatchedEventTypes).toContain('mrgrey-theme-change')
+  })
+
+  it('does not dispatch any event for an unknown id', () => {
+    applyTheme('not-a-theme')
+    expect(dispatchedEventTypes).toEqual([])
+  })
+
+  it('applies every css var from the pack to documentElement', () => {
+    const pack = THEME_PACKS.find(p => p.id === 'dracula')!
+    applyTheme('dracula')
+    for (const [key, val] of Object.entries(pack.css)) {
+      expect(appliedCssVars[key]).toBe(val)
+    }
+  })
+
+  it('leaves css vars untouched for an unknown id', () => {
+    Object.keys(appliedCssVars).forEach(k => { delete appliedCssVars[k] })
+    applyTheme('not-a-theme')
+    expect(Object.keys(appliedCssVars)).toHaveLength(0)
+  })
+
+  it('does not persist an unknown id to storage', () => {
+    localStorage.setItem('mrgrey-theme', 'nord')
+    applyTheme('not-a-theme')
+    expect(localStorage.getItem('mrgrey-theme')).toBe('nord')
   })
 })
