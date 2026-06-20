@@ -50,6 +50,21 @@ export class PongWindow {
   private readonly SPEED_MAX = 13.8
   private readonly SPEEDUP_HIT = 1.045
 
+  /** Vertical "english" imparted by where the ball strikes the paddle. */
+  private readonly ENGLISH_GAIN = 4.4
+  /** Small speed bump if a rebound would otherwise stall horizontally. */
+  private readonly ANTI_STALL_NUDGE = 1.05
+  /** CPU ball-trajectory lookahead steps (enough to cross the court). */
+  private readonly AI_LOOKAHEAD_STEPS = 700
+  /** Ball vx at which the CPU plays at full urgency. */
+  private readonly AI_URGENCY_VX = 8.5
+  /** CPU paddle step: AI_STEP_MIN at rest, up to +AI_STEP_RANGE at full urgency. */
+  private readonly AI_STEP_MIN = 5.4
+  private readonly AI_STEP_RANGE = 7.2
+  /** Aim jitter so the CPU isn't perfect; fades out as urgency rises. */
+  private readonly AI_JITTER = 2.4
+  private readonly AI_JITTER_FALLOFF = 0.88
+
   private mode: PongMode = 'cpu'
   private ball = {
     x: LOGICAL_W / 2,
@@ -298,7 +313,7 @@ export class PongWindow {
 
     const minHorizAbs = Math.max(sp * this.MIN_AXIAL_RATIO, this.SPEED_MIN * this.MIN_AXIAL_RATIO)
     const vyClamp = Math.sqrt(Math.max(0, sp * sp - minHorizAbs * minHorizAbs))
-    let vy = Math.max(-vyClamp, Math.min(vyClamp, this.ball.vy + rel * 4.4))
+    let vy = Math.max(-vyClamp, Math.min(vyClamp, this.ball.vy + rel * this.ENGLISH_GAIN))
     const vxMag = Math.sqrt(Math.max(sp * sp - vy * vy, minHorizAbs * minHorizAbs))
     let vx = (towardRightAfter ? 1 : -1) * vxMag
 
@@ -312,7 +327,7 @@ export class PongWindow {
       towardRightAfter ? this.ball.vx <= 0 :
       this.ball.vx >= 0
     ) {
-      vx = towardRightAfter ? this.SPEED_MIN * 1.05 : -this.SPEED_MIN * 1.05
+      vx = towardRightAfter ? this.SPEED_MIN * this.ANTI_STALL_NUDGE : -this.SPEED_MIN * this.ANTI_STALL_NUDGE
       out = this.clampSpeedAndAxes(vx, this.ball.vy)
       this.ball.vx = out.vx
       this.ball.vy = out.vy
@@ -335,7 +350,7 @@ export class PongWindow {
       const topMargin = this.EDGE_PAD
       const botMargin = this.h - this.EDGE_PAD
 
-      for (let i = 0; i < 700; i++) {
+      for (let i = 0; i < this.AI_LOOKAHEAD_STEPS; i++) {
         const nextY = y + vy
         if (nextY < topMargin || nextY > botMargin) {
           vy *= -1
@@ -353,11 +368,11 @@ export class PongWindow {
       target = this.h / 2 - this.paddleH / 2 + Math.sin(performance.now() / 820) * 22
     }
     const err = target - this.rightY
-    const urgency = Math.min(1, Math.abs(this.ball.vx) / 8.5)
-    const maxStep = 5.4 + urgency * 7.2
+    const urgency = Math.min(1, Math.abs(this.ball.vx) / this.AI_URGENCY_VX)
+    const maxStep = this.AI_STEP_MIN + urgency * this.AI_STEP_RANGE
     let next = this.rightY + Math.sign(err) * Math.min(Math.abs(err), maxStep)
     if (Math.abs(err) < 5 && Math.abs(this.ball.vx) > 5.5)
-      next += (Math.random() - 0.5) * 2.4 * (1 - urgency * 0.88)
+      next += (Math.random() - 0.5) * this.AI_JITTER * (1 - urgency * this.AI_JITTER_FALLOFF)
     return Math.max(pad, Math.min(maxY, next))
   }
 
