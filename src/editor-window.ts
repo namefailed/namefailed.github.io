@@ -86,6 +86,7 @@ export class EditorWindow {
   /** First `g` in `gg`. */
   private gArm = false
   private gArmTimer: ReturnType<typeof window.setTimeout> | null = null
+  private flashTimer: ReturnType<typeof window.setTimeout> | null = null
   /** Digits buffered before an operator/motion (`3dd`, `15G`, …). */
   private countDigits = ''
   /** `r` / `{count}r`, awaiting the replacement glyph */
@@ -251,6 +252,7 @@ export class EditorWindow {
     this.clearPendingDy()
     this.clearShiftChordArms()
     this.disarmGChord()
+    if (this.flashTimer != null) window.clearTimeout(this.flashTimer)
   }
 
   /** Disarm the pending `g` of a `gg` chord and cancel its timeout. */
@@ -570,7 +572,11 @@ export class EditorWindow {
     this.statusEl.className =
       'editor-status editor-status--msg' + (isErr ? ' editor-status--error' : '')
     this.statusEl.textContent = msg
-    window.setTimeout(() => {
+    // Track the timer so a newer flash resets it (rather than the older one
+    // clearing the newer message early) and dispose() can cancel it.
+    if (this.flashTimer != null) window.clearTimeout(this.flashTimer)
+    this.flashTimer = window.setTimeout(() => {
+      this.flashTimer = null
       this.statusEl.classList.remove('editor-status--msg', 'editor-status--error')
       this.syncStatus()
     }, STATUS_FLASH_MS)

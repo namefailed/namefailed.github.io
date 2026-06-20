@@ -1,7 +1,7 @@
 /** File browser over the fake VFS: navigate, rename, delete, clipboard cut/copy/paste. */
 
 import {
-  vfsCat,
+  vfsReadRaw,
   vfsFormatPath,
   vfsListEntries,
   vfsNormalize,
@@ -546,12 +546,14 @@ export class FileExplorerWindow {
   private setSelectedAsWallpaper(): void {
     const abs = this.selectedAbs()
     if (!abs) return
-    const url = vfsCat(abs)
-    if (!url?.trim()) {
+    // Read raw, not vfsCat — its display strings ('(empty file)', 'cat: …')
+    // would otherwise be taken as the wallpaper URL.
+    const res = vfsReadRaw(abs)
+    if (!res.ok || !res.body.trim()) {
       this.pushStatusWhenIdle('Wallpaper file is empty', true)
       return
     }
-    setWallpaper(url.trim())
+    setWallpaper(res.body.trim())
     this.pushStatusWhenIdle('Wallpaper applied ✓')
   }
 
