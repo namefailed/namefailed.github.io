@@ -210,6 +210,29 @@ export class VimInput {
     return this.cur   // not found — don't move
   }
 
+  /**
+   * Repeat an f/F/t/T motion for `;` / `,`. f/F just re-run findChar, but t/T
+   * leave the caret right next to the previous target, so a naive repeat finds
+   * that same char and never advances — step over the adjacent hit first.
+   */
+  private repeatFind(ch: string, forward: boolean, inclusive: boolean): number {
+    if (inclusive) return this.findChar(ch, forward, inclusive)
+    if (forward) {
+      let i = this.cur + 1
+      if (this.buf[i] === ch) i++
+      for (; i < this.buf.length; i++) {
+        if (this.buf[i] === ch) return i - 1
+      }
+    } else {
+      let i = this.cur - 1
+      if (this.buf[i] === ch) i--
+      for (; i >= 0; i--) {
+        if (this.buf[i] === ch) return i + 1
+      }
+    }
+    return this.cur
+  }
+
   // ── operator execution ─────────────────────────────────────────────────────
 
   private execOp(op: PendingOp, lo: number, hi: number): void {
@@ -449,7 +472,7 @@ export class VimInput {
       const { type, ch } = this.lastFT
       const forward   = type === 'f' || type === 't'
       const inclusive = type === 'f' || type === 'F'
-      this.cur = this.findChar(ch, forward, inclusive)
+      this.cur = this.repeatFind(ch, forward, inclusive)
       return { type: 'rendered' }
     }
 
@@ -459,7 +482,7 @@ export class VimInput {
       const { type, ch } = this.lastFT
       const forward   = type === 'F' || type === 'T'   // reversed
       const inclusive = type === 'f' || type === 'F'
-      this.cur = this.findChar(ch, forward, inclusive)
+      this.cur = this.repeatFind(ch, forward, inclusive)
       return { type: 'rendered' }
     }
 

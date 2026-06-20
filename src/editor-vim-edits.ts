@@ -99,11 +99,16 @@ export function pasteYankText(
 ): BufferEditResult | null {
   if (!yank) return null
   const { start, end } = lineBounds(text, pos)
-  const ins = afterLine
-    ? end < text.length && text[end] === '\n'
-      ? end + 1
-      : text.length
-    : start
+  // `p` on the final line, which has no trailing newline: open a real line
+  // below instead of gluing the yank onto the current line. Synthesize the
+  // separator and drop the yank's own trailing newline so we don't leave a
+  // blank last line.
+  if (afterLine && !(end < text.length && text[end] === '\n')) {
+    const sep = text.length > 0 ? '\n' : ''
+    const body = sep + (yank.endsWith('\n') ? yank.slice(0, -1) : yank)
+    return { text: text + body, pos: text.length + sep.length }
+  }
+  const ins = afterLine ? end + 1 : start
   const next = text.slice(0, ins) + yank + text.slice(ins)
   return { text: next, pos: ins + yank.length - 1 }
 }

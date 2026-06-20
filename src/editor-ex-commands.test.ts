@@ -18,6 +18,7 @@ describe('parseEditorExCommand', () => {
     expect(parseEditorExCommand(':run')).toEqual({ type: 'run-p5' })
     expect(parseEditorExCommand(':e notes.txt')).toEqual({ type: 'edit', path: 'notes.txt' })
     expect(parseEditorExCommand(':edit ~/docs/a.md')).toEqual({ type: 'edit', path: '~/docs/a.md' })
+    expect(parseEditorExCommand(':e! notes.txt')).toEqual({ type: 'edit', path: 'notes.txt', force: true })
   })
 
   it('returns help for empty or help', () => {

@@ -455,12 +455,17 @@ export class EditorWindow {
         this.leaveCmd()
         return
       case 'edit':
+        if (this.dirty && !action.force) {
+          this.flashStatus('No write since last change (use :e! to force)', true)
+          this.leaveCmd()
+          return
+        }
         this.loadFile(action.path)
         this.leaveCmd()
         return
       case 'help':
         this.flashStatus(
-          ':w :wq :q :q! :e path :run (F5 → play in p5) — NORMAL: hjkl ^ 0 $ · G gg · f F t T ; , · >> << · ~ s C Y · r J D · x X · dd yy p · u · ^R · Ctrl-f/b page · i I a A o O · w b e · counts · Esc',
+          ':w :wq :q :q! :e path :e! path :run (F5 → play in p5) — NORMAL: hjkl ^ 0 $ · G gg · f F t T ; , · >> << · ~ s C Y · r J D · x X · dd yy p · u · ^R · Ctrl-f/b page · i I a A o O · w b e · counts · Esc',
           false,
         )
         this.leaveCmd()

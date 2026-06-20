@@ -116,10 +116,11 @@ export function wordBackPos(text: string, pos: number): number {
 export function wordEndForwardPos(text: string, pos: number): number {
   if (text.length === 0) return 0
   let p = Math.min(Math.max(0, pos), text.length - 1)
-  if (!isWordChar(text[p]!)) {
-    while (p < text.length && !isWordChar(text[p]!)) p++
-    if (p >= text.length) return text.length - 1
-  }
+  // Step off the current char first; otherwise `e` (and `2e`, `3e`) stalls
+  // whenever the caret already sits on a word-end.
+  if (p < text.length - 1) p++
+  while (p < text.length && !isWordChar(text[p]!)) p++
+  if (p >= text.length) return text.length - 1
   while (p < text.length - 1 && isWordChar(text[p + 1]!)) p++
   return p
 }

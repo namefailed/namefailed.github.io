@@ -142,7 +142,8 @@ describe('word repeats', () => {
   })
 
   it('wordEndForwardRepeat', () => {
-    expect(wordEndForwardRepeat(text, 4, 2)).toBe(6)
+    // From 'bar' start (4): first `e` lands on 'bar' end (6), second on 'baz' end (10).
+    expect(wordEndForwardRepeat(text, 4, 2)).toBe(10)
   })
 })
 

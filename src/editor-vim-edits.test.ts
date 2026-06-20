@@ -58,6 +58,12 @@ describe('pasteYankText', () => {
     const result = pasteYankText('a\nb', 2, 'Y\n', false)
     expect(result?.text).toBe('a\nY\nb')
   })
+
+  it('opens a new line below when p lands on the last, newline-less line', () => {
+    const result = pasteYankText('a\nb', 2, 'Y\n', true)
+    expect(result?.text).toBe('a\nb\nY')
+    expect(result?.pos).toBe(4)
+  })
 })
 
 describe('indentLinesText', () => {

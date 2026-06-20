@@ -8,7 +8,7 @@ export type EditorExAction =
   | { type: 'quit-force' }
   | { type: 'write-quit' }
   | { type: 'run-p5' }
-  | { type: 'edit'; path: string }
+  | { type: 'edit'; path: string; force?: true }
   | { type: 'help' }
   | { type: 'unknown'; line: string }
 
@@ -24,8 +24,11 @@ export function parseEditorExCommand(raw: string): EditorExAction {
   if (lower === 'wq' || lower === 'x' || lower === 'xit') return { type: 'write-quit' }
   if (lower === 'run' || lower === 'p5') return { type: 'run-p5' }
 
-  const em = /^e(?:dit)?\s+(.+)$/.exec(line)
-  if (em) return { type: 'edit', path: em[1].trim() }
+  const em = /^e(?:dit)?(!)?\s+(.+)$/.exec(line)
+  if (em) {
+    const path = em[2]!.trim()
+    return em[1] ? { type: 'edit', path, force: true } : { type: 'edit', path }
+  }
 
   if (line === '' || lower === 'help') return { type: 'help' }
 
