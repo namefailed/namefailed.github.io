@@ -553,7 +553,7 @@ a.yasb-btn-classic:hover {
 
 .toast-stack {
   position: fixed;
-  top: 52px; /* below the ~44px YASB bar + 8px gap */
+  top: 52px; /* clear of the YASB bar with a small gap */
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--ui-z-yasb-popover);

@@ -26,9 +26,8 @@ export const FOLDER_POPUP_MARGIN_PX = 8
 export const FOLDER_POPUP_GAP_PX = 10
 
 /**
- * Pick above vs below from the space around the anchor (which already accounts
- * for the popup's own height), then clamp to the viewport. Shared by all three
- * folder tiles.
+ * Pick above vs below by comparing the space around the anchor against the
+ * popup's own height, then clamp to the viewport. Shared by all three folder tiles.
  */
 export function computeFolderPopupPosition(
   anchor: BoxRect,
