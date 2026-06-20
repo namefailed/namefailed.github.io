@@ -58,7 +58,7 @@
   flex-shrink: 0;
   background: none;
   border: none;
-  color: var(--th-subtext0, #a6adc8);
+  color: var(--th-text-muted);
   cursor: pointer;
   font-size: 10px;
   padding: 2px 5px;
@@ -101,7 +101,7 @@
 
 .welcome-guide-intro {
   margin: 0 0 12px;
-  color: var(--th-subtext1, #bac2de);
+  color: var(--th-text-muted);
   line-height: 1.5;
   font-size: 11px;
 }
@@ -140,7 +140,7 @@
   border-radius: 3px;
   font-family: inherit;
   font-size: 11px;
-  color: var(--th-green, #a6e3a1);
+  color: var(--th-badge-normal);
 }
 
 .welcome-guide-tip kbd {
@@ -153,11 +153,11 @@
 }
 
 .wg-tip--done {
-  color: var(--th-green, #a6e3a1);
+  color: var(--th-badge-normal);
 }
 
 .wg-tip--done .wg-bullet {
-  color: var(--th-green, #a6e3a1);
+  color: var(--th-badge-normal);
 }
 
 @keyframes desktop-tile-in {
@@ -529,7 +529,7 @@
   font: inherit;
   font-size: 12px;
   line-height: 1;
-  color: var(--th-subtext0, #a6adc8);
+  color: var(--th-text-muted);
   background: none;
   border: none;
   border-radius: 4px;
@@ -574,7 +574,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--th-subtext0, #a6adc8);
+  color: var(--th-text-muted);
 }
 
 .desktop-personalize-theme-select {
@@ -781,7 +781,7 @@
   font-size: 11px;
   line-height: 1.45;
   letter-spacing: 0.02em;
-  color: var(--th-subtext1, #bac2de);
+  color: var(--th-text-muted);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   pointer-events: auto;
 }

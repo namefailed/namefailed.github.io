@@ -295,10 +295,17 @@ function mountFaq(): HTMLElement {
         const otherPanelId = otherButton.getAttribute('aria-controls')
         const otherPanel = otherPanelId ? list.querySelector<HTMLElement>(`#${otherPanelId}`) : null
         otherButton.setAttribute('aria-expanded', 'false')
-        otherPanel?.setAttribute('aria-hidden', 'true')
+        if (otherPanel) {
+          otherPanel.setAttribute('aria-hidden', 'true')
+          otherPanel.style.maxHeight = ''
+        }
       })
       button.setAttribute('aria-expanded', String(open))
       panelWrap.setAttribute('aria-hidden', String(!open))
+      // Drive the open height off the real content so long answers never clip;
+      // the CSS max-height is only a no-JS fallback. Closing clears the inline
+      // value so the aria-hidden rule animates back to 0.
+      panelWrap.style.maxHeight = open ? `${panelWrap.scrollHeight}px` : ''
     }
 
     button.addEventListener('click', () => {

@@ -9,7 +9,7 @@
   --pm-edge-strong: var(--th-surface1);
   --pm-text: var(--th-text);
   --pm-muted: var(--th-subtext);
-  --pm-dim: var(--th-surface2);
+  --pm-dim: var(--th-subtext);
   --pm-accent: var(--th-accent);
   --pm-accent-rgb: var(--th-accent-rgb);
   --pm-blue: var(--th-blue);
@@ -56,7 +56,7 @@ body {
   background:
     radial-gradient(circle at 16% -10%, rgba(var(--pm-accent-rgb), 0.2), transparent 34rem),
     radial-gradient(circle at 86% 8%, rgba(var(--pm-blue-rgb), 0.15), transparent 30rem),
-    linear-gradient(180deg, var(--pm-bg) 0%, #0b0c13 55%, var(--pm-bg-soft) 100%);
+    linear-gradient(180deg, var(--pm-bg) 0%, color-mix(in srgb, var(--pm-bg) 78%, #000) 55%, var(--pm-bg-soft) 100%);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -732,7 +732,7 @@ summary:focus-visible {
   background: var(--pm-card);
   backdrop-filter: blur(16px) saturate(1.1);
   -webkit-backdrop-filter: blur(16px) saturate(1.1);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--th-crust) 40%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--th-mantle) 40%, transparent);
 }
 
 .pm-workflow-card {
@@ -995,6 +995,8 @@ summary:focus-visible {
   max-height: 0;
 }
 
+/* No-JS fallback cap; main.ts sets an exact max-height from scrollHeight on
+ * open so real answers never clip. */
 .pm-faq-question[aria-expanded='true'] + .pm-faq-answer-wrap,
 .pm-faq-answer-wrap[aria-hidden='false'] {
   max-height: 24rem;
@@ -1091,7 +1093,7 @@ summary:focus-visible {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--th-crust) 25%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--th-mantle) 25%, transparent);
 }
 
 .pm-footer-brand {

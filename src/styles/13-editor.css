@@ -84,6 +84,8 @@
 }
 .editor-textarea::-webkit-scrollbar-thumb:hover {
   background: var(--th-scroll-thumb-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .editor-cmdline {

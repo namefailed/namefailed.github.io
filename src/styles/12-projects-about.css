@@ -236,16 +236,16 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--th-green, #a6e3a1);
-  background: rgba(var(--th-green-rgb, 166, 227, 161), 0.12);
-  border: 1px solid rgba(var(--th-green-rgb, 166, 227, 161), 0.35);
+  color: var(--th-badge-normal);
+  background: color-mix(in srgb, var(--th-badge-normal) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--th-badge-normal) 35%, transparent);
   border-radius: 999px;
 }
 
 .about-status-hint {
   margin: 0;
   font-size: 11px;
-  color: var(--th-subtext1);
+  color: var(--th-text-muted);
 }
 
 .contact-window .contact-text-col .win-line:first-child {

@@ -132,6 +132,14 @@ describe('ansiToHtmlWithLinks — URL linkification', () => {
     expect(matches.length).toBe(1)
   })
 
+  it('never nests anchors when a host repeats in generated link text', () => {
+    const out = ansiToHtmlWithLinks('full https://github.com/namefailed plus bare github.com/x')
+    // One anchor per URL…
+    expect((out.match(/<a /g) ?? []).length).toBe(2)
+    // …and no <a> opened inside another before its </a> (would corrupt the href).
+    expect(out).not.toMatch(/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<a\b/)
+  })
+
   it('strips trailing punctuation from URLs', () => {
     const out = ansiToHtmlWithLinks('see https://example.com/foo.')
     // The dot should not be part of the href

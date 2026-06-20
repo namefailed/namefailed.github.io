@@ -6,20 +6,20 @@
 
 :root {
   --plain-bg:            var(--th-mantle);
-  --plain-bg-bot:        var(--th-crust);
+  --plain-bg-bot:        var(--th-mantle);
   --plain-surface:       var(--th-surface0);
   --plain-surface-hover: var(--th-surface1);
   --plain-edge:          var(--th-surface0);
   --plain-edge-hover:    var(--th-accent);
   --plain-text:          var(--th-text);
   --plain-muted:         var(--th-subtext);
-  --plain-dim:           var(--th-surface2);
+  --plain-dim:           var(--th-subtext);
   --plain-accent:        var(--th-accent);
   --plain-accent-strong: var(--th-accent);
   --plain-teal:          var(--th-teal);
-  --plain-green:         var(--th-green);
+  --plain-green:         var(--th-badge-normal);
   --plain-link:          var(--th-blue);
-  --plain-yellow:        var(--th-yellow);
+  --plain-yellow:        var(--th-dot-min);
   --plain-max:           42rem;
   --plain-max-prose:     40rem;
   --plain-gutter:        clamp(1.1rem, 5vw, 2rem);
@@ -836,7 +836,7 @@ a:hover { color: var(--plain-accent); }
     padding-bottom: 4rem;
   }
 
-  .plain-avatar { --plain-avatar: 80px; }
+  :root { --plain-avatar: 80px; }
 
   .plain-name { letter-spacing: -0.03em; }
 
