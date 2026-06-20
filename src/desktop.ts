@@ -260,7 +260,7 @@ export class Desktop {
       ...tileLimitHost(this.wm()),
       onWindowBumped: win => {
         const { label } = taskbarIconMeta(win.command)
-        pushToast(`Window limit (6) — minimized “${label}”`, 4800, 'toast--warn')
+        pushToast(`Window limit (${this.layout.maxVisible}) — minimized “${label}”`, 4800, 'toast--warn')
       },
     })
   }

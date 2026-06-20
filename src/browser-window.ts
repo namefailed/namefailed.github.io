@@ -63,6 +63,9 @@ export class BrowserWindow {
   private frame: HTMLIFrameElement
   private urlInput: HTMLInputElement
   private statusEl: HTMLElement
+  /** Identifies the current transient status message, so a delayed clear only
+   *  fires when a newer message hasn't replaced it (instead of matching text). */
+  private statusKey: string | null = null
   private toolbarRoot: HTMLElement
   private reloadBtn: HTMLButtonElement
   private siteBadge: HTMLElement
@@ -218,13 +221,11 @@ export class BrowserWindow {
 
     this.frame.addEventListener('load', () => {
       this.setToolbarLoading(false)
-      const s = this.statusEl.textContent
-      if (
-        !s?.startsWith('Address copied') &&
-        !s?.startsWith('Copy blocked') &&
-        !s?.startsWith('Nothing to copy')
-      ) {
+      // A load clears transient load messages but leaves copy/paste feedback on
+      // screen until its own timer expires.
+      if (this.statusKey !== 'copy') {
         this.statusEl.textContent = ''
+        this.statusKey = null
       }
     })
 
@@ -263,6 +264,21 @@ export class BrowserWindow {
     }
   }
 
+  private setStatus(text: string, key: string): void {
+    this.statusEl.textContent = text
+    this.statusKey = key
+  }
+
+  /** Clear the status after `ms`, but only if it still belongs to `key`. */
+  private clearStatusAfter(key: string, ms: number): void {
+    window.setTimeout(() => {
+      if (this.statusKey === key) {
+        this.statusEl.textContent = ''
+        this.statusKey = null
+      }
+    }, ms)
+  }
+
   /** Best-effort abort of in-flight navigation (iframes + cross-origin are messy). */
   private stopFrameNavigation(): void {
     this.setToolbarLoading(false)
@@ -274,36 +290,25 @@ export class BrowserWindow {
     this.frame.removeAttribute('src')
     this.frame.removeAttribute('srcdoc')
     this.frame.srcdoc = STOPPED_SRCDOC
-    this.statusEl.textContent = 'Load stopped — address unchanged; press Reload or Go.'
-    window.setTimeout(() => {
-      if (this.statusEl.textContent?.startsWith('Load stopped')) this.statusEl.textContent = ''
-    }, 4200)
+    this.setStatus('Load stopped — address unchanged; press Reload or Go.', 'stopped')
+    this.clearStatusAfter('stopped', 4200)
   }
 
   private async copyAddress(): Promise<void> {
     const u = this.currentUrl === 'about:blank' ? this.urlInput.value.trim() : this.currentUrl
     if (!u || u === 'about:blank') {
-      this.statusEl.textContent = 'Nothing to copy — enter a URL first.'
-      window.setTimeout(() => {
-        if (this.statusEl.textContent?.startsWith('Nothing')) this.statusEl.textContent = ''
-      }, 2200)
+      this.setStatus('Nothing to copy — enter a URL first.', 'copy')
+      this.clearStatusAfter('copy', 2200)
       return
     }
     const text = u.startsWith('http') ? u : normalizeBrowserUrl(u)
     try {
       await navigator.clipboard.writeText(text)
-      this.statusEl.textContent = 'Address copied.'
+      this.setStatus('Address copied.', 'copy')
     } catch {
-      this.statusEl.textContent = 'Copy blocked — select the address bar manually.'
+      this.setStatus('Copy blocked — select the address bar manually.', 'copy')
     }
-    window.setTimeout(() => {
-      if (
-        this.statusEl.textContent === 'Address copied.' ||
-        this.statusEl.textContent?.startsWith('Copy blocked')
-      ) {
-        this.statusEl.textContent = ''
-      }
-    }, 2000)
+    this.clearStatusAfter('copy', 2000)
   }
 
   private syncSiteBadge(): void {
@@ -360,10 +365,8 @@ export class BrowserWindow {
   private openInSystemTab(): void {
     const u = this.currentUrl === 'about:blank' ? normalizeBrowserUrl(this.urlInput.value) : this.currentUrl
     if (u === 'about:blank') {
-      this.statusEl.textContent = 'Enter a URL first, or use Go.'
-      window.setTimeout(() => {
-        if (this.statusEl.textContent?.startsWith('Enter')) this.statusEl.textContent = ''
-      }, 2400)
+      this.setStatus('Enter a URL first, or use Go.', 'go')
+      this.clearStatusAfter('go', 2400)
       return
     }
     window.open(u, '_blank', 'noopener,noreferrer')
@@ -480,11 +483,8 @@ export class BrowserWindow {
     try {
       this.frame.contentWindow?.history.go(delta)
     } catch {
-      this.statusEl.textContent =
-        'History is limited for cross-origin pages — use the address bar.'
-      window.setTimeout(() => {
-        if (this.statusEl.textContent?.startsWith('History')) this.statusEl.textContent = ''
-      }, 3200)
+      this.setStatus('History is limited for cross-origin pages — use the address bar.', 'history')
+      this.clearStatusAfter('history', 3200)
     }
   }
 

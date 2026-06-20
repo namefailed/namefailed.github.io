@@ -45,6 +45,13 @@ export interface EditorWindowOptions {
 
 type EditMode = 'normal' | 'insert' | 'cmd'
 
+// Multi-key chord arm windows (ms) — how long we wait for the second key.
+const SHIFT_CHORD_MS = 520 // >> / <<
+const G_CHORD_MS = 560 // gg
+const OP_CHORD_MS = 640 // dd / cc / yy
+/** How long a status flash stays before it auto-clears. */
+const STATUS_FLASH_MS = 3800
+
 /**
  * Map a keydown to the char it should insert: a single char as-is, Enter → \n,
  * and (with allowTab) Tab → \t. Modified keys (Ctrl/Meta/Alt) never produce one.
@@ -269,7 +276,7 @@ export class EditorWindow {
     this.shiftChordTimer = window.setTimeout(() => {
       this.shiftChordTimer = null
       this.shiftGtArmed = false
-    }, 520)
+    }, SHIFT_CHORD_MS)
   }
 
   private armShiftLtChord(): void {
@@ -278,7 +285,7 @@ export class EditorWindow {
     this.shiftChordTimer = window.setTimeout(() => {
       this.shiftChordTimer = null
       this.shiftLtArmed = false
-    }, 520)
+    }, SHIFT_CHORD_MS)
   }
 
   private clearPendingDy(): void {
@@ -294,7 +301,7 @@ export class EditorWindow {
     this.pendingChordTimer = window.setTimeout(() => {
       this.pendingChordTimer = null
       this.pendingOp = null
-    }, 640)
+    }, OP_CHORD_MS)
   }
 
   private consumeCount(defaultN = 1): number {
@@ -555,7 +562,7 @@ export class EditorWindow {
     window.setTimeout(() => {
       this.statusEl.classList.remove('editor-status--msg', 'editor-status--error')
       this.syncStatus()
-    }, 3800)
+    }, STATUS_FLASH_MS)
   }
 
   private syncTitle(): void {
@@ -899,7 +906,7 @@ export class EditorWindow {
       window.setTimeout(() => {
         this.gArm = false
         this.refreshModeMeta()
-      }, 560)
+      }, G_CHORD_MS)
       this.refreshModeMeta()
       return
     }

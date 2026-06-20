@@ -476,25 +476,25 @@ export class SnakeWindow {
     this.draw()
   }
 
-  private cc(x: number, y: number, cs: number): { ox: number; oy: number } {
+  private cellCenter(x: number, y: number, cs: number): { ox: number; oy: number } {
     return { ox: x * cs + cs * 0.5, oy: y * cs + cs * 0.5 }
   }
 
   private buildSnakePath(cs: number, gw: number, gh: number): Path2D {
     const p = new Path2D()
     if (this.snake.length === 0) return p
-    const { ox, oy } = this.cc(this.snake[0]!.x, this.snake[0]!.y, cs)
+    const { ox, oy } = this.cellCenter(this.snake[0]!.x, this.snake[0]!.y, cs)
     const oxClamp = Math.min(gw - 1, Math.max(1, ox))
     const oyClamp = Math.min(gh - 1, Math.max(1, oy))
     p.moveTo(oxClamp, oyClamp)
     for (let i = 1; i < this.snake.length; i++) {
-      const c = this.cc(this.snake[i]!.x, this.snake[i]!.y, cs)
+      const c = this.cellCenter(this.snake[i]!.x, this.snake[i]!.y, cs)
       p.lineTo(Math.min(gw - 1, Math.max(1, c.ox)), Math.min(gh - 1, Math.max(1, c.oy)))
     }
     return p
   }
 
-  private cssColor(key: string, fallback: string): string {
+  private themeColor(key: string, fallback: string): string {
     return this.cssVars.get(key, fallback)
   }
 
@@ -517,16 +517,16 @@ export class SnakeWindow {
     const ctx = this.ctx
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    const bg0 = this.cssColor('--snake-bg-a', '#0a0b10')
-    const bg1 = this.cssColor('--snake-bg-b', '#161825')
-    const body = this.cssColor('--snake-fg', '#8fe0a8')
-    const bodyMid = this.cssColor('--snake-fg-mid', '#5cb87a')
-    const outline = this.cssColor('--snake-outline', '#153428')
-    const headFill = this.cssColor('--snake-head', '#c8fad3')
-    const food = this.cssColor('--snake-food', '#f591b2')
-    const foodHot = this.cssColor('--snake-food-hot', '#fff5fb')
-    const gridMaj = this.cssColor('--snake-grid-major', 'rgba(180,190,255,0.09)')
-    const gridMin = this.cssColor('--snake-grid-minor', 'rgba(180,190,255,0.045)')
+    const bg0 = this.themeColor('--snake-bg-a', '#0a0b10')
+    const bg1 = this.themeColor('--snake-bg-b', '#161825')
+    const body = this.themeColor('--snake-fg', '#8fe0a8')
+    const bodyMid = this.themeColor('--snake-fg-mid', '#5cb87a')
+    const outline = this.themeColor('--snake-outline', '#153428')
+    const headFill = this.themeColor('--snake-head', '#c8fad3')
+    const food = this.themeColor('--snake-food', '#f591b2')
+    const foodHot = this.themeColor('--snake-food-hot', '#fff5fb')
+    const gridMaj = this.themeColor('--snake-grid-major', 'rgba(180,190,255,0.09)')
+    const gridMin = this.themeColor('--snake-grid-minor', 'rgba(180,190,255,0.045)')
 
     ctx.fillStyle = '#05060a'
     ctx.fillRect(0, 0, cw, ch)
@@ -592,7 +592,7 @@ export class SnakeWindow {
       ctx.restore()
 
       const hd = this.snake[0]!
-      const { ox: hx, oy: hy } = this.cc(hd.x, hd.y, cs)
+      const { ox: hx, oy: hy } = this.cellCenter(hd.x, hd.y, cs)
       const headR = cs * 0.44
       ctx.save()
       const headGrad = ctx.createRadialGradient(hx - headR * 0.35, hy - headR * 0.35, cs * 0.05, hx, hy, headR + 2)
@@ -625,7 +625,7 @@ export class SnakeWindow {
     }
 
     const pulse = (Math.sin(this.foodPhase) + 1) * 0.5
-    const { ox: fx, oy: fy } = this.cc(this.food.x, this.food.y, cs)
+    const { ox: fx, oy: fy } = this.cellCenter(this.food.x, this.food.y, cs)
     const fr = cs * (0.3 + pulse * 0.06)
     ctx.save()
     ctx.shadowColor = 'rgba(243,139,168,0.5)'
@@ -644,7 +644,7 @@ export class SnakeWindow {
     ctx.restore()
 
     if (this.powerup) {
-      const { ox: px, oy: py } = this.cc(this.powerup.x, this.powerup.y, cs)
+      const { ox: px, oy: py } = this.cellCenter(this.powerup.x, this.powerup.y, cs)
       const pr = cs * (0.28 + Math.sin(this.powerPhase) * 0.04)
       ctx.save()
       if (this.powerup.kind === 'ghost') {
@@ -733,7 +733,7 @@ export class SnakeWindow {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'top'
     let y = boxTop + padV
-    ctx.fillStyle = this.cssColor('--snake-msg', '#e8eaf6')
+    ctx.fillStyle = this.themeColor('--snake-msg', '#e8eaf6')
     ctx.font = titleFont
     ctx.fillText(title, mx, y)
     y += titleLineH + gapTitleSub

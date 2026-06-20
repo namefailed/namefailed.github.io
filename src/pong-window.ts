@@ -31,7 +31,7 @@ export class PongWindow {
   private hintEl: HTMLElement
   private scoreYOU!: HTMLElement
   private scoreCPU!: HTMLElement
-  private labelRow!: HTMLElement
+  private opponentLabel!: HTMLElement
 
   private alive = true
   private raf: number | null = null
@@ -135,13 +135,13 @@ export class PongWindow {
 
     const br = document.createElement('div')
     br.className = 'pong-score-block pong-score-block--guest'
-    this.labelRow = document.createElement('span')
-    this.labelRow.className = 'pong-score-role'
-    this.labelRow.textContent = 'computer'
+    this.opponentLabel = document.createElement('span')
+    this.opponentLabel.className = 'pong-score-role'
+    this.opponentLabel.textContent = 'computer'
     this.scoreCPU = document.createElement('span')
     this.scoreCPU.className = 'pong-score-val'
     this.scoreCPU.textContent = '0'
-    br.append(this.labelRow, this.scoreCPU)
+    br.append(this.opponentLabel, this.scoreCPU)
 
     scoreRow.append(bl, sep, br)
 
@@ -320,7 +320,7 @@ export class PongWindow {
   }
 
   private syncHudLabels(): void {
-    this.labelRow.textContent = this.mode === 'cpu' ? 'cpu' : 'p2'
+    this.opponentLabel.textContent = this.mode === 'cpu' ? 'cpu' : 'p2'
   }
 
   private aiRightPaddle(pad: number, maxY: number): number {
