@@ -16,7 +16,7 @@ function chromeOpts() {
 function mountEditor(
   path: string,
   body: string,
-  extra: Partial<Parameters<typeof EditorWindow.prototype.constructor>[0]> = {},
+  extra: Partial<ConstructorParameters<typeof EditorWindow>[0]> = {},
 ) {
   vfsWrite(path, body)
   const win = new EditorWindow({ initialPath: path, ...chromeOpts(), ...extra })
