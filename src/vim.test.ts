@@ -86,42 +86,45 @@ describe('VimInput', () => {
       expect(vim.mode).toBe('normal')
     })
 
+    // 'hello world' is 11 chars; cursorBack() === buf.length - cur, so position 0
+    // reads 11 and the last char reads 1. Each test anchors at 0 first to stay
+    // independent of the post-Escape clamp.
     it('moves left with h', () => {
-      // In normal mode after Esc from insert, cursor backs up 1
-      // For 'hello world' (11 chars), cursor is at position 9
-      vim.handleKey(keyEvent('h'))
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('l')) // cur 1
+      vim.handleKey(keyEvent('h')) // back to 0
       expect(vim.render()).toBe('hello world')
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      expect(vim.cursorBack()).toBe(11)
     })
 
     it('moves right with l', () => {
       vim.handleKey(keyEvent('0'))
       vim.handleKey(keyEvent('l'))
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      expect(vim.cursorBack()).toBe(10) // cur 1
     })
 
     it('moves to start with 0', () => {
       vim.handleKey(keyEvent('0'))
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      expect(vim.cursorBack()).toBe(11) // cur 0
     })
 
     it('moves to end with $', () => {
       vim.handleKey(keyEvent('0'))
       vim.handleKey(keyEvent('$'))
-      expect(vim.cursorBack()).toBeGreaterThanOrEqual(0)
+      expect(vim.cursorBack()).toBe(1) // cur 10 (last char 'd')
     })
 
     it('moves word forward with w', () => {
       vim.handleKey(keyEvent('0'))
       vim.handleKey(keyEvent('w'))
-      // Should move to start of "world"
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      expect(vim.cursorBack()).toBe(5) // start of 'world' = index 6
     })
 
     it('moves word back with b', () => {
-      // Already at end, b should move back
-      vim.handleKey(keyEvent('b'))
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      vim.handleKey(keyEvent('0'))
+      vim.handleKey(keyEvent('w')) // → 'world' (6)
+      vim.handleKey(keyEvent('b')) // → 'hello' (0)
+      expect(vim.cursorBack()).toBe(11)
     })
   })
 
@@ -135,8 +138,8 @@ describe('VimInput', () => {
       vim.handleKey(keyEvent('0'))
       vim.handleKey(keyEvent('d'))
       vim.handleKey(keyEvent('w'))
-      // dw deletes word including trailing whitespace
-      expect(vim.getValue()).not.toContain('hello')
+      // dw from the start removes 'hello ' (word + trailing space)
+      expect(vim.getValue()).toBe('world')
     })
 
     it('deletes line with dd', () => {
@@ -149,8 +152,8 @@ describe('VimInput', () => {
       vim.handleKey(keyEvent('0'))
       vim.handleKey(keyEvent('d'))
       vim.handleKey(keyEvent('l'))
-      // dl deletes first character
-      expect(vim.getValue()).not.toContain('hello')
+      // dl removes only the first character
+      expect(vim.getValue()).toBe('ello world')
     })
   })
 
@@ -310,16 +313,14 @@ describe('VimInput', () => {
       vim.handleKey(keyEvent('0'))
       vim.handleKey(keyEvent('f'))
       vim.handleKey(keyEvent('o'))
-      // Should move to position of 'o' in 'hello'
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      expect(vim.cursorBack()).toBe(7) // first 'o' in 'hello' = index 4
     })
 
     it('finds backward with F', () => {
       vim.handleKey(keyEvent('$'))
       vim.handleKey(keyEvent('F'))
       vim.handleKey(keyEvent('w'))
-      // Should move to 'w' in 'world'
-      expect(vim.cursorBack()).toBeGreaterThan(0)
+      expect(vim.cursorBack()).toBe(5) // 'w' in 'world' = index 6
     })
   })
 

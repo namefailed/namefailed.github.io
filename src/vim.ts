@@ -314,7 +314,11 @@ export class VimInput {
         this.pendingOp = null
         const dest = this.applyMotion(k)
         const lo   = Math.min(this.cur, dest)
-        const hi   = Math.max(this.cur, dest)
+        let hi     = Math.max(this.cur, dest)
+        // h/l/0/^/w/b are exclusive — the char at the destination is not part of
+        // the range; only e and $ reach inclusively to their target.
+        if (k !== 'e' && k !== '$') hi -= 1
+        if (hi < lo) return { type: 'rendered' } // motion didn't move; nothing to do
         if (op !== 'y') {
           this.execOp(op, lo, hi)
         } else {
